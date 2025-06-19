@@ -1,4 +1,4 @@
-package com.institution.management.academic_api.domain.model.entities.academic;
+package com.institution.management.academic_api.domain.model.entities.course;
 
 public class Course {
     private Long id;
