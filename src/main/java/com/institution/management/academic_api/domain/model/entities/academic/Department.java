@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.domain.model.entities.academic;
 
 import com.institution.management.academic_api.domain.model.entities.course.Course;
+import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -30,4 +31,9 @@ public class Department {
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Course> courses = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "institution_id", nullable = false)
+    @ToString.Exclude
+    private Institution institution;
 }
