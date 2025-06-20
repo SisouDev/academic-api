@@ -17,6 +17,9 @@ public interface TeacherMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "institution", ignore = true)
     @Mapping(target = "courseSections", ignore = true)
+    @Mapping(target = "phone", ignore = true)
+    @Mapping(target = "document.type", source = "document.type")
+    @Mapping(target = "document.number", source = "document.number")
     Teacher toEntity(CreateTeacherRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

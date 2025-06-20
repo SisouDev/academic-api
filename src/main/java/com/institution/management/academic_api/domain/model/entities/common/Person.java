@@ -3,7 +3,6 @@ package com.institution.management.academic_api.domain.model.entities.common;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonType;
-import com.institution.management.academic_api.domain.model.shared.Document;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

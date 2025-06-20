@@ -35,6 +35,8 @@ public interface InstitutionMapper {
     @Mapping(target = "academicTerms", ignore = true)
     @Mapping(target = "members", ignore = true)
     @Mapping(target = "admins", ignore = true)
+    @Mapping(target = "address.street", source = "address.street")
+    @Mapping(target = "address.number", source = "address.number")
     Institution toEntity(CreateInstitutionRequestDto requestDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

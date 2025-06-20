@@ -1,4 +1,4 @@
-package com.institution.management.academic_api.domain.model.shared;
+package com.institution.management.academic_api.domain.model.entities.common;
 
 import com.institution.management.academic_api.domain.model.enums.common.DocumentType;
 import jakarta.persistence.Embeddable;
