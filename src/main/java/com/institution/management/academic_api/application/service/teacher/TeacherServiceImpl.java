@@ -4,18 +4,28 @@ import com.institution.management.academic_api.application.dto.common.PersonSumm
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
+import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
+import com.institution.management.academic_api.domain.model.enums.common.RoleName;
+import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
+import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.service.teacher.TeacherService;
 import com.institution.management.academic_api.domain.service.user.UserService;
+import com.institution.management.academic_api.exception.type.common.EmailAlreadyExists;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
+import com.institution.management.academic_api.exception.type.teacher.TeacherNotFoundException;
+import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,29 +35,67 @@ public class TeacherServiceImpl implements TeacherService {
     private final InstitutionRepository institutionRepository;
     private final UserService userService;
     private final PersonMapper personMapper;
+    private final RoleRepository roleRepository;
 
     @Override
+    @Transactional
     public TeacherResponseDto create(CreateTeacherRequestDto request) {
-        return null;
+        Institution institution = findInstitutionByIdOrThrow(request.institutionId());
+        if (teacherRepository.existsByEmail(request.email())){
+            throw new EmailAlreadyExists("Email already in use: " + request.email());
+        }
+        Teacher newTeacher = teacherMapper.toEntity(request);
+        if (request.academicBackground() == null || request.academicBackground().isEmpty()){
+            newTeacher.setAcademicBackground(AcademicDegree.LICENTIATE);
+        }
+        newTeacher.setInstitution(institution);
+        Teacher savedTeacher = teacherRepository.save(newTeacher);
+        String defaultPassword = savedTeacher.getDocument().getNumber();
+        var teacherRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                .orElseThrow(() -> new InvalidRoleAssignmentException("Admin Role not found in the system."));
+        CreateUserRequestDto userRequest = new CreateUserRequestDto(
+                savedTeacher.getEmail(),
+                defaultPassword,
+                savedTeacher.getId(),
+                Set.of(teacherRole.getId())
+        );
+        userService.create(userRequest);
+        return teacherMapper.toResponseDto(savedTeacher);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TeacherResponseDto findById(Long id) {
-        return null;
+        Teacher teacher = findTeacherByIdOrThrow(id);
+        return teacherMapper.toResponseDto(teacher);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonSummaryDto> findAllByInstitution(Long institutionId) {
-        return List.of();
+        Institution institution = findInstitutionByIdOrThrow(institutionId);
+        List<Teacher> teachers = teacherRepository.findAllByInstitution(institution);
+        return teachers.stream()
+                .map(personMapper::toSummaryDto)
+                .toList();
     }
 
     @Override
+    @Transactional
     public TeacherResponseDto update(Long id, UpdateTeacherRequestDto request) {
-        return null;
+        Teacher teacherToUpdate = findTeacherByIdOrThrow(id);
+        teacherMapper.updateFromDto(request, teacherToUpdate);
+        Teacher updatedTeacher = teacherRepository.save(teacherToUpdate);
+        return teacherMapper.toResponseDto(updatedTeacher);
     }
 
     private Institution findInstitutionByIdOrThrow(Long id) {
         return institutionRepository.findById(id)
                 .orElseThrow(() -> new InstitutionNotFoundException("Institution not found with id: " + id));
+    }
+
+    private Teacher findTeacherByIdOrThrow(Long id) {
+        return teacherRepository.findById(id)
+                .orElseThrow(() -> new TeacherNotFoundException("Teacher not found with id: " + id));
     }
 }

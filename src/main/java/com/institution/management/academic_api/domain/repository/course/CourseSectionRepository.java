@@ -18,4 +18,8 @@ public interface CourseSectionRepository extends JpaRepository<CourseSection, Lo
     List<CourseSection> findBySubjectAndAcademicTerm(Subject subject, AcademicTerm term);
 
     List<CourseSection> findByRoomAndAcademicTerm(String room, AcademicTerm term);
+
+    boolean existsCourseSectionByNameAndAcademicTerm(String name, AcademicTerm academicTerm);
+
+    List<CourseSection> findAllByAcademicTerm(AcademicTerm academicTerm);
 }
