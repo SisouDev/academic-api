@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.teacher;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
-import com.institution.management.academic_api.application.mapper.teacher.TeacherMapper;
+import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.domain.factory.common.PersonFactory;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.enums.common.PersonType;

@@ -15,7 +15,7 @@ public record UserResponseDto(
         String login,
 
         @Schema(description = "Indica se a conta está ativa.", example = "true")
-        boolean isActive,
+        boolean active,
 
         @Schema(description = "Informações da pessoa vinculada a esta conta.")
         PersonSummaryDto person,

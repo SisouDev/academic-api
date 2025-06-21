@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.employee;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
-import com.institution.management.academic_api.application.mapper.employee.EmployeeMapper;
+import com.institution.management.academic_api.application.mapper.simple.employee.EmployeeMapper;
 import com.institution.management.academic_api.domain.factory.common.PersonFactory;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.enums.common.PersonType;

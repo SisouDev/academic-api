@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.user;
 import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
-import com.institution.management.academic_api.application.mapper.user.UserMapper;
+import com.institution.management.academic_api.application.mapper.simple.user.UserMapper;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

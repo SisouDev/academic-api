@@ -17,5 +17,8 @@ public record UpdateEmployeeRequestDto(
         String jobPosition,
 
         @Schema(description = "Nova data de contratação (geralmente não se altera, mas como exemplo).", example = "2021-11-11")
-        LocalDate hiringDate
+        LocalDate hiringDate,
+
+        String firstName,
+        String lastName
 ) {}

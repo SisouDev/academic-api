@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.course;
 import com.institution.management.academic_api.application.dto.course.CreateSubjectRequestDto;
-import com.institution.management.academic_api.application.mapper.course.SubjectMapper;
+import com.institution.management.academic_api.application.mapper.simple.course.SubjectMapper;
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

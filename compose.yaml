@@ -1,9 +1,22 @@
+version: '3.8'
+
 services:
   postgres:
-    image: 'postgres:latest'
+    image: postgres:latest
+    container_name: academic-db
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      - POSTGRES_DB=academic-api
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=PgKarolina2025!
     ports:
-      - '5432'
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - academic-network
+
+volumes:
+  postgres_data:
+
+networks:
+  academic-network:

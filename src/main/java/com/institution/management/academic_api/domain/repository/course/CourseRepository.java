@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +19,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findByNameAndDepartment(String name, Department department);
 
     Page<Course> findByDepartment_Institution_IdAndNameContainingIgnoreCase(Long institutionId, String courseName, Pageable pageable);
+
+    boolean existsByNameAndDepartment(String name, Department department);
+
+    List<Course> findAllByDepartment(Department department);
 }

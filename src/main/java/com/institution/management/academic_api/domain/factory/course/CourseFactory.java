@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.course;
 import com.institution.management.academic_api.application.dto.course.CreateCourseRequestDto;
-import com.institution.management.academic_api.application.mapper.course.CourseMapper;
+import com.institution.management.academic_api.application.mapper.simple.course.CourseMapper;
 import com.institution.management.academic_api.domain.model.entities.course.Course;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

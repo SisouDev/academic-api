@@ -34,7 +34,7 @@ public class User implements UserDetails{
     private String passwordHash;
 
     @Column
-    private boolean isActive;
+    private boolean active;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -88,6 +88,6 @@ public class User implements UserDetails{
 
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return active;
     }
 }

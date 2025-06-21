@@ -17,4 +17,8 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
     Optional<Subject> findByNameAndCourse(String name, Course course);
 
     List<Subject> findByWorkloadHoursGreaterThan(Integer hours);
+
+    boolean existsByNameAndCourse(String name, Course course);
+
+    List<Subject> findAllByCourse(Course course);
 }

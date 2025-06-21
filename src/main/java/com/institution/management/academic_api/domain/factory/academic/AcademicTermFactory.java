@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.academic;
 import com.institution.management.academic_api.application.dto.academic.AcademicTermRequestDto;
-import com.institution.management.academic_api.application.mapper.academic.AcademicTermMapper;
+import com.institution.management.academic_api.application.mapper.simple.academic.AcademicTermMapper;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import lombok.RequiredArgsConstructor;

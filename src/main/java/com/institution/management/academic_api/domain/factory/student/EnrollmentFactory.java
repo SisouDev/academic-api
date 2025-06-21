@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.student;
 import com.institution.management.academic_api.application.dto.student.CreateEnrollmentRequestDto;
-import com.institution.management.academic_api.application.mapper.student.EnrollmentMapper;
+import com.institution.management.academic_api.application.mapper.simple.student.EnrollmentMapper;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import lombok.RequiredArgsConstructor;

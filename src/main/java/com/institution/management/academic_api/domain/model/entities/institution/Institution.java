@@ -50,12 +50,7 @@ public class Institution {
     @ToString.Exclude
     private List<Person> members = new ArrayList<>();
 
-    @OneToMany
-    @JoinTable(
-            name = "institution_admins",
-            joinColumns = @JoinColumn(name = "institution_id"),
-            inverseJoinColumns = @JoinColumn(name = "admin_id")
-    )
+    @OneToMany(mappedBy = "institution", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<InstitutionAdmin> admins = new ArrayList<>();
 }

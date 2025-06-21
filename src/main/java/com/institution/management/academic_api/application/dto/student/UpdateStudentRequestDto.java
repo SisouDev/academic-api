@@ -20,5 +20,7 @@ public record UpdateStudentRequestDto(
         LocalDate birthDate,
 
         @Schema(description = "Novo endereço completo do aluno.")
-        AddressDto address
+        AddressDto address,
+        String firstName,
+        String lastName
 ) {}

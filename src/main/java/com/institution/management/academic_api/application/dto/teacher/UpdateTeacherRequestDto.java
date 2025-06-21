@@ -13,5 +13,7 @@ public record UpdateTeacherRequestDto(
         String status,
 
         @Schema(description = "Nova formação acadêmica.", example = "POSTDOC")
-        String academicBackground
+        String academicBackground,
+        String firstName,
+        String lastName
 ) {}

@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.factory.student;
 import com.institution.management.academic_api.application.dto.student.CreateAttendanceRecordRequestDto;
-import com.institution.management.academic_api.application.mapper.student.AttendanceRecordMapper;
+import com.institution.management.academic_api.application.mapper.simple.student.AttendanceRecordMapper;
 import com.institution.management.academic_api.domain.model.entities.student.AttendanceRecord;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
