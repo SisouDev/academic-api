@@ -18,4 +18,8 @@ public interface AcademicTermRepository extends JpaRepository<AcademicTerm, Long
     List<AcademicTerm> findByInstitutionAndStatus(Institution institution, AcademicTermStatus status);
 
     Optional<AcademicTerm> findByInstitutionAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Institution institution, LocalDate date, LocalDate sameDate);
+
+    boolean existsByYearAndSemesterAndInstitution(Year year, Integer semester, Institution institution);
+
+    List<AcademicTerm> findAllByInstitutionId(Long institutionId);
 }

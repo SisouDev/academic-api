@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -47,8 +48,11 @@ public class StudentServiceImpl implements StudentService {
         }
         Student newStudent = studentMapper.toEntity(request);
         newStudent.setInstitution(institution);
+        newStudent.setStatus(PersonStatus.ACTIVE);
+        newStudent.setCreatedAt(LocalDateTime.now());
+
         Student savedStudent = studentRepository.save(newStudent);
-        String defaultPassword = savedStudent.getDocument().getNumber();
+        String defaultPassword = request.document().number();
 
         var studentRole = roleRepository.findByName(RoleName.ROLE_USER)
                 .orElseThrow(() -> new InvalidRoleAssignmentException("User Role not found in the system."));

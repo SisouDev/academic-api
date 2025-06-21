@@ -22,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByRoles_Name(RoleName roleName, Pageable pageable);
 
     Page<User> findByPerson_Institution_Id(Long institutionId, Pageable pageable);
+
+    boolean existsByLogin(String login);
 }

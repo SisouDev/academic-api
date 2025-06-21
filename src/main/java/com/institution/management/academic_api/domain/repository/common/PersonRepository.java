@@ -6,6 +6,8 @@ import com.institution.management.academic_api.domain.model.enums.common.PersonS
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -25,4 +27,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
             Institution institution, String firstName, String lastName, Pageable pageable);
 
     Optional<Person> findByDocument_Number(String documentNumber);
+
+    @Query("SELECT p FROM Person p WHERE p.institution.id = :institutionId AND TYPE(p) IN (Employee, InstitutionAdmin)")
+    List<Person> findAllStaffByInstitutionId(@Param("institutionId") Long institutionId);
 }

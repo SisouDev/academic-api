@@ -9,6 +9,7 @@ import com.institution.management.academic_api.application.mapper.simple.common.
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
+import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +51,9 @@ public class TeacherServiceImpl implements TeacherService {
             newTeacher.setAcademicBackground(AcademicDegree.LICENTIATE);
         }
         newTeacher.setInstitution(institution);
+        newTeacher.setStatus(PersonStatus.ACTIVE);
+        newTeacher.setCreatedAt(LocalDateTime.now());
+
         Teacher savedTeacher = teacherRepository.save(newTeacher);
         String defaultPassword = savedTeacher.getDocument().getNumber();
         var teacherRole = roleRepository.findByName(RoleName.ROLE_ADMIN)

@@ -16,8 +16,8 @@ public interface InstitutionAdminMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "institution", ignore = true)
-    @Mapping(target = "document.type", source = "documentType")
-    @Mapping(target = "document.number", source = "documentNumber")
+    @Mapping(target = "document.type", source = "document.type")
+    @Mapping(target = "document.number", source = "document.number")
     InstitutionAdmin toEntity(CreateInstitutionAdminRequestDto requestDto);
 
 }

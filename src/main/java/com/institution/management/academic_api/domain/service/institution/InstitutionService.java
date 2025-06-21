@@ -14,4 +14,6 @@ public interface InstitutionService {
     List<InstitutionSummaryDto> findAll();
 
     InstitutionDetailsDto update(Long id, UpdateInstitutionRequestDto request);
+
+    void delete(Long id);
 }

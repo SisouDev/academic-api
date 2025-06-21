@@ -49,7 +49,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (enrollmentRepository.existsByStudentAndCourseSection(student, courseSection)) {
             throw new InvalidOperationException("This student is already enrolled in this class.");
         }
-        Enrollment newEnrollment = new Enrollment();
+        Enrollment newEnrollment = enrollmentMapper.toEntity(request);
         newEnrollment.setStudent(student);
         newEnrollment.setCourseSection(courseSection);
         newEnrollment.setEnrollmentDate(LocalDate.now());

@@ -12,4 +12,6 @@ public interface LessonPlanRepository extends JpaRepository<LessonPlan, Long> {
     Optional<LessonPlan> findByCourseSection(CourseSection courseSection);
 
     Optional<LessonPlan> findByCourseSectionId(Long courseSectionId);
+
+    boolean existsByCourseSectionId(Long id);
 }

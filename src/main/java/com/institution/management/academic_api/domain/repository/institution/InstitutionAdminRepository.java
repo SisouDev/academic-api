@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InstitutionAdminRepository extends JpaRepository<InstitutionAdmin, Long> {
+    boolean existsInstitutionAdminByEmail(String email);
 }

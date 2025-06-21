@@ -15,4 +15,5 @@ public interface InstitutionRepository extends JpaRepository<Institution, Long> 
     Optional<Institution> findByNameIgnoreCase(String name);
 
     Page<Institution> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
 }

@@ -1,9 +1,13 @@
 package com.institution.management.academic_api.application.dto.institution;
-import com.institution.management.academic_api.domain.model.enums.common.DocumentType;
+
+import com.institution.management.academic_api.application.dto.common.DocumentDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Dados para cadastrar um novo Administrador")
 public record CreateInstitutionAdminRequestDto(
+        @Schema(description = "ID da instituição à qual este admin pertence.", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
+        Long institutionId,
+
         @Schema(description = "Primeiro nome", requiredMode = Schema.RequiredMode.REQUIRED, example = "Joana")
         String firstName,
 
@@ -16,9 +20,5 @@ public record CreateInstitutionAdminRequestDto(
         @Schema(description = "Telefone para contato", example = "11987654321")
         String phone,
 
-        @Schema(description = "Tipo do documento (CPF, RG, etc)", requiredMode = Schema.RequiredMode.REQUIRED)
-        DocumentType documentType,
-
-        @Schema(description = "Número do documento", requiredMode = Schema.RequiredMode.REQUIRED, example = "123.456.789-00")
-        String documentNumber
+        DocumentDto document
 ) {}

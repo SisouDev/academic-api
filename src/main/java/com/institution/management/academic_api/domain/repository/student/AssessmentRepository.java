@@ -13,4 +13,6 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     List<Assessment> findByEnrollmentOrderByAssessmentDate(Enrollment enrollment);
 
     List<Assessment> findByEnrollmentAndType(Enrollment enrollment, AssessmentType type);
+
+    List<Assessment> findAllByEnrollment(Enrollment enrollment);
 }
