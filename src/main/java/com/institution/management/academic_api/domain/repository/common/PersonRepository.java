@@ -30,4 +30,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     @Query("SELECT p FROM Person p WHERE p.institution.id = :institutionId AND TYPE(p) IN (Employee, InstitutionAdmin)")
     List<Person> findAllStaffByInstitutionId(@Param("institutionId") Long institutionId);
+
+    boolean existsByEmail(String mail);
 }

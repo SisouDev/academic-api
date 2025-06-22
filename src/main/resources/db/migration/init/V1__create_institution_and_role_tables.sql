@@ -19,4 +19,8 @@ CREATE TABLE roles (
                        name VARCHAR(50) NOT NULL UNIQUE
 );
 
-INSERT INTO roles (name) VALUES ('STUDENT'), ('TEACHER'), ('EMPLOYEE'), ('STAFF'), ('ADMIN');
+INSERT INTO roles (name) VALUES
+                             ('ROLE_ADMIN'),
+                             ('ROLE_USER'),
+                             ('ROLE_FINANCE'),
+                             ('ROLE_MANAGER');

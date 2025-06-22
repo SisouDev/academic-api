@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import java.util.List;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Institution {
 
     @Id
@@ -36,6 +39,7 @@ public class Institution {
     private Address address;
 
     @Column
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "institution", cascade = CascadeType.ALL)

@@ -20,6 +20,7 @@ public interface EmployeeMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "institution", ignore = true)
     @Mapping(target = "phone", ignore = true)
+    @Mapping(target = "jobPosition", ignore = true)
     Employee toEntity(CreateEmployeeRequestDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

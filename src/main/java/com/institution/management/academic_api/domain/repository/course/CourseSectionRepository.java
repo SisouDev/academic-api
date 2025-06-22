@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CourseSectionRepository extends JpaRepository<CourseSection, Long> {
@@ -22,4 +23,6 @@ public interface CourseSectionRepository extends JpaRepository<CourseSection, Lo
     boolean existsCourseSectionByNameAndAcademicTerm(String name, AcademicTerm academicTerm);
 
     List<CourseSection> findAllByAcademicTerm(AcademicTerm academicTerm);
+
+    Optional<CourseSection> findByNameAndAcademicTerm(String courseSectionName, AcademicTerm term);
 }
