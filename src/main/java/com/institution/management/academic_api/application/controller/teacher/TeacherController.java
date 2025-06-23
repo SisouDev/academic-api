@@ -26,7 +26,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class TeacherController {
 
     private final TeacherService teacherService;
-    private final InstitutionController institutionController;
 
     @PostMapping
     public ResponseEntity<TeacherResponseDto> create(@RequestBody @Valid CreateTeacherRequestDto request) {

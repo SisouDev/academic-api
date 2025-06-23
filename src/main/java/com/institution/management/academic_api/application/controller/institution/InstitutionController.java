@@ -30,11 +30,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class InstitutionController {
 
     private final InstitutionService institutionService;
-    private final DepartmentController departmentController;
-    private final EmployeeController employeeController;
-    private final StudentController studentController;
-    private final TeacherController teacherController;
-    private final AcademicTermController academicTermController;
 
     @PostMapping
     public ResponseEntity<InstitutionDetailsDto> create(@RequestBody @Valid CreateInstitutionRequestDto request) {

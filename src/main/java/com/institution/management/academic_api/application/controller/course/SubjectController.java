@@ -25,7 +25,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class SubjectController {
 
     private final SubjectService subjectService;
-    private final CourseController courseController;
 
     @PostMapping
     public ResponseEntity<SubjectDetailsDto> create(@RequestBody @Valid CreateSubjectRequestDto request) {

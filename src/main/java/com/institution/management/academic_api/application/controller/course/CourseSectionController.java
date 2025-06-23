@@ -27,9 +27,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class CourseSectionController {
 
     private final CourseSectionService courseSectionService;
-    private final AcademicTermController academicTermController;
-    private final SubjectController subjectController;
-    private final TeacherController teacherController;
 
     @PostMapping
     public ResponseEntity<CourseSectionDetailsDto> create(@RequestBody @Valid CreateCourseSectionRequestDto request) {

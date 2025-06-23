@@ -10,7 +10,7 @@ import com.institution.management.academic_api.domain.repository.course.CourseSe
 import com.institution.management.academic_api.domain.repository.teacher.LessonPlanRepository;
 import com.institution.management.academic_api.domain.service.teacher.LessonPlanService;
 import com.institution.management.academic_api.exception.type.teacher.LessonPlanAlreadyExistsException;
-import jakarta.persistence.EntityNotFoundException;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

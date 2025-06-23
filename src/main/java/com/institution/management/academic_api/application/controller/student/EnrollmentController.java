@@ -23,9 +23,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
-    private final StudentController studentController;
-    private final CourseSectionController courseSectionController;
-    private final AssessmentController assessmentController;
 
     @PostMapping
     public ResponseEntity<EnrollmentDetailsDto> enrollStudent(@RequestBody @Valid CreateEnrollmentRequestDto request) {
