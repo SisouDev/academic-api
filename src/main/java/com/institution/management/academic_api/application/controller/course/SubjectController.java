@@ -7,11 +7,17 @@ import com.institution.management.academic_api.application.dto.course.UpdateSubj
 import com.institution.management.academic_api.domain.service.course.SubjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/subjects")
@@ -19,6 +25,7 @@ import java.util.List;
 public class SubjectController {
 
     private final SubjectService subjectService;
+    private final CourseController courseController;
 
     @PostMapping
     public ResponseEntity<SubjectDetailsDto> create(@RequestBody @Valid CreateSubjectRequestDto request) {
@@ -27,15 +34,30 @@ public class SubjectController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SubjectDetailsDto> findById(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<SubjectDetailsDto>> findById(@PathVariable Long id) {
         SubjectDetailsDto subject = subjectService.findById(id);
-        return ResponseEntity.ok(subject);
+
+        EntityModel<SubjectDetailsDto> subjectModel = EntityModel.of(subject,
+                linkTo(methodOn(SubjectController.class).findById(id)).withSelfRel(),
+                linkTo(methodOn(CourseController.class).findById(subject.course().id())).withRel("course")
+        );
+
+        return ResponseEntity.ok(subjectModel);
     }
 
     @GetMapping
-    public ResponseEntity<List<SubjectSummaryDto>> findAllByCourse(@RequestParam Long courseId) {
+    public ResponseEntity<CollectionModel<EntityModel<SubjectSummaryDto>>> findAllByCourse(@RequestParam Long courseId) {
         List<SubjectSummaryDto> subjects = subjectService.findAllByCourse(courseId);
-        return ResponseEntity.ok(subjects);
+
+        List<EntityModel<SubjectSummaryDto>> subjectModels = subjects.stream()
+                .map(sub -> EntityModel.of(sub,
+                        linkTo(methodOn(SubjectController.class).findById(sub.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        CollectionModel<EntityModel<SubjectSummaryDto>> collectionModel = CollectionModel.of(subjectModels,
+                linkTo(methodOn(SubjectController.class).findAllByCourse(courseId)).withSelfRel());
+
+        return ResponseEntity.ok(collectionModel);
     }
 
     @PutMapping("/{id}")

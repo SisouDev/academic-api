@@ -1,5 +1,10 @@
 package com.institution.management.academic_api.application.controller.institution;
 
+import com.institution.management.academic_api.application.controller.academic.AcademicTermController;
+import com.institution.management.academic_api.application.controller.academic.DepartmentController;
+import com.institution.management.academic_api.application.controller.employee.EmployeeController;
+import com.institution.management.academic_api.application.controller.student.StudentController;
+import com.institution.management.academic_api.application.controller.teacher.TeacherController;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionRequestDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionDetailsDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionSummaryDto;
@@ -7,11 +12,17 @@ import com.institution.management.academic_api.application.dto.institution.Updat
 import com.institution.management.academic_api.domain.service.institution.InstitutionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/institutions")
@@ -19,6 +30,11 @@ import java.util.List;
 public class InstitutionController {
 
     private final InstitutionService institutionService;
+    private final DepartmentController departmentController;
+    private final EmployeeController employeeController;
+    private final StudentController studentController;
+    private final TeacherController teacherController;
+    private final AcademicTermController academicTermController;
 
     @PostMapping
     public ResponseEntity<InstitutionDetailsDto> create(@RequestBody @Valid CreateInstitutionRequestDto request) {
@@ -27,15 +43,34 @@ public class InstitutionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<InstitutionDetailsDto> findById(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<InstitutionDetailsDto>> findById(@PathVariable Long id) {
         InstitutionDetailsDto institution = institutionService.findById(id);
-        return ResponseEntity.ok(institution);
+
+        EntityModel<InstitutionDetailsDto> model = EntityModel.of(institution,
+                linkTo(methodOn(InstitutionController.class).findById(id)).withSelfRel(),
+                linkTo(methodOn(DepartmentController.class).findAllByInstitution(id)).withRel("departments"),
+                linkTo(methodOn(EmployeeController.class).findAllByInstitution(id)).withRel("employees"),
+                linkTo(methodOn(StudentController.class).findAllByInstitution(id)).withRel("students"),
+                linkTo(methodOn(TeacherController.class).findAllByInstitution(id)).withRel("teachers"),
+                linkTo(methodOn(AcademicTermController.class).findAllByInstitution(id)).withRel("academic-terms")
+        );
+
+        return ResponseEntity.ok(model);
     }
 
     @GetMapping
-    public ResponseEntity<List<InstitutionSummaryDto>> findAll() {
+    public ResponseEntity<CollectionModel<EntityModel<InstitutionSummaryDto>>> findAll() {
         List<InstitutionSummaryDto> institutions = institutionService.findAll();
-        return ResponseEntity.ok(institutions);
+
+        List<EntityModel<InstitutionSummaryDto>> institutionModels = institutions.stream()
+                .map(inst -> EntityModel.of(inst,
+                        linkTo(methodOn(InstitutionController.class).findById(inst.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        CollectionModel<EntityModel<InstitutionSummaryDto>> collectionModel = CollectionModel.of(institutionModels,
+                linkTo(methodOn(InstitutionController.class).findAll()).withSelfRel());
+
+        return ResponseEntity.ok(collectionModel);
     }
 
     @PutMapping("/{id}")

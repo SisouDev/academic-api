@@ -7,11 +7,16 @@ import com.institution.management.academic_api.application.dto.academic.UpdateDe
 import com.institution.management.academic_api.domain.service.academic.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/departments")
@@ -27,15 +32,29 @@ public class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDetailsDto> findById(@PathVariable Long id) {
-        DepartmentDetailsDto department = departmentService.findById(id);
-        return ResponseEntity.ok(department);
+    public ResponseEntity<EntityModel<DepartmentDetailsDto>> findById(@PathVariable Long id) {
+        DepartmentDetailsDto departmentDto = departmentService.findById(id);
+
+        var selfLink = linkTo(methodOn(DepartmentController.class).findById(id)).withSelfRel();
+        EntityModel<DepartmentDetailsDto> model = EntityModel.of(departmentDto, selfLink /*, coursesLink */);
+
+        return ResponseEntity.ok(model);
     }
 
     @GetMapping
-    public ResponseEntity<List<DepartmentSummaryDto>> findAllByInstitution(@RequestParam Long institutionId) {
-        List<DepartmentSummaryDto> departments = departmentService.findAllByInstitution(institutionId);
-        return ResponseEntity.ok(departments);
+    public ResponseEntity<CollectionModel<EntityModel<DepartmentSummaryDto>>> findAllByInstitution(@RequestParam Long institutionId) {
+        List<DepartmentSummaryDto> departmentList = departmentService.findAllByInstitution(institutionId);
+
+        List<EntityModel<DepartmentSummaryDto>> departmentModels = departmentList.stream()
+                .map(dept -> EntityModel.of(dept,
+                        linkTo(methodOn(DepartmentController.class).findById(dept.id())).withSelfRel()))
+                .toList();
+
+        var selfLink = linkTo(methodOn(DepartmentController.class).findAllByInstitution(institutionId)).withSelfRel();
+
+        CollectionModel<EntityModel<DepartmentSummaryDto>> collectionModel = CollectionModel.of(departmentModels, selfLink);
+
+        return ResponseEntity.ok(collectionModel);
     }
 
     @PutMapping("/{id}")

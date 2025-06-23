@@ -1,5 +1,7 @@
 package com.institution.management.academic_api.application.controller.course;
 
+import com.institution.management.academic_api.application.controller.academic.AcademicTermController;
+import com.institution.management.academic_api.application.controller.teacher.TeacherController;
 import com.institution.management.academic_api.application.dto.course.CourseSectionDetailsDto;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
@@ -7,11 +9,17 @@ import com.institution.management.academic_api.application.dto.course.UpdateCour
 import com.institution.management.academic_api.domain.service.course.CourseSectionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/course-sections")
@@ -19,6 +27,9 @@ import java.util.List;
 public class CourseSectionController {
 
     private final CourseSectionService courseSectionService;
+    private final AcademicTermController academicTermController;
+    private final SubjectController subjectController;
+    private final TeacherController teacherController;
 
     @PostMapping
     public ResponseEntity<CourseSectionDetailsDto> create(@RequestBody @Valid CreateCourseSectionRequestDto request) {
@@ -27,15 +38,32 @@ public class CourseSectionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CourseSectionDetailsDto> findById(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<CourseSectionDetailsDto>> findById(@PathVariable Long id) {
         CourseSectionDetailsDto section = courseSectionService.findById(id);
-        return ResponseEntity.ok(section);
+
+        EntityModel<CourseSectionDetailsDto> sectionModel = EntityModel.of(section,
+                linkTo(methodOn(CourseSectionController.class).findById(id)).withSelfRel(),
+                linkTo(methodOn(AcademicTermController.class).findById(section.academicTerm().id())).withRel("academic-term"),
+                linkTo(methodOn(SubjectController.class).findById(section.subject().id())).withRel("subject"),
+                linkTo(methodOn(TeacherController.class).findById(section.teacher().id())).withRel("teacher")
+        );
+
+        return ResponseEntity.ok(sectionModel);
     }
 
     @GetMapping
-    public ResponseEntity<List<CourseSectionSummaryDto>> findAllByAcademicTerm(@RequestParam Long academicTermId) {
+    public ResponseEntity<CollectionModel<EntityModel<CourseSectionSummaryDto>>> findAllByAcademicTerm(@RequestParam Long academicTermId) {
         List<CourseSectionSummaryDto> sections = courseSectionService.findAllByAcademicTerm(academicTermId);
-        return ResponseEntity.ok(sections);
+
+        List<EntityModel<CourseSectionSummaryDto>> sectionModels = sections.stream()
+                .map(sec -> EntityModel.of(sec,
+                        linkTo(methodOn(CourseSectionController.class).findById(sec.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        CollectionModel<EntityModel<CourseSectionSummaryDto>> collectionModel = CollectionModel.of(sectionModels,
+                linkTo(methodOn(CourseSectionController.class).findAllByAcademicTerm(academicTermId)).withSelfRel());
+
+        return ResponseEntity.ok(collectionModel);
     }
 
     @PutMapping("/{id}")

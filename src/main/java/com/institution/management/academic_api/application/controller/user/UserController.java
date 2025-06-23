@@ -7,9 +7,13 @@ import com.institution.management.academic_api.application.dto.user.UserResponse
 import com.institution.management.academic_api.domain.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -19,8 +23,16 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.findById(id));
+    public ResponseEntity<EntityModel<UserResponseDto>> findById(@PathVariable Long id) {
+        UserResponseDto userDto = userService.findById(id);
+
+        EntityModel<UserResponseDto> model = EntityModel.of(userDto,
+                linkTo(methodOn(UserController.class).findById(id)).withSelfRel(),
+                linkTo(methodOn(UserController.class).updateStatus(id, null)).withRel("update-status"),
+                linkTo(methodOn(UserController.class).assignRoles(id, null)).withRel("assign-roles")
+        );
+
+        return ResponseEntity.ok(model);
     }
 
     @PatchMapping("/{id}/status")
