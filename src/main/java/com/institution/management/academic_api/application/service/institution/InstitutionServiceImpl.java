@@ -13,6 +13,7 @@ import com.institution.management.academic_api.exception.type.institution.Instit
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,7 @@ public class InstitutionServiceImpl implements InstitutionService {
     private final InstitutionRepository institutionRepository;
 
     @Override
+    @Transactional
     public InstitutionDetailsDto create(CreateInstitutionRequestDto request) {
         institutionRepository.findByRegisterId(request.registerId()).ifPresent(inst -> {
             throw new InstitutionAlreadyExistsException("An institution with the registration ID " + request.registerId() + " already exists.");
@@ -37,11 +39,13 @@ public class InstitutionServiceImpl implements InstitutionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InstitutionDetailsDto findById(Long id) {
         return institutionMapper.toDetailsDto(findInstitutionByIdOrThrow(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InstitutionSummaryDto> findAll() {
         return institutionRepository.findAll().stream()
                 .map(institutionMapper::toSummaryDto)
@@ -49,6 +53,7 @@ public class InstitutionServiceImpl implements InstitutionService {
     }
 
     @Override
+    @Transactional
     public InstitutionDetailsDto update(Long id, UpdateInstitutionRequestDto request) {
         Institution institutionToUpdate = findInstitutionByIdOrThrow(id);
 
@@ -58,6 +63,8 @@ public class InstitutionServiceImpl implements InstitutionService {
         return institutionMapper.toDetailsDto(updatedInstitution);
     }
 
+    @Override
+    @Transactional
     public void delete(Long id) {
         Institution institutionToDelete = findInstitutionByIdOrThrow(id);
         if (!institutionToDelete.getDepartments().isEmpty() || !institutionToDelete.getMembers().isEmpty()) {

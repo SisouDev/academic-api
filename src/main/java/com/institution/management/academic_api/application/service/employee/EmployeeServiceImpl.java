@@ -111,6 +111,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonResponseDto findById(Long id) {
         Person staffMember = personRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Staff member not found with ID: " + id));
@@ -122,6 +123,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonSummaryDto> findAllByInstitution(Long institutionId) {
         List<Person> staffMembers = personRepository.findAllStaffByInstitutionId(institutionId);
 
@@ -131,6 +133,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public EmployeeResponseDto update(Long id, UpdateEmployeeRequestDto request) {
         Employee employeeToUpdate = findEmployeeByIdOrThrow(id);
         employeeMapper.updateFromDto(request, employeeToUpdate);
@@ -139,6 +142,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         if (!personRepository.existsById(id)) {
             throw new UserNotFoundException("Staff member not found with ID: " + id);

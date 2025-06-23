@@ -10,6 +10,7 @@ import com.institution.management.academic_api.application.dto.course.*;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionAdminRequestDto;
+import com.institution.management.academic_api.application.dto.student.CreateAssessmentRequestDto;
 import com.institution.management.academic_api.application.dto.student.CreateEnrollmentRequestDto;
 import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
 import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
@@ -24,6 +25,7 @@ import com.institution.management.academic_api.domain.model.entities.course.Cour
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
@@ -48,6 +50,7 @@ import com.institution.management.academic_api.domain.service.course.CourseSecti
 import com.institution.management.academic_api.domain.service.course.CourseService;
 import com.institution.management.academic_api.domain.service.course.SubjectService;
 import com.institution.management.academic_api.domain.service.employee.EmployeeService;
+import com.institution.management.academic_api.domain.service.student.AssessmentService;
 import com.institution.management.academic_api.domain.service.student.EnrollmentService;
 import com.institution.management.academic_api.domain.service.student.StudentService;
 import com.institution.management.academic_api.domain.service.teacher.TeacherService;
@@ -57,6 +60,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
@@ -91,6 +95,7 @@ public class DataSeeder implements CommandLineRunner {
     private final EnrollmentRepository enrollmentRepository;
     private final EnrollmentService enrollmentService;
     private final EmployeeRepository employeeRepository;
+    private final AssessmentService assessmentService;
 
     @Override
     public void run(String... args) throws Exception {
@@ -120,8 +125,8 @@ public class DataSeeder implements CommandLineRunner {
 
                         if (courseSections != null && !courseSections.isEmpty() &&
                                 students != null && !students.isEmpty()) {
-
                             seedEnrollments(students, courseSections);
+                            seedAssessments(students, courseSections);
                         }
                     }
                 }
@@ -1156,6 +1161,43 @@ public class DataSeeder implements CommandLineRunner {
         } catch (Exception e) {
             log.error("Erro ao criar o funcionário de exemplo '{}': {}", email, e.getMessage());
             return null;
+        }
+    }
+
+
+    private void seedAssessments(Map<String, Student> students, Map<String, CourseSection> sections) {
+        log.info("Iniciando seeding de Avaliações (abordagem direta)...");
+
+        Student alunoJoao = students.get("JOAO");
+        CourseSection turmaPOO = sections.get("POO_A");
+
+        if (alunoJoao != null && turmaPOO != null) {
+            Optional<Enrollment> enrollmentOpt = enrollmentRepository.findByStudentAndCourseSection(alunoJoao, turmaPOO);
+
+            enrollmentOpt.ifPresent(enrollment -> {
+                log.info("Matrícula encontrada (ID: {}). Adicionando avaliações...", enrollment.getId());
+                createAssessment("EXAM", new BigDecimal("8.5"), LocalDate.now().minusMonths(1), enrollment);
+                createAssessment("PROJECT", new BigDecimal("9.0"), LocalDate.now().minusWeeks(2), enrollment);
+            });
+        }
+
+        log.info("Seeding de Avaliações finalizado.");
+    }
+
+    private void createAssessment(String type, BigDecimal score, LocalDate date, Enrollment enrollment) {
+        log.info("Criando avaliação do tipo '{}' para a matrícula ID {}...", type, enrollment.getId());
+
+        var request = new CreateAssessmentRequestDto(
+                enrollment.getId(),
+                score,
+                date,
+                type
+        );
+        try {
+            assessmentService.addAssessmentToEnrollment(request);
+            log.info("Avaliação '{}' criada com sucesso.", type);
+        } catch (Exception e) {
+            log.error("Erro ao criar a avaliação '{}': {}", type, e.getMessage());
         }
     }
 

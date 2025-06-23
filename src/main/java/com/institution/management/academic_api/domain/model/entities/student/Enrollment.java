@@ -26,7 +26,7 @@ public class Enrollment {
     @Column
     private LocalDate enrollmentDate;
     @Column
-    private Integer totalAbsences;
+    private Integer totalAbsences = 0;
 
     @Enumerated(EnumType.STRING)
     private EnrollmentStatus status;
