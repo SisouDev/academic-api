@@ -4,7 +4,6 @@ import com.institution.management.academic_api.application.dto.course.CourseSect
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
-import com.institution.management.academic_api.application.mapper.simple.academic.AcademicTermMapper;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.application.mapper.wrappers.academic.AcademicTermMapperWrapper;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
@@ -20,6 +19,8 @@ public interface CourseSectionMapper {
 
     CourseSectionMapper INSTANCE = Mappers.getMapper(CourseSectionMapper.class);
 
+    @Mapping(target = "subjectInfo.subjectName", source = "subject.name")
+    @Mapping(target = "subjectInfo.courseName", source = "subject.course.name")
     CourseSectionSummaryDto toSummaryDto(CourseSection courseSection);
 
     @Mapping(
@@ -42,4 +43,6 @@ public interface CourseSectionMapper {
     @Mapping(target = "teacher", ignore = true)
     @Mapping(target = "enrollments", ignore = true)
     void updateFromDto(UpdateCourseSectionRequestDto dto, @MappingTarget CourseSection entity);
+
+
 }

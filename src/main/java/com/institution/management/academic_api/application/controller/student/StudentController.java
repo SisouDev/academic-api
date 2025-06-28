@@ -68,8 +68,8 @@ public class StudentController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Void> updateStatus(@PathVariable Long id, @RequestParam String status) {
-        studentService.updateStatus(id, status);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<StudentResponseDto> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        StudentResponseDto updatedStudent = studentService.updateStatus(id, status);
+        return ResponseEntity.ok(updatedStudent);
     }
 }

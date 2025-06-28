@@ -1,7 +1,9 @@
 package com.institution.management.academic_api.application.controller.teacher;
 
+import com.institution.management.academic_api.application.controller.course.CourseSectionController;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
 import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
+import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
@@ -64,5 +66,17 @@ public class TeacherController {
     public ResponseEntity<TeacherResponseDto> update(@PathVariable Long id, @RequestBody @Valid UpdateTeacherRequestDto request) {
         TeacherResponseDto updatedTeacher = teacherService.update(id, request);
         return ResponseEntity.ok(updatedTeacher);
+    }
+
+    @GetMapping("/{teacherId}/course-sections")
+    public ResponseEntity<CollectionModel<EntityModel<CourseSectionSummaryDto>>> findCourseSectionsByTeacher(@PathVariable Long teacherId) {
+        List<CourseSectionSummaryDto> sections = teacherService.findCourseSectionsByTeacherId(teacherId);
+
+        List<EntityModel<CourseSectionSummaryDto>> sectionModels = sections.stream()
+                .map(section -> EntityModel.of(section,
+                        linkTo(methodOn(CourseSectionController.class).findById(section.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(CollectionModel.of(sectionModels));
     }
 }

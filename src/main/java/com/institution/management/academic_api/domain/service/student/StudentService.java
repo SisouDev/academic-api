@@ -16,5 +16,5 @@ public interface StudentService {
 
     StudentResponseDto update(Long id, UpdateStudentRequestDto request);
 
-    void updateStatus(Long id, String status);
+    StudentResponseDto updateStatus(Long id, String status);
 }

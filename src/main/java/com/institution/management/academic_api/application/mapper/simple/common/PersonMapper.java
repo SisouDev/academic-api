@@ -8,13 +8,14 @@ import com.institution.management.academic_api.application.dto.student.StudentRe
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
 import com.institution.management.academic_api.application.mapper.simple.employee.EmployeeMapper;
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionAdminMapper;
-import com.institution.management.academic_api.application.mapper.wrappers.student.StudentMapperWrapper;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
+import com.institution.management.academic_api.application.mapper.wrappers.student.StudentMapperWrapper;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.institution.InstitutionAdmin;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
+import org.hibernate.Hibernate;
 import org.mapstruct.*;
 
 
@@ -45,12 +46,14 @@ public interface PersonMapper {
 
     @ObjectFactory
     default PersonResponseDto resolvePersonSubclass(Person person) {
-        return switch (person) {
+        final Object realObject = Hibernate.unproxy(person);
+
+        return switch (realObject) {
             case Student student -> new StudentResponseDto();
             case Teacher teacher -> new TeacherResponseDto();
             case Employee employee -> new EmployeeResponseDto();
             case InstitutionAdmin institutionAdmin -> new InstitutionAdminResponseDto();
-            default -> throw new IllegalArgumentException("Unknown person subtype: " + person.getClass());
+            default -> throw new IllegalArgumentException("Unknown person subtype: " + realObject.getClass());
         };
     }
 }

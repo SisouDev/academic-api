@@ -9,14 +9,17 @@ import com.institution.management.academic_api.application.mapper.simple.common.
 import com.institution.management.academic_api.application.mapper.simple.student.StudentMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
 import com.institution.management.academic_api.domain.repository.student.StudentRepository;
+import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.student.StudentService;
 import com.institution.management.academic_api.domain.service.user.UserService;
 import com.institution.management.academic_api.exception.type.common.EmailAlreadyExists;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.student.StudentNotFoundException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
@@ -38,6 +41,7 @@ public class StudentServiceImpl implements StudentService {
     private final RoleRepository roleRepository;
     private final StudentMapper studentMapper;
     private final PersonMapper personMapper;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -94,10 +98,20 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional
-    public void updateStatus(Long id, String status) {
+    public StudentResponseDto updateStatus(Long id, String status) {
         Student studentToUpdate = findStudentByIdOrThrow(id);
+
         PersonStatus newStatus = PersonStatus.valueOf(status.toUpperCase());
+
+        User userToUpdate = userRepository.findByPerson(studentToUpdate)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado para o aluno com ID: " + id));
+
         studentToUpdate.setStatus(newStatus);
+        userToUpdate.setActive(newStatus == PersonStatus.ACTIVE);
+
+        studentRepository.save(studentToUpdate);
+        userRepository.save(userToUpdate);
+        return studentMapper.toResponseDto(studentToUpdate);
     }
 
     private Institution findInstitutionByIdOrThrow(Long id) {

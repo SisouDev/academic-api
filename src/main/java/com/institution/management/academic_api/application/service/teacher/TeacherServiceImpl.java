@@ -1,11 +1,13 @@
 package com.institution.management.academic_api.application.service.teacher;
 
 import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
+import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
+import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
@@ -38,6 +40,7 @@ public class TeacherServiceImpl implements TeacherService {
     private final UserService userService;
     private final PersonMapper personMapper;
     private final RoleRepository roleRepository;
+    private final CourseSectionMapper courseSectionMapper;
 
     @Override
     @Transactional
@@ -102,5 +105,14 @@ public class TeacherServiceImpl implements TeacherService {
     private Teacher findTeacherByIdOrThrow(Long id) {
         return teacherRepository.findById(id)
                 .orElseThrow(() -> new TeacherNotFoundException("Teacher not found with id: " + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSectionSummaryDto> findCourseSectionsByTeacherId(Long teacherId) {
+        Teacher teacher = findTeacherByIdOrThrow(teacherId);
+        return teacher.getCourseSections().stream()
+                .map(courseSectionMapper::toSummaryDto)
+                .toList();
     }
 }

@@ -10,6 +10,12 @@ public record PersonSummaryDto(
         @Schema(description = "Nome completo.", example = "Ana Souza")
         String fullName,
 
+        @Schema(description = "Email de contato.", example = "ana.souza@example.com")
+        String email,
+
+        @Schema(description = "Status da pessoa no sistema.", example = "ACTIVE")
+        String status,
+
         @Schema(description = "Tipo da pessoa.", example = "STUDENT")
         String personType
 ) {}

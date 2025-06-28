@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.application.dto.user;
 
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
+import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
 import com.institution.management.academic_api.application.dto.common.RoleDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -18,7 +18,7 @@ public record UserResponseDto(
         boolean active,
 
         @Schema(description = "Informações da pessoa vinculada a esta conta.")
-        PersonSummaryDto person,
+        PersonResponseDto person,
 
         @Schema(description = "Perfis de acesso (Roles) do usuário.")
         Set<RoleDto> roles
