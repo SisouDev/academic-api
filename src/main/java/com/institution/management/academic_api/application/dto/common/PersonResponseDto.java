@@ -59,5 +59,7 @@ public abstract class PersonResponseDto {
 
     private InstitutionSummaryDto institution;
 
+    private String profilePictureUrl;
+
     public abstract String getPersonType();
 }

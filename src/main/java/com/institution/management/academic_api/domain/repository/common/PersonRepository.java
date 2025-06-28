@@ -6,6 +6,7 @@ import com.institution.management.academic_api.domain.model.enums.common.PersonS
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,4 +33,8 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     List<Person> findAllStaffByInstitutionId(@Param("institutionId") Long institutionId);
 
     boolean existsByEmail(String mail);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Person p SET p.profilePictureUrl = :url WHERE p.id = :id")
+    void updateProfilePictureUrl(@Param("id") Long id, @Param("url") String url);
 }

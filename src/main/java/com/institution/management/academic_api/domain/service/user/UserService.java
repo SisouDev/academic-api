@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.domain.service.user;
 
 import com.institution.management.academic_api.application.dto.user.*;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     UserResponseDto create(CreateUserRequestDto request);
@@ -12,4 +13,6 @@ public interface UserService {
     void updateStatus(Long userId, UpdateUserStatusRequestDto request);
 
     UserResponseDto assignRoles(Long userId, UpdateUserRolesRequestDto request);
+
+    void updateProfilePicture(Long userId, MultipartFile file);
 }

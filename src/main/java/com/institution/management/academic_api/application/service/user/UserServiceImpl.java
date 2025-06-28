@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.service.user;
 
 import com.institution.management.academic_api.application.dto.user.*;
 import com.institution.management.academic_api.application.mapper.simple.user.UserMapper;
+import com.institution.management.academic_api.application.service.FileStorageService;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
 import com.institution.management.academic_api.domain.model.entities.user.User;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional
@@ -104,5 +107,16 @@ public class UserServiceImpl implements UserService {
 
         user.setRoles(newRoles);
         return userMapper.toResponseDto(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateProfilePicture(Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        String fileUrl = fileStorageService.store(file);
+
+        personRepository.updateProfilePictureUrl(user.getPerson().getId(), fileUrl);
     }
 }

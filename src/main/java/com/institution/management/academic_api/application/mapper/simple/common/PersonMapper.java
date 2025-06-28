@@ -27,6 +27,7 @@ import org.mapstruct.*;
 })
 public interface PersonMapper {
 
+    @Mapping(target = "profilePictureUrl", source = "profilePictureUrl")
     @SubclassMapping(source = Student.class, target = StudentResponseDto.class)
     @SubclassMapping(source = Teacher.class, target = TeacherResponseDto.class)
     @SubclassMapping(source = Employee.class, target = EmployeeResponseDto.class)

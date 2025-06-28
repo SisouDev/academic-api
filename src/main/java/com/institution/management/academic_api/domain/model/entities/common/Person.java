@@ -33,10 +33,16 @@ public abstract class Person {
 
     @Column
     private String email;
+
+    @Column
+    private String profilePictureUrl;
+
     @Column
     private String phone;
+
     @Enumerated(EnumType.STRING)
     private PersonStatus status;
+
     @Column
     private LocalDateTime createdAt;
 

@@ -1,0 +1,1 @@
+ALTER TABLE people ADD COLUMN profile_picture_url VARCHAR(255);

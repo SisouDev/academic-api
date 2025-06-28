@@ -11,6 +11,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -52,6 +53,15 @@ public class UserController {
             @RequestBody @Valid ChangePasswordRequestDto request
     ) {
         userService.changePassword(currentUser.getId(), request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/me/avatar")
+    public ResponseEntity<Void> uploadProfilePicture(
+            @AuthenticationPrincipal com.institution.management.academic_api.domain.model.entities.user.User currentUser,
+            @RequestParam("file") MultipartFile file) {
+
+        userService.updateProfilePicture(currentUser.getId(), file);
         return ResponseEntity.ok().build();
     }
 }
