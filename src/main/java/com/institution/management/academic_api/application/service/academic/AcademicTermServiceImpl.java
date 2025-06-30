@@ -12,6 +12,7 @@ import com.institution.management.academic_api.domain.repository.institution.Ins
 import com.institution.management.academic_api.domain.service.academic.AcademicTermService;
 import com.institution.management.academic_api.exception.type.academic.AcademicTermAlreadyExistsException;
 import com.institution.management.academic_api.exception.type.academic.AcademicTermStatusChangeNotAllowedException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class AcademicTermServiceImpl implements AcademicTermService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo período acadêmico.")
     public AcademicTermDetailsDto create(AcademicTermRequestDto request) {
         Institution institution = institutionRepository.findById(request.institutionId())
                 .orElseThrow(() -> new EntityNotFoundException("Institution not found with id: " + request.institutionId()));
@@ -64,6 +66,7 @@ public class AcademicTermServiceImpl implements AcademicTermService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um período acadêmico.")
     public AcademicTermDetailsDto update(Long id, UpdateAcademicTermRequestDto request) {
         AcademicTerm academicTermToUpdate = academicTermRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Academic Term not found with id: " + id));
@@ -75,6 +78,7 @@ public class AcademicTermServiceImpl implements AcademicTermService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou um período acadêmico.")
     public void delete(Long id) {
         AcademicTerm academicTermToDelete = academicTermRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Academic Term not found with id: " + id));

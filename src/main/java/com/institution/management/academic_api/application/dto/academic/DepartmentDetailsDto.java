@@ -15,5 +15,14 @@ public record DepartmentDetailsDto(
         String acronym,
 
         @Schema(description = "Lista de cursos oferecidos por este departamento.")
-        List<CourseSummaryDto> courses
+        List<CourseSummaryDto> courses,
+
+        @Schema(description = "Total de cursos neste departamento.", example = "8")
+        int courseCount,
+
+        @Schema(description = "Total de professores associados aos cursos deste departamento.", example = "35")
+        long teacherCount,
+
+        @Schema(description = "Total de alunos matriculados nos cursos deste departamento.", example = "450")
+        long studentCount
 ) {}

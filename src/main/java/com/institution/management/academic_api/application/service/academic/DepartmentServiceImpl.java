@@ -12,6 +12,7 @@ import com.institution.management.academic_api.domain.repository.institution.Ins
 import com.institution.management.academic_api.domain.service.academic.DepartmentService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo departamento acadêmico.")
     public DepartmentDetailsDto create(DepartmentRequestDto request) {
         Institution institution = findInstitutionByIdOrThrow(request.institutionId());
         if(departmentRepository.existsByNameAndInstitution(request.name(), institution)){
@@ -63,6 +65,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um departamento acadêmico.")
     public DepartmentDetailsDto update(Long id, UpdateDepartmentRequestDto request) {
         Department departmentToUpdate = findDepartmentByIdOrThrow(id);
         departmentMapper.updateFromDto(request, departmentToUpdate);
@@ -72,6 +75,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou um departamento acadêmico.")
     public void delete(Long id) {
         Department departmentToDelete = findDepartmentByIdOrThrow(id);
         departmentRepository.delete(departmentToDelete);

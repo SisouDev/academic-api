@@ -4,6 +4,7 @@ import com.institution.management.academic_api.application.dto.auth.LoginRequest
 import com.institution.management.academic_api.application.dto.auth.LoginResponseDto;
 import com.institution.management.academic_api.application.dto.user.UserSummaryDto;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import com.institution.management.academic_api.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +21,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
 
     @Transactional
+    @LogActivity("Fez login.")
     public LoginResponseDto login(LoginRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

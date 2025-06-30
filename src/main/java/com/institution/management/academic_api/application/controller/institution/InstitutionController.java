@@ -2,7 +2,6 @@ package com.institution.management.academic_api.application.controller.instituti
 
 import com.institution.management.academic_api.application.controller.academic.AcademicTermController;
 import com.institution.management.academic_api.application.controller.academic.DepartmentController;
-import com.institution.management.academic_api.application.controller.employee.EmployeeController;
 import com.institution.management.academic_api.application.controller.student.StudentController;
 import com.institution.management.academic_api.application.controller.teacher.TeacherController;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionRequestDto;
@@ -44,7 +43,6 @@ public class InstitutionController {
         EntityModel<InstitutionDetailsDto> model = EntityModel.of(institution,
                 linkTo(methodOn(InstitutionController.class).findById(id)).withSelfRel(),
                 linkTo(methodOn(DepartmentController.class).findAllByInstitution(id)).withRel("departments"),
-                linkTo(methodOn(EmployeeController.class).findAllByInstitution(id)).withRel("employees"),
                 linkTo(methodOn(StudentController.class).findAllByInstitution(id)).withRel("students"),
                 linkTo(methodOn(TeacherController.class).findAllByInstitution(id)).withRel("teachers"),
                 linkTo(methodOn(AcademicTermController.class).findAllByInstitution(id)).withRel("academic-terms")

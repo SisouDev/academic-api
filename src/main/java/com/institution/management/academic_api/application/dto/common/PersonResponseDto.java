@@ -61,5 +61,10 @@ public abstract class PersonResponseDto {
 
     private String profilePictureUrl;
 
+    private String phone;
+
+    @Schema(description = "Endereço completo formatado como uma única string.", example = "Rua das Flores, 123, São Paulo - SP")
+    private String formattedAddress;
+
     public abstract String getPersonType();
 }

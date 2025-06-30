@@ -23,6 +23,7 @@ import com.institution.management.academic_api.exception.type.common.EntityNotFo
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.student.StudentNotFoundException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo aluno")
     public StudentResponseDto create(CreateStudentRequestDto request) {
         Institution institution = findInstitutionByIdOrThrow(request.institutionId());
         if (studentRepository.existsByEmail(request.email())){
@@ -89,6 +91,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um aluno")
     public StudentResponseDto update(Long id, UpdateStudentRequestDto request) {
         Student studentToUpdate = findStudentByIdOrThrow(id);
         studentMapper.updateFromDto(request, studentToUpdate);
@@ -97,7 +100,8 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
+    @LogActivity("Alterou o status de um aluno")
     public StudentResponseDto updateStatus(Long id, String status) {
         Student studentToUpdate = findStudentByIdOrThrow(id);
 

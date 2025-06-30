@@ -6,10 +6,8 @@ import com.institution.management.academic_api.application.dto.course.CreateCour
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
-import com.institution.management.academic_api.domain.model.entities.course.Course;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
-import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
@@ -19,14 +17,13 @@ import com.institution.management.academic_api.domain.repository.course.SubjectR
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.service.course.CourseSectionService;
 import com.institution.management.academic_api.exception.type.academic.AcademicTermNotFoundException;
-import com.institution.management.academic_api.exception.type.common.EmailAlreadyExists;
 import com.institution.management.academic_api.exception.type.common.InvalidOperationException;
 import com.institution.management.academic_api.exception.type.course.CourseSectionAlreadyExistsInCourseException;
 import com.institution.management.academic_api.exception.type.course.CourseSectionNotFoundException;
 import com.institution.management.academic_api.exception.type.course.SubjectNotFoundException;
-import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.teacher.TeacherNotAvailableException;
 import com.institution.management.academic_api.exception.type.teacher.TeacherNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +42,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou uma nova seção de curso.")
     public CourseSectionDetailsDto create(CreateCourseSectionRequestDto request) {
         AcademicTerm academicTerm = findAcademicTermByIdOrThrow(request.academicTermId());
         if (academicTerm.getStatus() != AcademicTermStatus.PLANNING && academicTerm.getStatus() != AcademicTermStatus.ENROLLMENT_OPEN) {
@@ -86,6 +84,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou uma seção de curso.")
     public CourseSectionDetailsDto update(Long id, UpdateCourseSectionRequestDto request) {
         CourseSection courseSectionToUpdate = findCourseSectionByIdOrThrow(id);
         courseSectionMapper.updateFromDto(request, courseSectionToUpdate);
@@ -95,6 +94,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou uma seção de curso.")
     public void delete(Long id) {
         CourseSection courseSectionToDelete = findCourseSectionByIdOrThrow(id);
         courseSectionRepository.delete(courseSectionToDelete);

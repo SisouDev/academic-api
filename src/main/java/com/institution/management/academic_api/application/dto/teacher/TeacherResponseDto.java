@@ -19,6 +19,12 @@ public class TeacherResponseDto extends PersonResponseDto {
     @Schema(description = "Lista de turmas (resumidas) que este professor está lecionando.")
     private List<CourseSectionSummaryDto> courseSections;
 
+    @Schema(description = "Lista de disciplinas únicas que o professor leciona.")
+    private List<TaughtSubjectDto> taughtSubjects;
+
+    @Schema(description = "Quantidade total de turmas ativas do professor.", example = "3")
+    private int totalActiveSections;
+
     @Override
     public String getPersonType() {
         return "TEACHER";

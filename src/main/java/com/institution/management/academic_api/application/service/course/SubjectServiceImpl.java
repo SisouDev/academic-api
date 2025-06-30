@@ -13,6 +13,7 @@ import com.institution.management.academic_api.domain.service.course.SubjectServ
 import com.institution.management.academic_api.exception.type.course.CourseNotFoundException;
 import com.institution.management.academic_api.exception.type.course.SubjectAlreadyExistsInCourseException;
 import com.institution.management.academic_api.exception.type.course.SubjectNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo tópico para o curso.")
     public SubjectDetailsDto create(CreateSubjectRequestDto request) {
         Course course = findCourseByIdOrThrow(request.courseId());
         if (subjectRepository.existsByNameAndCourse(request.name(), course)){
@@ -60,6 +62,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um tópico para o curso.")
     public SubjectDetailsDto update(Long id, UpdateSubjectRequestDto request) {
         Subject subjectToUpdate = findSubjectByIdOrThrow(id);
         subjectMapper.updateFromDto(request, subjectToUpdate);
@@ -69,6 +72,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou um tópico para o curso.")
     public void delete(Long id) {
         Subject subjectToDelete = findSubjectByIdOrThrow(id);
         subjectRepository.delete(subjectToDelete);

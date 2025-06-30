@@ -18,6 +18,10 @@ import org.mapstruct.*;
 })
 public interface EnrollmentMapper {
 
+    @Mapping(target = "status", source = "status.displayName")
+    @Mapping(target = "courseSection", source = "courseSection")
+    @Mapping(target = "teacher", source = "courseSection.teacher")
+    @Mapping(target = "courseSectionInfo", source = "courseSection")
     EnrollmentSummaryDto toSummaryDto(Enrollment enrollment);
 
     EnrollmentDetailsDto toDetailsDto(Enrollment enrollment);

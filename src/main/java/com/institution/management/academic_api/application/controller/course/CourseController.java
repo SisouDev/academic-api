@@ -1,6 +1,5 @@
 package com.institution.management.academic_api.application.controller.course;
 
-import com.institution.management.academic_api.application.controller.academic.DepartmentController;
 import com.institution.management.academic_api.application.dto.course.CourseDetailsDto;
 import com.institution.management.academic_api.application.dto.course.CourseSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseRequestDto;
@@ -39,8 +38,7 @@ public class CourseController {
 
         EntityModel<CourseDetailsDto> courseModel = EntityModel.of(course,
                 linkTo(methodOn(CourseController.class).findById(id)).withSelfRel(),
-                linkTo(methodOn(SubjectController.class).findAllByCourse(id)).withRel("subjects"),
-                linkTo(methodOn(DepartmentController.class).findById(course.department().id())).withRel("department")
+                linkTo(methodOn(SubjectController.class).findAllByCourse(id)).withRel("subjects")
         );
 
         return ResponseEntity.ok(courseModel);

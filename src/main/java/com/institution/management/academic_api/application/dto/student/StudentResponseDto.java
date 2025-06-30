@@ -22,6 +22,12 @@ public class StudentResponseDto extends PersonResponseDto {
     @Schema(description = "Lista de matrículas (resumidas) do aluno.")
     private List<EnrollmentSummaryDto> enrollments;
 
+    @Schema(description = "Média geral do aluno em todas as disciplinas.", example = "8.5")
+    private double generalAverage;
+
+    @Schema(description = "Total de faltas acumuladas do aluno em todas as disciplinas.", example = "12")
+    private int totalAbsences;
+
     @Override
     public String getPersonType() {
         return "STUDENT";

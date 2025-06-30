@@ -11,6 +11,7 @@ import com.institution.management.academic_api.domain.repository.teacher.LessonP
 import com.institution.management.academic_api.domain.service.teacher.LessonPlanService;
 import com.institution.management.academic_api.exception.type.teacher.LessonPlanAlreadyExistsException;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo plano de aula.")
     public LessonPlanDto create(CreateLessonPlanRequestDto request) {
         CourseSection courseSection = courseSectionRepository.findById(request.courseSectionId())
                 .orElseThrow(() -> new EntityNotFoundException("CourseSection not found..."));
@@ -41,6 +43,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um plano de aula.")
     public LessonPlanDto update(Long lessonPlanId, UpdateLessonPlanRequestDto request) {
         LessonPlan lessonPlanToUpdate = lessonPlanRepository.findById(lessonPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("LessonPlan not found..."));
@@ -61,6 +64,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou um plano de aula.")
     public void delete(Long lessonPlanId) {
         if (!lessonPlanRepository.existsById(lessonPlanId)) {
             throw new EntityNotFoundException("LessonPlan not found with id: " + lessonPlanId);

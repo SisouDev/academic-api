@@ -12,6 +12,7 @@ import com.institution.management.academic_api.domain.repository.course.CourseRe
 import com.institution.management.academic_api.domain.service.course.CourseService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.course.CourseNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo curso.")
     public CourseDetailsDto create(CreateCourseRequestDto request) {
         Department department = findDepartmentByIdOrThrow(request.departmentId());
         if (courseRepository.existsByNameAndDepartment(request.name(), department)){
@@ -61,6 +63,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um curso.")
     public CourseDetailsDto update(Long id, UpdateCourseRequestDto request) {
         Course courseToUpdate = findCourseByIdOrThrow(id);
         courseMapper.updateFromDto(request, courseToUpdate);
@@ -70,6 +73,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou um curso.")
     public void delete(Long id) {
         Course courseToDelete = findCourseByIdOrThrow(id);
         courseRepository.delete(courseToDelete);

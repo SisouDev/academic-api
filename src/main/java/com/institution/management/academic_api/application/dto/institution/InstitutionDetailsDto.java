@@ -31,7 +31,20 @@ public record InstitutionDetailsDto(
         Integer membersCount,
 
         @Schema(description = "Lista dos administradores principais da instituição.")
-        List<PersonSummaryDto> admins
+        List<PersonSummaryDto> admins,
+
+        @Schema(description = "Endereço completo formatado.", example = "Rua Principal, 123 - Centro, São Paulo - SP")
+        String formattedAddress,
+
+        @Schema(description = "Total de alunos na instituição.", example = "3500")
+        long studentCount,
+
+        @Schema(description = "Total de professores na instituição.", example = "250")
+        long teacherCount,
+
+        @Schema(description = "Total de cursos oferecidos na instituição.", example = "42")
+        long courseCount
+
 ) {}
 
 

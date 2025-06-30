@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.domain.model.entities.employee;
 
+import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.enums.common.PersonType;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
@@ -24,6 +25,11 @@ public class Employee extends Person {
 
     @Column
     private LocalDate hiringDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    @ToString.Exclude
+    private Department department;
 
     @Override
     public PersonType getPersonType() {

@@ -20,5 +20,8 @@ public record UpdateEmployeeRequestDto(
         LocalDate hiringDate,
 
         String firstName,
-        String lastName
+        String lastName,
+
+        @Schema(description = "Novo ID do departamento.", example = "2")
+        Long departmentId
 ) {}

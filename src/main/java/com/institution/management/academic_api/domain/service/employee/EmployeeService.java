@@ -1,13 +1,14 @@
 package com.institution.management.academic_api.domain.service.employee;
+
 import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
+import com.institution.management.academic_api.application.dto.employee.EmployeeSummaryDto;
 import com.institution.management.academic_api.application.dto.employee.UpdateEmployeeRequestDto;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionAdminRequestDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionAdminResponseDto;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface EmployeeService {
     EmployeeResponseDto createEmployee(CreateEmployeeRequestDto request);
@@ -16,9 +17,10 @@ public interface EmployeeService {
 
     PersonResponseDto findById(Long id);
 
-    List<PersonSummaryDto> findAllByInstitution(Long institutionId);
 
     EmployeeResponseDto update(Long id, UpdateEmployeeRequestDto request);
 
     void delete(Long id);
+
+    Page<EmployeeSummaryDto> findPaginated(Long institutionId, Pageable pageable);
 }

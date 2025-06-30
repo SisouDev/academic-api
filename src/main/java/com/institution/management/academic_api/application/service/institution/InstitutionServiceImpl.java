@@ -11,6 +11,7 @@ import com.institution.management.academic_api.domain.service.institution.Instit
 import com.institution.management.academic_api.exception.type.institution.InstitutionAlreadyExistsException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionCannotBeDeletedException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class InstitutionServiceImpl implements InstitutionService {
 
     @Override
     @Transactional
+    @LogActivity("Criou uma nova instituição.")
     public InstitutionDetailsDto create(CreateInstitutionRequestDto request) {
         institutionRepository.findByRegisterId(request.registerId()).ifPresent(inst -> {
             throw new InstitutionAlreadyExistsException("An institution with the registration ID " + request.registerId() + " already exists.");
@@ -54,6 +56,7 @@ public class InstitutionServiceImpl implements InstitutionService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou uma instituição.")
     public InstitutionDetailsDto update(Long id, UpdateInstitutionRequestDto request) {
         Institution institutionToUpdate = findInstitutionByIdOrThrow(id);
 
@@ -65,6 +68,7 @@ public class InstitutionServiceImpl implements InstitutionService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou uma instituição.")
     public void delete(Long id) {
         Institution institutionToDelete = findInstitutionByIdOrThrow(id);
         if (!institutionToDelete.getDepartments().isEmpty() || !institutionToDelete.getMembers().isEmpty()) {

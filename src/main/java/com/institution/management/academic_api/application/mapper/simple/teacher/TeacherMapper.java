@@ -1,15 +1,30 @@
 package com.institution.management.academic_api.application.mapper.simple.teacher;
 
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.TaughtSubjectDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
+import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import org.mapstruct.*;
+import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {CourseSectionMapper.class})
 public interface TeacherMapper {
 
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "firstName", source = "firstName")
+    @Mapping(target = "lastName", source = "lastName")
+    @Mapping(target = "email", source = "email")
+    @Mapping(target = "status", source = "status.displayName")
+    @Mapping(target = "academicBackground", source = "academicBackground.displayName")
+    @Mapping(target = "courseSections", source = "courseSections")
+    @Mapping(target = "taughtSubjects", source = "courseSections", qualifiedByName = "mapToTaughtSubjects")
+    @Mapping(target = "totalActiveSections", source = "courseSections", qualifiedByName = "countActiveSections")
     TeacherResponseDto toResponseDto(Teacher teacher);
 
     @Mapping(target = "id", ignore = true)
@@ -30,4 +45,31 @@ public interface TeacherMapper {
     @Mapping(target = "courseSections", ignore = true)
     void updateFromDto(UpdateTeacherRequestDto dto, @MappingTarget Teacher entity);
 
+    @Named("mapToTaughtSubjects")
+    default List<TaughtSubjectDto> mapToTaughtSubjects(List<CourseSection> courseSections) {
+        if (courseSections == null) {
+            return Collections.emptyList();
+        }
+        return courseSections.stream()
+                .map(CourseSection::getSubject)
+                .distinct()
+                .map(subject -> new TaughtSubjectDto(
+                        subject.getName(),
+                        subject.getCourse().getName()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Named("countActiveSections")
+    default int countActiveSections(List<CourseSection> courseSections) {
+        if (courseSections == null) {
+            return 0;
+        }
+        return (int) courseSections.stream()
+                .filter(section ->
+                        section != null && section.getAcademicTerm() != null
+                                && section.getAcademicTerm().getStatus() == AcademicTermStatus.IN_PROGRESS
+                )
+                .count();
+    }
 }

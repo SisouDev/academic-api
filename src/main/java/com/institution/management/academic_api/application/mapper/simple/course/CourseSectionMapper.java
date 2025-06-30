@@ -4,9 +4,11 @@ import com.institution.management.academic_api.application.dto.course.CourseSect
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
+import com.institution.management.academic_api.application.dto.student.EnrolledCourseSectionInfo;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.application.mapper.wrappers.academic.AcademicTermMapperWrapper;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
+import com.institution.management.academic_api.domain.model.entities.course.Subject;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -44,5 +46,24 @@ public interface CourseSectionMapper {
     @Mapping(target = "enrollments", ignore = true)
     void updateFromDto(UpdateCourseSectionRequestDto dto, @MappingTarget CourseSection entity);
 
+    @Mapping(target = "sectionName", source = "name")
+    @Mapping(target = "subjectName", source = "subject.name")
+    @Mapping(target = "courseName", source = "subject", qualifiedByName = "getCourseNameFromSubject")
+    EnrolledCourseSectionInfo toEnrolledInfo(CourseSection courseSection);
 
+    @Named("getCourseNameFromSubject")
+    default String getCourseNameFromSubject(Subject subject) {
+        if (subject == null || subject.getCourse() == null) {
+            return null;
+        }
+        return subject.getCourse().getName();
+    }
+
+    @Named("getCourseName")
+    default String getCourseName(Subject subject) {
+        if (subject == null || subject.getCourse() == null) {
+            return null;
+        }
+        return subject.getCourse().getName();
+    }
 }

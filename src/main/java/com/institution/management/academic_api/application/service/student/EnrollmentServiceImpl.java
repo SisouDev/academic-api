@@ -18,6 +18,7 @@ import com.institution.management.academic_api.exception.type.common.InvalidOper
 import com.institution.management.academic_api.exception.type.course.CourseSectionNotFoundException;
 import com.institution.management.academic_api.exception.type.student.EnrollmentNotFoundException;
 import com.institution.management.academic_api.exception.type.student.StudentNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     @Transactional
+    @LogActivity("Matriculou um novo aluno.")
     public EnrollmentDetailsDto enrollStudent(CreateEnrollmentRequestDto request) {
         Student student = findStudentByIdOrThrow(request.studentId());
         CourseSection courseSection = findCourseSectionByIdOrThrow(request.courseSectionId());
@@ -78,6 +80,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou a matrícula de um aluno.")
     public void updateEnrollmentStatus(Long id, UpdateEnrollmentRequestDto request) {
         Enrollment enrollmentToUpdate = findEnrollmentByIdOrThrow(id);
         if (request.status() != null && !request.status().isBlank()) {
@@ -91,6 +94,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     @Transactional
+    @LogActivity("Registrou a presença de um aluno.")
     public void recordAttendance(CreateAttendanceRecordRequestDto request) {
         Enrollment enrollment = findEnrollmentByIdOrThrow(request.enrollmentId());
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {

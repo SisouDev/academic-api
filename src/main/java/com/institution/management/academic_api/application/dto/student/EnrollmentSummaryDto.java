@@ -12,5 +12,8 @@ public record EnrollmentSummaryDto(
         String status,
 
         @Schema(description = "Informações da turma (Course Section) desta matrícula.")
-        CourseSectionSummaryDto courseSection
+        CourseSectionSummaryDto courseSection,
+
+        EnrolledCourseSectionInfo courseSectionInfo,
+        EnrolledTeacherInfo teacher
 ) {}

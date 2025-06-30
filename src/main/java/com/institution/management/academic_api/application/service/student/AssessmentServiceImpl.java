@@ -13,6 +13,7 @@ import com.institution.management.academic_api.domain.service.student.Assessment
 import com.institution.management.academic_api.exception.type.common.InvalidOperationException;
 import com.institution.management.academic_api.exception.type.student.AssessmentNotFoundException;
 import com.institution.management.academic_api.exception.type.student.EnrollmentNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
     @Override
     @Transactional
+    @LogActivity("Criou uma nova avaliação.")
     public AssessmentDto addAssessmentToEnrollment(CreateAssessmentRequestDto request) {
         Enrollment enrollment = findEnrollmentByIdOrThrow(request.enrollmentId());
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE){
@@ -42,6 +44,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou uma avaliação.")
     public AssessmentDto updateAssessment(Long assessmentId, UpdateAssessmentRequestDto request) {
         Assessment assessmentToUpdate = findAssessmentByIdOrThrow(assessmentId);
         assessmentMapper.updateFromDto(request, assessmentToUpdate);
@@ -51,6 +54,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou uma avaliação.")
     public void deleteAssessment(Long assessmentId) {
         Assessment assessmentToDelete = findAssessmentByIdOrThrow(assessmentId);
         assessmentRepository.delete(assessmentToDelete);

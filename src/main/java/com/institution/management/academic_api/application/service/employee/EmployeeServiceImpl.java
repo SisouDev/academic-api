@@ -1,9 +1,9 @@
 package com.institution.management.academic_api.application.service.employee;
 
 import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
+import com.institution.management.academic_api.application.dto.employee.EmployeeSummaryDto;
 import com.institution.management.academic_api.application.dto.employee.UpdateEmployeeRequestDto;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionAdminRequestDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionAdminResponseDto;
@@ -30,13 +30,15 @@ import com.institution.management.academic_api.exception.type.employee.EmployeeN
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
 import com.institution.management.academic_api.exception.type.user.UserNotFoundException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -55,6 +57,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
+    @LogActivity("Criou um novo funcionário.")
     public EmployeeResponseDto createEmployee(CreateEmployeeRequestDto request) {
         Institution institution = findInstitutionByIdOrThrow(request.institutionId());
         if (employeeRepository.existsEmployeeByEmail(request.email())){
@@ -85,6 +88,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
+    @LogActivity("Criou um novo funcionário administrador.")
     public InstitutionAdminResponseDto createAdmin(CreateInstitutionAdminRequestDto request) {
         Institution institution = findInstitutionByIdOrThrow(request.institutionId());
         if (institutionAdminRepository.existsInstitutionAdminByEmail((request.email()))) {
@@ -123,17 +127,20 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<PersonSummaryDto> findAllByInstitution(Long institutionId) {
-        List<Person> staffMembers = personRepository.findAllStaffByInstitutionId(institutionId);
+    public Page<EmployeeSummaryDto> findPaginated(Long institutionId, Pageable pageable) {
+        Page<Employee> employeePage;
 
-        return staffMembers.stream()
-                .map(personMapper::toSummaryDto)
-                .toList();
+        if (institutionId != null) {
+            employeePage = employeeRepository.findByInstitutionId(institutionId, pageable);
+        } else {
+            employeePage = employeeRepository.findAll(pageable);
+        }
+        return employeePage.map(employeeMapper::toSummaryDto);
     }
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um funcionário.")
     public EmployeeResponseDto update(Long id, UpdateEmployeeRequestDto request) {
         Employee employeeToUpdate = findEmployeeByIdOrThrow(id);
         employeeMapper.updateFromDto(request, employeeToUpdate);
@@ -143,11 +150,17 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
+    @LogActivity("Deletou um funcionário.")
     public void delete(Long id) {
         if (!personRepository.existsById(id)) {
             throw new UserNotFoundException("Staff member not found with ID: " + id);
         }
         personRepository.deleteById(id);
+    }
+
+    public Page<EmployeeSummaryDto> findAllPaginated(Pageable pageable) {
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+        return employeePage.map(employeeMapper::toSummaryDto);
     }
 
     private Institution findInstitutionByIdOrThrow(Long id) {

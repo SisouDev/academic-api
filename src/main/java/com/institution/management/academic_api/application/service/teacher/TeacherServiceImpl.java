@@ -23,6 +23,7 @@ import com.institution.management.academic_api.exception.type.common.EmailAlread
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.teacher.TeacherNotFoundException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
+import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +45,7 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     @Transactional
+    @LogActivity("Cadastrou um novo professor")
     public TeacherResponseDto create(CreateTeacherRequestDto request) {
         Institution institution = findInstitutionByIdOrThrow(request.institutionId());
         if (teacherRepository.existsByEmail(request.email())){
@@ -90,6 +92,7 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     @Transactional
+    @LogActivity("Atualizou um professor")
     public TeacherResponseDto update(Long id, UpdateTeacherRequestDto request) {
         Teacher teacherToUpdate = findTeacherByIdOrThrow(id);
         teacherMapper.updateFromDto(request, teacherToUpdate);

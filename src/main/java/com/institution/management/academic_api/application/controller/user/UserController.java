@@ -4,6 +4,7 @@ import com.institution.management.academic_api.application.dto.user.ChangePasswo
 import com.institution.management.academic_api.application.dto.user.UpdateUserRolesRequestDto;
 import com.institution.management.academic_api.application.dto.user.UpdateUserStatusRequestDto;
 import com.institution.management.academic_api.application.dto.user.UserResponseDto;
+import com.institution.management.academic_api.domain.model.entities.common.ActivityLog;
 import com.institution.management.academic_api.domain.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -64,4 +67,11 @@ public class UserController {
         userService.updateProfilePicture(currentUser.getId(), file);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{id}/activities")
+    public ResponseEntity<List<ActivityLog>> getUserActivities(@PathVariable Long id) {
+        List<ActivityLog> activities = userService.findUserActivity(id);
+        return ResponseEntity.ok(activities);
+    }
+
 }
