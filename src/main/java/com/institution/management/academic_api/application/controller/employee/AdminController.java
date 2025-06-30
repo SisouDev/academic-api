@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.application.controller.employee;
 
+import com.institution.management.academic_api.application.dto.common.ActivityLogDto;
 import com.institution.management.academic_api.application.dto.course.CourseStudentCountDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionDetailsDto;
 import com.institution.management.academic_api.application.service.employee.AdminService;
@@ -34,5 +35,10 @@ public class AdminController {
     public ResponseEntity<Void> resetUserPassword(@PathVariable Long userId) {
         userService.adminResetPassword(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/recent-activity")
+    public ResponseEntity<List<ActivityLogDto>> getRecentActivity() {
+        return ResponseEntity.ok(adminService.getRecentActivityLogs());
     }
 }
