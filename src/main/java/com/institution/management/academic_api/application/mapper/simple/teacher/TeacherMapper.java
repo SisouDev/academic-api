@@ -1,14 +1,12 @@
 package com.institution.management.academic_api.application.mapper.simple.teacher;
 
-import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
-import com.institution.management.academic_api.application.dto.teacher.TaughtSubjectDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
-import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.*;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
-import org.mapstruct.*;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
+import org.mapstruct.*;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,6 +42,10 @@ public interface TeacherMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "courseSections", ignore = true)
     void updateFromDto(UpdateTeacherRequestDto dto, @MappingTarget Teacher entity);
+
+    @Mapping(target = "academicBackground", source = "academicBackground.displayName")
+    @Mapping(target = "status", source = "status.displayName")
+    TeacherSummaryDto toSummaryDto(Teacher teacher);
 
     @Named("mapToTaughtSubjects")
     default List<TaughtSubjectDto> mapToTaughtSubjects(List<CourseSection> courseSections) {

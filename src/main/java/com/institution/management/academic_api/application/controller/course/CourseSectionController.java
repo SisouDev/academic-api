@@ -1,7 +1,6 @@
 package com.institution.management.academic_api.application.controller.course;
 
 import com.institution.management.academic_api.application.controller.academic.AcademicTermController;
-import com.institution.management.academic_api.application.controller.teacher.TeacherController;
 import com.institution.management.academic_api.application.dto.course.CourseSectionDetailsDto;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
@@ -41,8 +40,7 @@ public class CourseSectionController {
         EntityModel<CourseSectionDetailsDto> sectionModel = EntityModel.of(section,
                 linkTo(methodOn(CourseSectionController.class).findById(id)).withSelfRel(),
                 linkTo(methodOn(AcademicTermController.class).findById(section.academicTerm().id())).withRel("academic-term"),
-                linkTo(methodOn(SubjectController.class).findById(section.subject().id())).withRel("subject"),
-                linkTo(methodOn(TeacherController.class).findById(section.teacher().id())).withRel("teacher")
+                linkTo(methodOn(SubjectController.class).findById(section.subject().id())).withRel("subject")
         );
 
         return ResponseEntity.ok(sectionModel);

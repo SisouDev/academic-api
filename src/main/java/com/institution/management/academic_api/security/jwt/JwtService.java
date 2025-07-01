@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.security.jwt;
 
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -40,6 +41,15 @@ public class JwtService {
                 .collect(Collectors.toList());
         extraClaims.put("roles", roles);
 
+        if (userDetails instanceof User) {
+            User customUser = (User) userDetails;
+
+            extraClaims.put("userId", customUser.getId());
+            extraClaims.put("personId", customUser.getPerson().getId());
+            extraClaims.put("fullName", customUser.getPerson().getFirstName() + " " + customUser.getPerson().getLastName());
+            extraClaims.put("institutionId", customUser.getPerson().getInstitution().getId());
+        }
+
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
@@ -48,6 +58,7 @@ public class JwtService {
                 .signWith(getSignInKey())
                 .compact();
     }
+
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

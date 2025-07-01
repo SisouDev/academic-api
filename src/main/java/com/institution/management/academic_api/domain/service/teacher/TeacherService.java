@@ -4,7 +4,10 @@ import com.institution.management.academic_api.application.dto.common.PersonSumm
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
+import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -18,4 +21,7 @@ public interface TeacherService {
     TeacherResponseDto update(Long id, UpdateTeacherRequestDto request);
 
     List<CourseSectionSummaryDto> findCourseSectionsByTeacherId(Long teacherId);
+
+    Page<TeacherSummaryDto> findPaginated(String searchTerm, Pageable pageable);
+
 }

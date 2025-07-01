@@ -4,12 +4,14 @@ import com.institution.management.academic_api.application.dto.common.PersonSumm
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
+import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.specification.TeacherSpecification;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
@@ -25,6 +27,9 @@ import com.institution.management.academic_api.exception.type.teacher.TeacherNot
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,6 +104,14 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher updatedTeacher = teacherRepository.save(teacherToUpdate);
         return teacherMapper.toResponseDto(updatedTeacher);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TeacherSummaryDto> findPaginated(String searchTerm, Pageable pageable) {
+        Specification<Teacher> spec = TeacherSpecification.searchByTerm(searchTerm);
+        return teacherRepository.findAll(spec, pageable).map(teacherMapper::toSummaryDto);
+    }
+
 
     private Institution findInstitutionByIdOrThrow(Long id) {
         return institutionRepository.findById(id)

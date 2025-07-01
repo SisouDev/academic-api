@@ -2,16 +2,20 @@ package com.institution.management.academic_api.application.controller.teacher;
 
 import com.institution.management.academic_api.application.controller.course.CourseSectionController;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
+import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
 import com.institution.management.academic_api.domain.service.teacher.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,18 +53,20 @@ public class TeacherController {
     }
 
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<PersonSummaryDto>>> findAllByInstitution(@RequestParam Long institutionId) {
-        List<PersonSummaryDto> teachers = teacherService.findAllByInstitution(institutionId);
+    public ResponseEntity<PagedModel<EntityModel<TeacherSummaryDto>>> findPaginated(
+            @RequestParam(required = false) String searchTerm,
+            Pageable pageable,
+            PagedResourcesAssembler<TeacherSummaryDto> assembler) {
 
-        List<EntityModel<PersonSummaryDto>> teacherModels = teachers.stream()
-                .map(teacher -> EntityModel.of(teacher,
-                        linkTo(methodOn(TeacherController.class).findById(teacher.id())).withSelfRel()))
-                .collect(Collectors.toList());
+        Page<TeacherSummaryDto> teachersPage = teacherService.findPaginated(searchTerm, pageable);
 
-        CollectionModel<EntityModel<PersonSummaryDto>> collectionModel = CollectionModel.of(teacherModels,
-                linkTo(methodOn(TeacherController.class).findAllByInstitution(institutionId)).withSelfRel());
+        PagedModel<EntityModel<TeacherSummaryDto>> pagedModel = assembler.toModel(teachersPage,
+                teacher -> EntityModel.of(teacher,
+                        linkTo(methodOn(TeacherController.class).findById(teacher.id())).withSelfRel()
+                )
+        );
 
-        return ResponseEntity.ok(collectionModel);
+        return ResponseEntity.ok(pagedModel);
     }
 
     @PutMapping("/{id}")

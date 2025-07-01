@@ -1,7 +1,6 @@
 package com.institution.management.academic_api.application.dto.course;
 
 import com.institution.management.academic_api.application.dto.academic.AcademicTermSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Representação detalhada de uma Turma.")
@@ -20,9 +19,6 @@ public record CourseSectionDetailsDto(
 
         @Schema(description = "Período letivo em que a turma ocorre.")
         AcademicTermSummaryDto academicTerm,
-
-        @Schema(description = "Professor responsável pela turma.")
-        TeacherSummaryDto teacher,
 
         @Schema(description = "Número de alunos matriculados na turma.", example = "32")
         Integer enrolledStudentsCount
