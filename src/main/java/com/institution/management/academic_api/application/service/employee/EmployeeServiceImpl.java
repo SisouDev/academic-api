@@ -11,21 +11,26 @@ import com.institution.management.academic_api.application.dto.user.CreateUserRe
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.employee.EmployeeMapper;
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionAdminMapper;
+import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.institution.InstitutionAdmin;
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
+import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionAdminRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
+import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.employee.EmployeeService;
 import com.institution.management.academic_api.domain.service.user.UserService;
 import com.institution.management.academic_api.exception.type.common.EmailAlreadyExists;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.employee.EmployeeNotFoundException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
@@ -34,6 +39,9 @@ import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +62,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final PersonMapper personMapper;
     private final RoleRepository roleRepository;
     private final PersonRepository personRepository;
+    private final UserRepository userRepository;
+    private final DepartmentRepository departmentRepository;
 
     @Override
     @Transactional
@@ -140,10 +150,44 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    @LogActivity("Atualizou um funcionário.")
+    @LogActivity("Atualizou dados de um funcionário.")
     public EmployeeResponseDto update(Long id, UpdateEmployeeRequestDto request) {
         Employee employeeToUpdate = findEmployeeByIdOrThrow(id);
-        employeeMapper.updateFromDto(request, employeeToUpdate);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userRepository.findByLogin(currentUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Logged in user not found."));
+
+        boolean isSelfUpdate = currentUser.getPerson().getId().equals(id);
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+
+        if (!isAdmin && !isSelfUpdate) {
+            throw new AccessDeniedException("You do not have permission to edit another user's profile.");
+        }
+
+        if (isAdmin) {
+            employeeMapper.updateFromDto(request, employeeToUpdate);
+
+            if (request.departmentId() != null) {
+                Department department = departmentRepository.findById(request.departmentId())
+                        .orElseThrow(() -> new EntityNotFoundException("Department not found with ID: " + request.departmentId()));
+                employeeToUpdate.setDepartment(department);
+            }
+
+        } else {
+            if (request.jobPosition() != null || request.status() != null || request.departmentId() != null) {
+                throw new AccessDeniedException("You are not allowed to change your job title, status, or department.");
+            }
+            if (request.email() != null) {
+                employeeToUpdate.setEmail(request.email());
+            }
+            if (request.phone() != null) {
+                employeeToUpdate.setPhone(request.phone());
+            }
+        }
+
         Employee updatedEmployee = employeeRepository.save(employeeToUpdate);
         return employeeMapper.toDto(updatedEmployee);
     }

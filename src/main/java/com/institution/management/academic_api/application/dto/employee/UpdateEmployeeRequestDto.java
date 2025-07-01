@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.application.dto.employee;
+
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDate;
 
 @Schema(description = "Dados para atualizar parcialmente um Funcionário. Apenas os campos fornecidos serão alterados.")
 public record UpdateEmployeeRequestDto(
@@ -15,9 +15,6 @@ public record UpdateEmployeeRequestDto(
 
         @Schema(description = "Novo cargo do funcionário.", example = "SENIOR_COORDINATOR")
         String jobPosition,
-
-        @Schema(description = "Nova data de contratação (geralmente não se altera, mas como exemplo).", example = "2021-11-11")
-        LocalDate hiringDate,
 
         String firstName,
         String lastName,

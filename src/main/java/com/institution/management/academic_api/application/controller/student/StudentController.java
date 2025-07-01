@@ -1,21 +1,21 @@
 package com.institution.management.academic_api.application.controller.student;
 
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
 import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
+import com.institution.management.academic_api.application.dto.student.StudentSummaryDto;
 import com.institution.management.academic_api.application.dto.student.UpdateStudentRequestDto;
 import com.institution.management.academic_api.domain.service.student.StudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -26,6 +26,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class StudentController {
 
     private final StudentService studentService;
+
 
     @PostMapping
     public ResponseEntity<StudentResponseDto> create(@RequestBody @Valid CreateStudentRequestDto request) {
@@ -46,21 +47,6 @@ public class StudentController {
         return ResponseEntity.ok(model);
     }
 
-    @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<PersonSummaryDto>>> findAllByInstitution(@RequestParam Long institutionId) {
-        List<PersonSummaryDto> students = studentService.findAllByInstitution(institutionId);
-
-        List<EntityModel<PersonSummaryDto>> studentModels = students.stream()
-                .map(student -> EntityModel.of(student,
-                        linkTo(methodOn(StudentController.class).findById(student.id())).withSelfRel()))
-                .collect(Collectors.toList());
-
-        CollectionModel<EntityModel<PersonSummaryDto>> collectionModel = CollectionModel.of(studentModels,
-                linkTo(methodOn(StudentController.class).findAllByInstitution(institutionId)).withSelfRel());
-
-        return ResponseEntity.ok(collectionModel);
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<StudentResponseDto> update(@PathVariable Long id, @RequestBody @Valid UpdateStudentRequestDto request) {
         StudentResponseDto updatedStudent = studentService.update(id, request);
@@ -72,4 +58,23 @@ public class StudentController {
         StudentResponseDto updatedStudent = studentService.updateStatus(id, status);
         return ResponseEntity.ok(updatedStudent);
     }
+
+    @GetMapping
+    public ResponseEntity<PagedModel<EntityModel<StudentSummaryDto>>> findPaginated(
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(required = false) Long institutionId,
+            Pageable pageable,
+            PagedResourcesAssembler<StudentSummaryDto> assembler) {
+
+        Page<StudentSummaryDto> studentsPage = studentService.findPaginated(searchTerm, institutionId, pageable);
+
+        PagedModel<EntityModel<StudentSummaryDto>> pagedModel = assembler.toModel(studentsPage,
+                student -> EntityModel.of(student,
+                        linkTo(methodOn(StudentController.class).findById(student.id())).withSelfRel()
+                )
+        );
+
+        return ResponseEntity.ok(pagedModel);
+    }
+
 }

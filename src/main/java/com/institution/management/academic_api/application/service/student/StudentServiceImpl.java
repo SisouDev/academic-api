@@ -1,13 +1,14 @@
 package com.institution.management.academic_api.application.service.student;
 
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
 import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
+import com.institution.management.academic_api.application.dto.student.StudentSummaryDto;
 import com.institution.management.academic_api.application.dto.student.UpdateStudentRequestDto;
 import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.student.StudentMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.specification.StudentSpecification;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
@@ -25,11 +26,13 @@ import com.institution.management.academic_api.exception.type.student.StudentNot
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -79,15 +82,6 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toResponseDto(student);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PersonSummaryDto> findAllByInstitution(Long institutionId) {
-        Institution institution = findInstitutionByIdOrThrow(institutionId);
-        List<Student> students = studentRepository.findAllByInstitution(institution);
-        return students.stream()
-                .map(personMapper::toSummaryDto)
-                .toList();
-    }
 
     @Override
     @Transactional
@@ -117,6 +111,15 @@ public class StudentServiceImpl implements StudentService {
         userRepository.save(userToUpdate);
         return studentMapper.toResponseDto(studentToUpdate);
     }
+
+    @Override
+    public Page<StudentSummaryDto> findPaginated(String searchTerm, Long institutionId, Pageable pageable) {
+        Specification<Student> spec = StudentSpecification.filterBy(searchTerm, institutionId);
+        Page<Student> studentPage = studentRepository.findAll(spec, pageable);
+
+        return studentPage.map(studentMapper::toSummaryDto);
+    }
+
 
     private Institution findInstitutionByIdOrThrow(Long id) {
         return institutionRepository.findById(id)

@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.mapper.simple.studen
 
 import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
 import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
+import com.institution.management.academic_api.application.dto.student.StudentSummaryDto;
 import com.institution.management.academic_api.application.dto.student.UpdateStudentRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.common.AddressMapper;
 import com.institution.management.academic_api.application.mapper.wrappers.student.EnrollmentMapperWrapper;
@@ -45,6 +46,10 @@ public interface StudentMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "enrollments", ignore = true)
     void updateFromDto(UpdateStudentRequestDto dto, @MappingTarget Student entity);
+
+    @Mapping(target = "fullName", expression = "java(student.getFirstName() + \" \" + student.getLastName())")
+    @Mapping(target = "status", source = "status.displayName")
+    StudentSummaryDto toSummaryDto(Student student);
 
     @Named("formatAddressToString")
     default String formatAddressToString(Address address) {
