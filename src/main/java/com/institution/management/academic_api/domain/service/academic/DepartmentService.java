@@ -18,4 +18,6 @@ public interface DepartmentService {
     DepartmentDetailsDto update(Long id, UpdateDepartmentRequestDto request);
 
     void delete(Long id);
+
+    List<DepartmentSummaryDto> findAllForCurrentUser();
 }

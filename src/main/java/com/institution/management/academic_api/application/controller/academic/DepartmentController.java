@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -67,5 +68,18 @@ public class DepartmentController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         departmentService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<CollectionModel<EntityModel<DepartmentSummaryDto>>> findAllForCurrentUser() {
+        List<DepartmentSummaryDto> departments = departmentService.findAllForCurrentUser();
+        List<EntityModel<DepartmentSummaryDto>> departmentModels = departments.stream()
+                .map(dept -> EntityModel.of(dept,
+                        linkTo(methodOn(DepartmentController.class).findById(dept.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(DepartmentController.class).findAllForCurrentUser()).withSelfRel();
+        CollectionModel<EntityModel<DepartmentSummaryDto>> collectionModel = CollectionModel.of(departmentModels, selfLink);
+        return ResponseEntity.ok(collectionModel);
     }
 }

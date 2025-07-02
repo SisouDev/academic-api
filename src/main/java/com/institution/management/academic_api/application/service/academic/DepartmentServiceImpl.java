@@ -7,14 +7,17 @@ import com.institution.management.academic_api.application.dto.academic.UpdateDe
 import com.institution.management.academic_api.application.mapper.simple.academic.DepartmentMapper;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
+import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.academic.DepartmentService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityExistsException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentMapper departmentMapper;
     private final DepartmentRepository departmentRepository;
     private final InstitutionRepository institutionRepository;
+    private final UserRepository userRepository;
 
 
     @Override
@@ -79,6 +83,22 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void delete(Long id) {
         Department departmentToDelete = findDepartmentByIdOrThrow(id);
         departmentRepository.delete(departmentToDelete);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DepartmentSummaryDto> findAllForCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User currentUser = userRepository.findByLogin(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado."));
+
+        Institution institution = currentUser.getPerson().getInstitution();
+        List<Department> departments = departmentRepository.findAllByInstitution(institution);
+
+        return departments.stream()
+                .map(departmentMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 
     private Department findDepartmentByIdOrThrow(Long id) {

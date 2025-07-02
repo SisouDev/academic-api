@@ -19,7 +19,9 @@ public record CourseDetailsDto(
         Integer durationInSemesters,
 
         @Schema(description = "Lista de disciplinas que compõem o curso.")
-        List<SubjectSummaryDto> subjects
+        List<SubjectSummaryDto> subjectsSummary,
+
+        List<SubjectDetailsDto> subjects
 ) {}
 
 

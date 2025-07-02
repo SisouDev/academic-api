@@ -17,5 +17,9 @@ public record SubjectDetailsDto(
         CourseSummaryDto course,
 
         @Schema(description = "Lista de turmas (Course Sections) que ofertam esta disciplina.")
-        List<CourseSectionSummaryDto> courseSections
+        List<CourseSectionSummaryDto> courseSections,
+
+        Long teacherId,
+
+        String teacherName
 ) {}

@@ -7,14 +7,14 @@ import com.institution.management.academic_api.application.dto.course.UpdateCour
 import com.institution.management.academic_api.domain.service.course.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -38,25 +38,24 @@ public class CourseController {
 
         EntityModel<CourseDetailsDto> courseModel = EntityModel.of(course,
                 linkTo(methodOn(CourseController.class).findById(id)).withSelfRel(),
-                linkTo(methodOn(SubjectController.class).findAllByCourse(id)).withRel("subjects")
+                linkTo(methodOn(SubjectController.class).findAllByCourse(id)).withRel("subjectsSummary")
         );
 
         return ResponseEntity.ok(courseModel);
     }
 
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<CourseSummaryDto>>> findAllByDepartment(@RequestParam Long departmentId) {
-        List<CourseSummaryDto> courses = courseService.findAllByDepartment(departmentId);
+    public ResponseEntity<PagedModel<EntityModel<CourseSummaryDto>>> findPaginated(
+            @RequestParam(required = false) String searchTerm,
+            Pageable pageable,
+            PagedResourcesAssembler<CourseSummaryDto> assembler) {
 
-        List<EntityModel<CourseSummaryDto>> courseModels = courses.stream()
-                .map(course -> EntityModel.of(course,
-                        linkTo(methodOn(CourseController.class).findById(course.id())).withSelfRel()))
-                .collect(Collectors.toList());
+        Page<CourseSummaryDto> coursesPage = courseService.findPaginated(searchTerm, pageable);
 
-        CollectionModel<EntityModel<CourseSummaryDto>> collectionModel = CollectionModel.of(courseModels,
-                linkTo(methodOn(CourseController.class).findAllByDepartment(departmentId)).withSelfRel());
-
-        return ResponseEntity.ok(collectionModel);
+        return ResponseEntity.ok(assembler.toModel(coursesPage,
+                course -> EntityModel.of(course,
+                        linkTo(methodOn(CourseController.class).findById(course.id())).withSelfRel())
+        ));
     }
 
     @PutMapping("/{id}")
