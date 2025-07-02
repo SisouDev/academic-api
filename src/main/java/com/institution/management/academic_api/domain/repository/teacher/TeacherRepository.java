@@ -7,10 +7,13 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TeacherRepository extends JpaRepository<Teacher, Long>, JpaSpecificationExecutor<Teacher> {
     boolean existsByEmail(String email);
 
     List<Teacher> findAllByInstitution(Institution institution);
+
+    Optional<Teacher> findByEmail(String username);
 }

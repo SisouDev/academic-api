@@ -70,4 +70,20 @@ public class EnrollmentController {
         enrollmentService.recordAttendance(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @GetMapping("/by-section/{courseSectionId}")
+    public ResponseEntity<CollectionModel<EntityModel<ClassListStudentDto>>> getEnrollmentsBySection(@PathVariable Long courseSectionId) {
+        List<ClassListStudentDto> enrollments = enrollmentService.findEnrollmentsByCourseSection(courseSectionId);
+
+        List<EntityModel<ClassListStudentDto>> enrollmentModels = enrollments.stream()
+                .map(dto -> EntityModel.of(dto,
+                        linkTo(methodOn(EnrollmentController.class).findById(dto.enrollmentId())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(EnrollmentController.class).getEnrollmentsBySection(courseSectionId)).withSelfRel();
+
+        CollectionModel<EntityModel<ClassListStudentDto>> collectionModel = CollectionModel.of(enrollmentModels, selfLink);
+
+        return ResponseEntity.ok(collectionModel);
+    }
 }

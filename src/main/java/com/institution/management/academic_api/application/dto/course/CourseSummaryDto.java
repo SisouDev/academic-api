@@ -10,5 +10,7 @@ public record CourseSummaryDto(
         String name,
 
         @Schema(description = "Duração do curso em semestres.", example = "10")
-        Integer durationInSemesters
+        Integer durationInSemesters,
+        
+        String departmentName
 ) {}

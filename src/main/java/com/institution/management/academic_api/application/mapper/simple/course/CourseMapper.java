@@ -20,6 +20,7 @@ public interface CourseMapper {
 
     CourseMapper INSTANCE = Mappers.getMapper(CourseMapper.class);
 
+    @Mapping(target = "departmentName", source = "department.name")
     CourseSummaryDto toSummaryDto(Course course);
 
     @Mapping(target = "subjects", source = "subjects", qualifiedByName = "mapSubjectsToDetails")

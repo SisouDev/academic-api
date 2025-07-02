@@ -1,11 +1,8 @@
 package com.institution.management.academic_api.application.mapper.simple.student;
 
-import com.institution.management.academic_api.application.dto.student.CreateEnrollmentRequestDto;
-import com.institution.management.academic_api.application.dto.student.EnrollmentDetailsDto;
-import com.institution.management.academic_api.application.dto.student.EnrollmentSummaryDto;
-import com.institution.management.academic_api.application.dto.student.UpdateEnrollmentRequestDto;
-import com.institution.management.academic_api.application.mapper.wrappers.common.PersonMapperWrapper;
+import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
+import com.institution.management.academic_api.application.mapper.wrappers.common.PersonMapperWrapper;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import org.mapstruct.*;
 
@@ -43,4 +40,11 @@ public interface EnrollmentMapper {
     @Mapping(target = "assessments", ignore = true)
     @Mapping(target = "attendanceRecords", ignore = true)
     void updateFromDto(UpdateEnrollmentRequestDto dto, @MappingTarget Enrollment entity);
+
+    @Mapping(target = "enrollmentId", source = "id")
+    @Mapping(target = "studentId", source = "student.id")
+    @Mapping(target = "studentName", expression = "java(enrollment.getStudent().getFirstName() + \" \" + enrollment.getStudent().getLastName())")
+    @Mapping(target = "studentEmail", source = "student.email")
+    @Mapping(target = "status", source = "status.displayName")
+    ClassListStudentDto toClassListDto(Enrollment enrollment);
 }

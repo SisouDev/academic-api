@@ -14,6 +14,7 @@ import com.institution.management.academic_api.domain.repository.student.Attenda
 import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
 import com.institution.management.academic_api.domain.repository.student.StudentRepository;
 import com.institution.management.academic_api.domain.service.student.EnrollmentService;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.common.InvalidOperationException;
 import com.institution.management.academic_api.exception.type.course.CourseSectionNotFoundException;
 import com.institution.management.academic_api.exception.type.student.EnrollmentNotFoundException;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -110,6 +112,18 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         }
 
         attendanceRecordRepository.save(newRecord);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassListStudentDto> findEnrollmentsByCourseSection(Long courseSectionId) {
+        if (!courseSectionRepository.existsById(courseSectionId)) {
+            throw new EntityNotFoundException("Turma não encontrada: " + courseSectionId);
+        }
+        return enrollmentRepository.findAllByCourseSectionId(courseSectionId)
+                .stream()
+                .map(enrollmentMapper::toClassListDto)
+                .collect(Collectors.toList());
     }
 
     private Student findStudentByIdOrThrow(Long id) {

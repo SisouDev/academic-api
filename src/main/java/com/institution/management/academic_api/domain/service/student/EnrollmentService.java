@@ -14,4 +14,5 @@ public interface EnrollmentService {
     void updateEnrollmentStatus(Long id, UpdateEnrollmentRequestDto request);
 
     void recordAttendance(CreateAttendanceRecordRequestDto request);
+    List<ClassListStudentDto> findEnrollmentsByCourseSection(Long courseSectionId);
 }
