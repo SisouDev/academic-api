@@ -1,5 +1,8 @@
 package com.institution.management.academic_api.application.dto.student;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -7,6 +10,8 @@ import java.time.LocalDate;
 public record CreateAssessmentRequestDto(
         @Schema(description = "ID da matrícula à qual esta avaliação pertence.", requiredMode = Schema.RequiredMode.REQUIRED, example = "250")
         Long enrollmentId,
+
+        @NotNull Long assessmentDefinitionId,
 
         @Schema(description = "Nota obtida na avaliação.", requiredMode = Schema.RequiredMode.REQUIRED, example = "8.5")
         BigDecimal score,

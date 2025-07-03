@@ -6,6 +6,7 @@ import com.institution.management.academic_api.domain.model.entities.student.Enr
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,5 +28,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     List<Enrollment> findAllByStudent(Student student);
 
+
+    @Query("SELECT e FROM Enrollment e JOIN FETCH e.student WHERE e.courseSection.id = :courseSectionId")
     List<Enrollment> findAllByCourseSectionId(Long courseSectionId);
 }

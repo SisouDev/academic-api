@@ -198,7 +198,7 @@
 				<artifactId>flyway-maven-plugin</artifactId>
 				<version>11.7.2</version>
 				<configuration>
-					<url>jdbc:postgresql://localhost:5432/academic-api</url>
+					<url>jdbc:postgresql://localhost:5433/academic-api</url>
 					<user>postgres</user>
 					<password>PgKarolina2025!</password>
 					<locations>

@@ -1,15 +1,3 @@
-CREATE TABLE course_sections (
-                                 id BIGSERIAL PRIMARY KEY,
-                                 name VARCHAR(255) NOT NULL,
-                                 room VARCHAR(100),
-                                 subject_id BIGINT NOT NULL,
-                                 academic_term_id BIGINT NOT NULL,
-                                 teacher_id BIGINT NOT NULL,
-                                 CONSTRAINT fk_section_subject FOREIGN KEY (subject_id) REFERENCES subjects(id),
-                                 CONSTRAINT fk_section_term FOREIGN KEY (academic_term_id) REFERENCES academic_terms(id),
-                                 CONSTRAINT fk_section_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id)
-);
-
 CREATE TABLE lesson_plans (
                               id BIGSERIAL PRIMARY KEY,
                               objectives TEXT,
@@ -36,8 +24,16 @@ CREATE TABLE assessments (
                              assessment_date DATE NOT NULL,
                              type VARCHAR(100) NOT NULL,
                              enrollment_id BIGINT NOT NULL,
-                             CONSTRAINT fk_assessment_enrollment FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
+
+                             assessment_definition_id BIGINT NOT NULL,
+
+                             CONSTRAINT fk_assessment_enrollment
+                                 FOREIGN KEY (enrollment_id) REFERENCES enrollments(id),
+                             CONSTRAINT fk_assessment_to_definition
+                                 FOREIGN KEY (assessment_definition_id) REFERENCES assessment_definitions(id)
 );
+
+
 
 CREATE TABLE attendance_records (
                                     id BIGSERIAL PRIMARY KEY,

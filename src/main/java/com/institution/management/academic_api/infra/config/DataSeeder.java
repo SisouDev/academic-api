@@ -25,12 +25,14 @@ import com.institution.management.academic_api.domain.model.entities.course.Cour
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.student.AssessmentDefinition;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
+import com.institution.management.academic_api.domain.model.enums.student.AssessmentType;
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.academic.AcademicTermRepository;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
@@ -41,6 +43,8 @@ import com.institution.management.academic_api.domain.repository.course.CourseSe
 import com.institution.management.academic_api.domain.repository.course.SubjectRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
+import com.institution.management.academic_api.domain.repository.student.AssessmentDefinitionRepository;
+import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
 import com.institution.management.academic_api.domain.repository.student.StudentRepository;
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
@@ -96,6 +100,8 @@ public class DataSeeder implements CommandLineRunner {
     private final EnrollmentService enrollmentService;
     private final EmployeeRepository employeeRepository;
     private final AssessmentService assessmentService;
+    private final AssessmentDefinitionRepository assessmentDefinitionRepository;
+    private final AssessmentRepository assessmentRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -142,6 +148,10 @@ public class DataSeeder implements CommandLineRunner {
             roleRepository.save(new Role(RoleName.ROLE_USER));
             roleRepository.save(new Role(RoleName.ROLE_ADMIN));
             roleRepository.save(new Role(RoleName.ROLE_MANAGER));
+            roleRepository.save(new Role(RoleName.ROLE_TEACHER));
+            roleRepository.save(new Role(RoleName.ROLE_STUDENT));
+            roleRepository.save(new Role(RoleName.ROLE_EMPLOYEE));
+            roleRepository.save(new Role(RoleName.ROLE_FINANCE));
         }
     }
 
@@ -857,7 +867,7 @@ public class DataSeeder implements CommandLineRunner {
                 1,
                 LocalDate.of(2026, 2, 1),
                 LocalDate.of(2026, 6, 30),
-                AcademicTermStatus.PLANNING,
+                AcademicTermStatus.ENROLLMENT_OPEN,
                 institution
         ));
 
@@ -1167,7 +1177,7 @@ public class DataSeeder implements CommandLineRunner {
 
 
     private void seedAssessments(Map<String, Student> students, Map<String, CourseSection> sections) {
-        log.info("Iniciando seeding de Avaliações (abordagem direta)...");
+        log.info("Iniciando seeding de Avaliações...");
 
         Student alunoJoao = students.get("JOAO");
         CourseSection turmaPOO = sections.get("POO_A");
@@ -1176,30 +1186,51 @@ public class DataSeeder implements CommandLineRunner {
             Optional<Enrollment> enrollmentOpt = enrollmentRepository.findByStudentAndCourseSection(alunoJoao, turmaPOO);
 
             enrollmentOpt.ifPresent(enrollment -> {
-                log.info("Matrícula encontrada (ID: {}). Adicionando avaliações...", enrollment.getId());
-                createAssessment("EXAM", new BigDecimal("8.5"), LocalDate.now().minusMonths(1), enrollment);
-                createAssessment("PROJECT", new BigDecimal("9.0"), LocalDate.now().minusWeeks(2), enrollment);
+
+                AssessmentDefinition examDef = assessmentDefinitionRepository.findByTitle("Prova 1")
+                        .orElseGet(() -> {
+                            log.info("Criando definição para 'Prova 1'...");
+                            AssessmentDefinition newExamDef = new AssessmentDefinition();
+                            newExamDef.setTitle("Prova 1");
+                            newExamDef.setType(AssessmentType.EXAM);
+                            newExamDef.setCourseSection(turmaPOO);
+                            newExamDef.setWeight(new BigDecimal("50.0"));
+                            return assessmentDefinitionRepository.save(newExamDef);
+                        });
+
+                AssessmentDefinition projectDef = assessmentDefinitionRepository.findByTitle("Projeto Final")
+                        .orElseGet(() -> {
+                            log.info("Criando definição para 'Projeto Final'...");
+                            AssessmentDefinition newProjectDef = new AssessmentDefinition();
+                            newProjectDef.setTitle("Projeto Final");
+                            newProjectDef.setType(AssessmentType.PROJECT);
+                            newProjectDef.setCourseSection(turmaPOO);
+                            newProjectDef.setWeight(new BigDecimal("50.0"));
+                            return assessmentDefinitionRepository.save(newProjectDef);
+                        });
+
+                if (assessmentRepository.existsByEnrollmentAndAssessmentDefinition(enrollment, examDef)) {
+                    createAssessment(examDef, new BigDecimal("8.5"), LocalDate.now().minusMonths(1), enrollment);
+                }
+                if (assessmentRepository.existsByEnrollmentAndAssessmentDefinition(enrollment, projectDef)) {
+                    createAssessment(projectDef, new BigDecimal("9.0"), LocalDate.now().minusWeeks(2), enrollment);
+                }
             });
         }
 
         log.info("Seeding de Avaliações finalizado.");
     }
 
-    private void createAssessment(String type, BigDecimal score, LocalDate date, Enrollment enrollment) {
-        log.info("Criando avaliação do tipo '{}' para a matrícula ID {}...", type, enrollment.getId());
+    private void createAssessment(AssessmentDefinition definition, BigDecimal score, LocalDate date, Enrollment enrollment) {
 
         var request = new CreateAssessmentRequestDto(
                 enrollment.getId(),
+                definition.getId(),
                 score,
                 date,
-                type
+                definition.getType().name()
         );
-        try {
-            assessmentService.addAssessmentToEnrollment(request);
-            log.info("Avaliação '{}' criada com sucesso.", type);
-        } catch (Exception e) {
-            log.error("Erro ao criar a avaliação '{}': {}", type, e.getMessage());
-        }
+        assessmentService.addAssessmentToEnrollment(request);
     }
 
 

@@ -5,12 +5,13 @@ import com.institution.management.academic_api.application.dto.student.CreateAss
 import com.institution.management.academic_api.application.dto.student.UpdateAssessmentRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.student.AssessmentMapper;
 import com.institution.management.academic_api.domain.model.entities.student.Assessment;
+import com.institution.management.academic_api.domain.model.entities.student.AssessmentDefinition;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
-import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
+import com.institution.management.academic_api.domain.repository.student.AssessmentDefinitionRepository;
 import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
 import com.institution.management.academic_api.domain.service.student.AssessmentService;
-import com.institution.management.academic_api.exception.type.common.InvalidOperationException;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.student.AssessmentNotFoundException;
 import com.institution.management.academic_api.exception.type.student.EnrollmentNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
@@ -27,17 +28,20 @@ public class AssessmentServiceImpl implements AssessmentService {
     private final AssessmentRepository assessmentRepository;
     private final AssessmentMapper assessmentMapper;
     private final EnrollmentRepository enrollmentRepository;
+    private final AssessmentDefinitionRepository definitionRepository;
 
     @Override
     @Transactional
-    @LogActivity("Criou uma nova avaliação.")
     public AssessmentDto addAssessmentToEnrollment(CreateAssessmentRequestDto request) {
         Enrollment enrollment = findEnrollmentByIdOrThrow(request.enrollmentId());
-        if (enrollment.getStatus() != EnrollmentStatus.ACTIVE){
-            throw new InvalidOperationException("The student " + enrollment.getStudent().getFirstName() + " is not active.");
-        }
+
+        AssessmentDefinition definition = definitionRepository.findById(request.assessmentDefinitionId())
+                .orElseThrow(() -> new EntityNotFoundException("Assessment Definition not found."));
+
         Assessment assessment = assessmentMapper.toEntity(request);
         assessment.setEnrollment(enrollment);
+        assessment.setAssessmentDefinition(definition);
+
         Assessment savedAssessment = assessmentRepository.save(assessment);
         return assessmentMapper.toDto(savedAssessment);
     }

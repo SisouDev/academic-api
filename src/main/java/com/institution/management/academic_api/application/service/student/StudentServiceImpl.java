@@ -63,8 +63,8 @@ public class StudentServiceImpl implements StudentService {
         Student savedStudent = studentRepository.save(newStudent);
         String defaultPassword = request.document().number();
 
-        var studentRole = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new InvalidRoleAssignmentException("User Role not found in the system."));
+        var studentRole = roleRepository.findByName(RoleName.ROLE_STUDENT)
+                .orElseThrow(() -> new InvalidRoleAssignmentException("Student Role not found in the system."));
         CreateUserRequestDto userRequest = new CreateUserRequestDto(
                 savedStudent.getEmail(),
                 defaultPassword,

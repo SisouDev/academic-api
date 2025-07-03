@@ -7,6 +7,8 @@ import java.util.stream.Stream;
 @Getter
 public enum RoleName {
     ROLE_ADMIN("Admin"),
+    ROLE_TEACHER("Teacher"),
+    ROLE_STUDENT("Student"),
     ROLE_USER("User"),
     ROLE_FINANCE("Finance"),
     ROLE_EMPLOYEE("Employee"),

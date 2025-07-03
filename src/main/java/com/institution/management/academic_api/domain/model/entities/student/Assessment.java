@@ -34,4 +34,9 @@ public class Assessment {
     @JoinColumn(name = "enrollment_id", nullable = false)
     @ToString.Exclude
     private Enrollment enrollment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assessment_definition_id", nullable = false)
+    @ToString.Exclude
+    private AssessmentDefinition assessmentDefinition;
 }

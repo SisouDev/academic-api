@@ -40,7 +40,33 @@ public class TeacherController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTeacher);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/me/sections")
+    public ResponseEntity<CollectionModel<EntityModel<CourseSectionSummaryDto>>> getMySections() {
+        List<CourseSectionSummaryDto> sections = teacherService.findSectionsForCurrentTeacher();
+
+        List<EntityModel<CourseSectionSummaryDto>> sectionModels = sections.stream()
+                .map(section -> EntityModel.of(section,
+                        linkTo(methodOn(CourseSectionController.class).findById(section.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(TeacherController.class).getMySections()).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(sectionModels, selfLink));
+    }
+
+    @GetMapping("/{teacherId}/course-sections")
+    public ResponseEntity<CollectionModel<EntityModel<CourseSectionSummaryDto>>> findCourseSectionsByTeacher(@PathVariable Long teacherId) {
+        List<CourseSectionSummaryDto> sections = teacherService.findCourseSectionsByTeacherId(teacherId);
+
+        List<EntityModel<CourseSectionSummaryDto>> sectionModels = sections.stream()
+                .map(section -> EntityModel.of(section,
+                        linkTo(methodOn(CourseSectionController.class).findById(section.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(CollectionModel.of(sectionModels));
+    }
+
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<EntityModel<TeacherResponseDto>> findById(@PathVariable Long id) {
         TeacherResponseDto teacher = teacherService.findById(id);
 
@@ -75,15 +101,4 @@ public class TeacherController {
         return ResponseEntity.ok(updatedTeacher);
     }
 
-    @GetMapping("/{teacherId}/course-sections")
-    public ResponseEntity<CollectionModel<EntityModel<CourseSectionSummaryDto>>> findCourseSectionsByTeacher(@PathVariable Long teacherId) {
-        List<CourseSectionSummaryDto> sections = teacherService.findCourseSectionsByTeacherId(teacherId);
-
-        List<EntityModel<CourseSectionSummaryDto>> sectionModels = sections.stream()
-                .map(section -> EntityModel.of(section,
-                        linkTo(methodOn(CourseSectionController.class).findById(section.id())).withSelfRel()))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(CollectionModel.of(sectionModels));
-    }
 }

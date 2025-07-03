@@ -13,6 +13,7 @@ import com.institution.management.academic_api.application.mapper.simple.employe
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionAdminMapper;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.entities.common.Role;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.institution.InstitutionAdmin;
@@ -47,7 +48,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -84,8 +87,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee savedEmployee = employeeRepository.save(newEmployee);
         String defaultPassword = savedEmployee.getDocument().getNumber();
 
-        var employeeRole = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new InvalidRoleAssignmentException("User Role not found in the system."));
+        var employeeRole = roleRepository.findByName(RoleName.ROLE_EMPLOYEE)
+                .orElseThrow(() -> new InvalidRoleAssignmentException("Employee Role not found in the system."));
         CreateUserRequestDto userRequest = new CreateUserRequestDto(
                 savedEmployee.getEmail(),
                 defaultPassword,
@@ -112,13 +115,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         InstitutionAdmin savedInstitutionAdmin = institutionAdminRepository.save(newInstitutionAdmin);
         String defaultPassword = request.document().number();
 
-        var institutionAdminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
-                .orElseThrow(() -> new InvalidRoleAssignmentException("Admin Role not found in the system."));
+        List<Role> allRoles = roleRepository.findAll();
+        Set<Long> allRoleIds = allRoles.stream()
+                .map(Role::getId)
+                .collect(Collectors.toSet());
+
         CreateUserRequestDto userRequest = new CreateUserRequestDto(
                 savedInstitutionAdmin.getEmail(),
                 defaultPassword,
                 savedInstitutionAdmin.getId(),
-                Set.of(institutionAdminRole.getId())
+                allRoleIds
         );
         userService.create(userRequest);
         return institutionAdminMapper.toDto(savedInstitutionAdmin);
