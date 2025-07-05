@@ -1,20 +1,21 @@
 package com.institution.management.academic_api.application.service.student;
 
-import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
-import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
-import com.institution.management.academic_api.application.dto.student.StudentSummaryDto;
-import com.institution.management.academic_api.application.dto.student.UpdateStudentRequestDto;
-import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
+import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
+import com.institution.management.academic_api.application.mapper.simple.student.EnrollmentMapper;
 import com.institution.management.academic_api.application.mapper.simple.student.StudentMapper;
+import com.institution.management.academic_api.domain.model.entities.common.Role;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.specification.StudentSpecification;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
+import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
+import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
+import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
 import com.institution.management.academic_api.domain.repository.student.StudentRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.student.StudentService;
@@ -29,11 +30,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,32 +52,42 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final PersonMapper personMapper;
     private final UserRepository userRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentMapper enrollmentMapper;
+    private final PersonRepository personRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     @LogActivity("Cadastrou um novo aluno")
     public StudentResponseDto create(CreateStudentRequestDto request) {
-        Institution institution = findInstitutionByIdOrThrow(request.institutionId());
-        if (studentRepository.existsByEmail(request.email())){
+        Institution institution = institutionRepository.findById(request.institutionId())
+                .orElseThrow(() -> new EntityNotFoundException("Institution not found."));
+
+        if (personRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExists("Email already in use: " + request.email());
         }
+
         Student newStudent = studentMapper.toEntity(request);
         newStudent.setInstitution(institution);
         newStudent.setStatus(PersonStatus.ACTIVE);
         newStudent.setCreatedAt(LocalDateTime.now());
-
         Student savedStudent = studentRepository.save(newStudent);
-        String defaultPassword = request.document().number();
 
-        var studentRole = roleRepository.findByName(RoleName.ROLE_STUDENT)
-                .orElseThrow(() -> new InvalidRoleAssignmentException("Student Role not found in the system."));
-        CreateUserRequestDto userRequest = new CreateUserRequestDto(
-                savedStudent.getEmail(),
-                defaultPassword,
-                savedStudent.getId(),
-                Set.of(studentRole.getId())
-        );
-        userService.create(userRequest);
+        User newUser = new User();
+        String defaultPassword = savedStudent.getDocument().getNumber();
+
+        newUser.setLogin(savedStudent.getEmail());
+        newUser.setPasswordHash(passwordEncoder.encode(defaultPassword));
+        newUser.setActive(true);
+        newUser.setPerson(savedStudent);
+
+        Role studentRole = roleRepository.findByName(RoleName.ROLE_STUDENT)
+                .orElseThrow(() -> new InvalidRoleAssignmentException("Student Role not found."));
+        newUser.setRoles(Collections.singleton(studentRole));
+
+        userRepository.save(newUser);
+
         return studentMapper.toResponseDto(savedStudent);
     }
 
@@ -82,6 +98,21 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toResponseDto(student);
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentSummaryDto> findEnrollmentsForCurrentStudent() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Student student = studentRepository.findByEmail(username)
+                .orElseThrow(() -> new AccessDeniedException("The logged in user is not a student or was not found."));
+
+        return enrollmentRepository.findAllByStudent(student)
+                .stream()
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ACTIVE)
+                .map(enrollmentMapper::toSummaryDto)
+                .collect(Collectors.toList());
+    }
 
     @Override
     @Transactional

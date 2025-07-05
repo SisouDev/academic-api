@@ -8,5 +8,6 @@ public record AssessmentDto(
         Long id,
         BigDecimal score,
         LocalDate assessmentDate,
-        String type
+        String type,
+        String title
 ) {}

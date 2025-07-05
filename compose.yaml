@@ -14,6 +14,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - academic-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
 
   pgadmin:
     image: dpage/pgadmin4
@@ -21,14 +26,19 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: karolina.souza@estudante.ufjf.br
       PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
+      PGADMIN_DISABLE_POSTFIX: true
     ports:
       - "8888:80"
     networks:
       - academic-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
 
 volumes:
   postgres_data:
 
 networks:
   academic-network:
-

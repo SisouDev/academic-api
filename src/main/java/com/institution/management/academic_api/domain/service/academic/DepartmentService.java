@@ -4,6 +4,8 @@ import com.institution.management.academic_api.application.dto.academic.Departme
 import com.institution.management.academic_api.application.dto.academic.DepartmentRequestDto;
 import com.institution.management.academic_api.application.dto.academic.DepartmentSummaryDto;
 import com.institution.management.academic_api.application.dto.academic.UpdateDepartmentRequestDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -20,4 +22,7 @@ public interface DepartmentService {
     void delete(Long id);
 
     List<DepartmentSummaryDto> findAllForCurrentUser();
+
+    Page<DepartmentSummaryDto> findAll(String searchTerm, Pageable pageable);
+
 }

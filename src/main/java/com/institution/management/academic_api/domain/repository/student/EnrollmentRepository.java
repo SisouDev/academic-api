@@ -31,4 +31,5 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     @Query("SELECT e FROM Enrollment e JOIN FETCH e.student WHERE e.courseSection.id = :courseSectionId")
     List<Enrollment> findAllByCourseSectionId(Long courseSectionId);
+
 }

@@ -38,13 +38,17 @@ public class TeacherNoteServiceImpl implements TeacherNoteService {
 
         Enrollment enrollment = enrollmentRepository.findById(request.enrollmentId())
                 .orElseThrow(() -> new EntityNotFoundException("Enrollment not found."));
+        System.out.println(enrollment);
 
         TeacherNote newNote = noteMapper.toEntity(request);
+        System.out.println(newNote);
         newNote.setAuthor(author);
         newNote.setEnrollment(enrollment);
         newNote.setCreatedAt(LocalDateTime.now());
 
         TeacherNote savedNote = noteRepository.save(newNote);
+        System.out.println(savedNote);
+
         return noteMapper.toDto(savedNote);
     }
 

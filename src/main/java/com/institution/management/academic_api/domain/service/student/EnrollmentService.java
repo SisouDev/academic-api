@@ -15,4 +15,5 @@ public interface EnrollmentService {
 
     void recordAttendance(CreateAttendanceRecordRequestDto request);
     List<ClassListStudentDto> findEnrollmentsByCourseSection(Long courseSectionId);
+
 }

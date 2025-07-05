@@ -8,6 +8,7 @@ import com.institution.management.academic_api.domain.model.entities.student.Enr
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
+import com.institution.management.academic_api.domain.model.enums.student.DailyAttendanceStatus;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.student.AttendanceRecordRepository;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,18 +102,29 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public void recordAttendance(CreateAttendanceRecordRequestDto request) {
         Enrollment enrollment = findEnrollmentByIdOrThrow(request.enrollmentId());
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
-            throw new InvalidOperationException("It is not possible to register attendance for a registration that is not active.");
-        }
-        AttendanceRecord newRecord = new AttendanceRecord();
-        newRecord.setEnrollment(enrollment);
-        newRecord.setDate(request.date());
-        newRecord.setWasPresent(request.wasPresent());
-
-        if (Boolean.FALSE.equals(request.wasPresent())) {
-            enrollment.setTotalAbsences(enrollment.getTotalAbsences() + 1);
+            throw new InvalidOperationException("It is not possible to register attendance for an inactive registration.");
         }
 
-        attendanceRecordRepository.save(newRecord);
+        LocalDate today = LocalDate.now();
+
+        Optional<AttendanceRecord> existingRecordOpt = attendanceRecordRepository
+                .findByEnrollmentAndDate(enrollment, today);
+
+        AttendanceRecord recordToSave;
+        if (existingRecordOpt.isPresent()) {
+
+            recordToSave = existingRecordOpt.get();
+        } else {
+            recordToSave = new AttendanceRecord();
+            recordToSave.setEnrollment(enrollment);
+            recordToSave.setDate(today);
+        }
+        recordToSave.setWasPresent(request.wasPresent());
+        attendanceRecordRepository.save(recordToSave);
+
+        long totalAbsences = attendanceRecordRepository.countByEnrollmentAndWasPresent(enrollment, false);
+        enrollment.setTotalAbsences((int) totalAbsences);
+        enrollmentRepository.save(enrollment);
     }
 
     @Override
@@ -120,10 +133,30 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (!courseSectionRepository.existsById(courseSectionId)) {
             throw new EntityNotFoundException("Turma não encontrada: " + courseSectionId);
         }
-        return enrollmentRepository.findAllByCourseSectionId(courseSectionId)
-                .stream()
-                .map(enrollmentMapper::toClassListDto)
-                .collect(Collectors.toList());
+        List<Enrollment> enrollments = enrollmentRepository.findAllByCourseSectionId(courseSectionId);
+        LocalDate today = LocalDate.now();
+
+        return enrollments.stream().map(enrollment -> {
+
+            Optional<AttendanceRecord> todaysRecordOpt = attendanceRecordRepository
+                    .findMostRecentByEnrollmentAndDate(enrollment, today)
+                    .stream()
+                    .findFirst();
+
+            DailyAttendanceStatus todaysStatus = todaysRecordOpt
+                    .map(record -> record.getWasPresent() ? DailyAttendanceStatus.PRESENT : DailyAttendanceStatus.ABSENT)
+                    .orElse(DailyAttendanceStatus.UNDEFINED);
+
+            return new ClassListStudentDto(
+                    enrollment.getId(),
+                    enrollment.getStudent().getId(),
+                    enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName(),
+                    enrollment.getStudent().getEmail(),
+                    enrollment.getStatus().getDisplayName(),
+                    todaysStatus
+            );
+
+        }).collect(Collectors.toList());
     }
 
     private Student findStudentByIdOrThrow(Long id) {

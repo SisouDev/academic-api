@@ -1,21 +1,23 @@
 package com.institution.management.academic_api.application.controller.student;
 
+import com.institution.management.academic_api.application.controller.course.CourseSectionController;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
-import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
-import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
-import com.institution.management.academic_api.application.dto.student.StudentSummaryDto;
-import com.institution.management.academic_api.application.dto.student.UpdateStudentRequestDto;
+import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.domain.service.student.StudentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -26,12 +28,28 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class StudentController {
 
     private final StudentService studentService;
+    private final CourseSectionController courseSectionController;
 
 
     @PostMapping
     public ResponseEntity<StudentResponseDto> create(@RequestBody @Valid CreateStudentRequestDto request) {
         StudentResponseDto createdStudent = studentService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdStudent);
+    }
+
+    @GetMapping("/me/enrollments")
+    public ResponseEntity<CollectionModel<EntityModel<EnrollmentSummaryDto>>> findMyEnrollments() {
+        List<EnrollmentSummaryDto> enrollments = studentService.findEnrollmentsForCurrentStudent();
+
+        List<EntityModel<EnrollmentSummaryDto>> models = enrollments.stream()
+                .map(enrollment -> EntityModel.of(enrollment,
+                        linkTo(methodOn(EnrollmentController.class).findById(enrollment.id())).withSelfRel(),
+                        linkTo(methodOn(CourseSectionController.class).findById(enrollment.courseSection().id())).withRel("courseSectionDetails")
+                )).collect(Collectors.toList());
+
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(StudentController.class).findMyEnrollments()).withSelfRel()
+        ));
     }
 
     @GetMapping("/{id}")

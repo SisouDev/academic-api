@@ -10,12 +10,10 @@ import com.institution.management.academic_api.application.dto.course.*;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionAdminRequestDto;
-import com.institution.management.academic_api.application.dto.student.CreateAssessmentRequestDto;
-import com.institution.management.academic_api.application.dto.student.CreateEnrollmentRequestDto;
-import com.institution.management.academic_api.application.dto.student.CreateStudentRequestDto;
-import com.institution.management.academic_api.application.dto.student.StudentResponseDto;
+import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
+import com.institution.management.academic_api.application.service.common.SeedingService;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
@@ -32,7 +30,6 @@ import com.institution.management.academic_api.domain.model.entities.teacher.Tea
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
-import com.institution.management.academic_api.domain.model.enums.student.AssessmentType;
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.academic.AcademicTermRepository;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
@@ -54,6 +51,7 @@ import com.institution.management.academic_api.domain.service.course.CourseSecti
 import com.institution.management.academic_api.domain.service.course.CourseService;
 import com.institution.management.academic_api.domain.service.course.SubjectService;
 import com.institution.management.academic_api.domain.service.employee.EmployeeService;
+import com.institution.management.academic_api.domain.service.student.AssessmentDefinitionService;
 import com.institution.management.academic_api.domain.service.student.AssessmentService;
 import com.institution.management.academic_api.domain.service.student.EnrollmentService;
 import com.institution.management.academic_api.domain.service.student.StudentService;
@@ -70,6 +68,7 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -102,6 +101,9 @@ public class DataSeeder implements CommandLineRunner {
     private final AssessmentService assessmentService;
     private final AssessmentDefinitionRepository assessmentDefinitionRepository;
     private final AssessmentRepository assessmentRepository;
+    private final SeedingService seedingService;
+    private final AssessmentDefinitionService assessmentDefinitionService;
+
 
     @Override
     public void run(String... args) throws Exception {
@@ -126,13 +128,15 @@ public class DataSeeder implements CommandLineRunner {
                     if (academicTerms != null && !academicTerms.isEmpty() &&
                             subjects != null && !subjects.isEmpty() &&
                             teachers != null && !teachers.isEmpty()) {
-
+                        seedingService.seedTeacherSubjectRelations(teachers, subjects);
                         Map<String, CourseSection> courseSections = seedCourseSections(academicTerms, subjects, teachers);
 
                         if (courseSections != null && !courseSections.isEmpty() &&
                                 students != null && !students.isEmpty()) {
-                            seedEnrollments(students, courseSections);
-                            seedAssessments(students, courseSections);
+                            Map<String, Enrollment> enrollments = seedEnrollments(students, courseSections);
+
+                            Map<String, AssessmentDefinition> assessmentDefinitions = seedAssessmentDefinitions(courseSections);
+                            seedingService.seedAssessmentsAndAttendance(enrollments, assessmentDefinitions);
                         }
                     }
                 }
@@ -1035,8 +1039,9 @@ public class DataSeeder implements CommandLineRunner {
                 });
     }
 
-    private void seedEnrollments(Map<String, Student> students, Map<String, CourseSection> sections) {
+    private Map<String, Enrollment> seedEnrollments(Map<String, Student> students, Map<String, CourseSection> sections) {
         log.info("Iniciando seeding de Matrículas...");
+        Map<String, Enrollment> createdEnrollments = new HashMap<>();
 
         Student alunoJoao = students.get("JOAO");
         Student alunaMaria = students.get("MARIA");
@@ -1055,61 +1060,59 @@ public class DataSeeder implements CommandLineRunner {
         CourseSection turmaDB_B = sections.get("DB_B");
 
         if (alunoJoao != null && turmaPOO != null) {
-            createEnrollmentIfNotExists(alunoJoao, turmaPOO);
+            createdEnrollments.put("JOAO_POO", createEnrollmentIfNotExists(alunoJoao, turmaPOO));
         }
-
         if (alunaMaria != null && turmaPOO != null) {
-            createEnrollmentIfNotExists(alunaMaria, turmaPOO);
+            createdEnrollments.put("MARIA_POO", createEnrollmentIfNotExists(alunaMaria, turmaPOO));
         }
-
         if (alunaMaria != null && turmaDB != null) {
-            createEnrollmentIfNotExists(alunaMaria, turmaDB);
+            createdEnrollments.put("MARIA_DB", createEnrollmentIfNotExists(alunaMaria, turmaDB));
         }
         if (alunaFernanda != null && turmaADS_C != null) {
-            createEnrollmentIfNotExists(alunaFernanda, turmaADS_C);
+            createdEnrollments.put("FERNANDA_ADS", createEnrollmentIfNotExists(alunaFernanda, turmaADS_C));
         }
-
         if (alunoCarlos != null && turmaSTAT_A != null) {
-            createEnrollmentIfNotExists(alunoCarlos, turmaSTAT_A);
+            createdEnrollments.put("CARLOS_STAT", createEnrollmentIfNotExists(alunoCarlos, turmaSTAT_A));
         }
-
         if (alunaAna != null && turmaML_A != null) {
-            createEnrollmentIfNotExists(alunaAna, turmaML_A);
+            createdEnrollments.put("ANA_ML", createEnrollmentIfNotExists(alunaAna, turmaML_A));
         }
-
         if (alunoLucas != null && turmaTL_B != null) {
-            createEnrollmentIfNotExists(alunoLucas, turmaTL_B);
+            createdEnrollments.put("LUCAS_TL", createEnrollmentIfNotExists(alunoLucas, turmaTL_B));
+        }
+        if (alunoCarlos != null && turmaDB_B != null) {
+            createdEnrollments.put("CARLOS_DB", createEnrollmentIfNotExists(alunoCarlos, turmaDB_B));
         }
 
-        if (alunoCarlos != null && turmaDB_B != null) {
-            createEnrollmentIfNotExists(alunoCarlos, turmaDB_B);
-        }
+        createdEnrollments.values().removeIf(Objects::isNull);
 
         log.info("Seeding de Matrículas finalizado.");
+        return createdEnrollments;
     }
 
-    private void createEnrollmentIfNotExists(Student student, CourseSection courseSection) {
-        if (enrollmentRepository.existsByStudentAndCourseSection(student, courseSection)) {
-            log.info("Matrícula do aluno '{}' na turma '{}' já existe.", student.getFirstName(), courseSection.getName());
-            return;
-        }
+    private Enrollment createEnrollmentIfNotExists(Student student, CourseSection courseSection) {
+        return enrollmentRepository.findByStudentAndCourseSection(student, courseSection)
+                .orElseGet(() -> {
+                    log.info("Matriculando o aluno '{}' na turma '{}'...", student.getFirstName(), courseSection.getName());
 
-        log.info("Matriculando o aluno '{}' na turma '{}'...", student.getFirstName(), courseSection.getName());
+                    var enrollmentRequest = new CreateEnrollmentRequestDto(
+                            student.getId(),
+                            courseSection.getId(),
+                            LocalDate.now()
+                    );
 
-        var enrollmentRequest = new CreateEnrollmentRequestDto(
-                student.getId(),
-                courseSection.getId(),
-                LocalDate.now()
-        );
-
-        try {
-            enrollmentService.enrollStudent(enrollmentRequest);
-            log.info("Matrícula para o aluno '{}' na turma '{}' criada com sucesso.",
-                    student.getFirstName(), courseSection.getName());
-        } catch (Exception e) {
-            log.error("Não foi possível realizar a matrícula de teste para o aluno '{}' na turma '{}': {}",
-                    student.getFirstName(), courseSection.getName(), e.getMessage());
-        }
+                    try {
+                        EnrollmentDetailsDto createdEnrollmentDto = enrollmentService.enrollStudent(enrollmentRequest);
+                        log.info("Matrícula para o aluno '{}' na turma '{}' criada com sucesso.",
+                                student.getFirstName(), courseSection.getName());
+                        return enrollmentRepository.findById(createdEnrollmentDto.id())
+                                .orElseThrow(() -> new IllegalStateException("A matrícula acabou de ser criada, mas não foi encontrada."));
+                    } catch (Exception e) {
+                        log.error("Não foi possível realizar a matrícula de teste para o aluno '{}' na turma '{}': {}",
+                                student.getFirstName(), courseSection.getName(), e.getMessage());
+                        return null;
+                    }
+                });
     }
 
     private Map<String, Employee> seedEmployees(Institution institution) {
@@ -1175,63 +1178,32 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    private Map<String, AssessmentDefinition> seedAssessmentDefinitions(Map<String, CourseSection> courseSections) {
+        log.info("Iniciando seeding de Definições de Avaliação...");
+        Map<String, AssessmentDefinition> createdDefinitions = new HashMap<>();
 
-    private void seedAssessments(Map<String, Student> students, Map<String, CourseSection> sections) {
-        log.info("Iniciando seeding de Avaliações...");
-
-        Student alunoJoao = students.get("JOAO");
-        CourseSection turmaPOO = sections.get("POO_A");
-
-        if (alunoJoao != null && turmaPOO != null) {
-            Optional<Enrollment> enrollmentOpt = enrollmentRepository.findByStudentAndCourseSection(alunoJoao, turmaPOO);
-
-            enrollmentOpt.ifPresent(enrollment -> {
-
-                AssessmentDefinition examDef = assessmentDefinitionRepository.findByTitle("Prova 1")
-                        .orElseGet(() -> {
-                            log.info("Criando definição para 'Prova 1'...");
-                            AssessmentDefinition newExamDef = new AssessmentDefinition();
-                            newExamDef.setTitle("Prova 1");
-                            newExamDef.setType(AssessmentType.EXAM);
-                            newExamDef.setCourseSection(turmaPOO);
-                            newExamDef.setWeight(new BigDecimal("50.0"));
-                            return assessmentDefinitionRepository.save(newExamDef);
-                        });
-
-                AssessmentDefinition projectDef = assessmentDefinitionRepository.findByTitle("Projeto Final")
-                        .orElseGet(() -> {
-                            log.info("Criando definição para 'Projeto Final'...");
-                            AssessmentDefinition newProjectDef = new AssessmentDefinition();
-                            newProjectDef.setTitle("Projeto Final");
-                            newProjectDef.setType(AssessmentType.PROJECT);
-                            newProjectDef.setCourseSection(turmaPOO);
-                            newProjectDef.setWeight(new BigDecimal("50.0"));
-                            return assessmentDefinitionRepository.save(newProjectDef);
-                        });
-
-                if (assessmentRepository.existsByEnrollmentAndAssessmentDefinition(enrollment, examDef)) {
-                    createAssessment(examDef, new BigDecimal("8.5"), LocalDate.now().minusMonths(1), enrollment);
-                }
-                if (assessmentRepository.existsByEnrollmentAndAssessmentDefinition(enrollment, projectDef)) {
-                    createAssessment(projectDef, new BigDecimal("9.0"), LocalDate.now().minusWeeks(2), enrollment);
-                }
-            });
+        CourseSection pooSection = courseSections.get("POO_A");
+        if (pooSection != null) {
+            createdDefinitions.put("Prova 1", createAssessmentDefinitionIfNotExists("Prova 1", "EXAM", pooSection, new BigDecimal("40.0")));
+            createdDefinitions.put("Projeto Final", createAssessmentDefinitionIfNotExists("Projeto Final", "PROJECT", pooSection, new BigDecimal("60.0")));
         }
-
-        log.info("Seeding de Avaliações finalizado.");
+        return createdDefinitions;
     }
 
-    private void createAssessment(AssessmentDefinition definition, BigDecimal score, LocalDate date, Enrollment enrollment) {
-
-        var request = new CreateAssessmentRequestDto(
-                enrollment.getId(),
-                definition.getId(),
-                score,
-                date,
-                definition.getType().name()
-        );
-        assessmentService.addAssessmentToEnrollment(request);
+    private AssessmentDefinition createAssessmentDefinitionIfNotExists(String title, String type, CourseSection section, BigDecimal weight) {
+        return assessmentDefinitionRepository.findByTitleAndCourseSection(title, section)
+                .orElseGet(() -> {
+                    log.info("Criando definição de avaliação: {}", title);
+                    var request = new CreateAssessmentDefinitionRequestDto(
+                            section.getId(),
+                            title,
+                            type,
+                            LocalDate.now().plusMonths(2),
+                            weight
+                    );
+                    AssessmentDefinitionDto dto = assessmentDefinitionService.create(request);
+                    return assessmentDefinitionRepository.findById(dto.id()).orElseThrow();
+                });
     }
-
 
 }

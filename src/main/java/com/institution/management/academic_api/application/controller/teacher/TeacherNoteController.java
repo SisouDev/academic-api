@@ -19,21 +19,21 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/api/v1/teacher-notes")
-@RequiredArgsConstructor
-public class TeacherNoteController {
+    @RequestMapping("/api/v1/teacher-notes")
+    @RequiredArgsConstructor
+    public class TeacherNoteController {
 
-    private final TeacherNoteService noteService;
+        private final TeacherNoteService noteService;
 
-    @PostMapping
-    public ResponseEntity<EntityModel<TeacherNoteDto>> createNote(@RequestBody @Valid CreateTeacherNoteRequestDto request) {
-        TeacherNoteDto createdNote = noteService.create(request);
+        @PostMapping
+        public ResponseEntity<EntityModel<TeacherNoteDto>> createNote(@RequestBody @Valid CreateTeacherNoteRequestDto request) {
+            TeacherNoteDto createdNote = noteService.create(request);
 
-        EntityModel<TeacherNoteDto> noteModel = EntityModel.of(createdNote,
-                linkTo(methodOn(TeacherNoteController.class).findById(createdNote.id())).withSelfRel());
+            EntityModel<TeacherNoteDto> noteModel = EntityModel.of(createdNote,
+                    linkTo(methodOn(com.institution.management.academic_api.application.controller.teacher.TeacherNoteController.class).findById(createdNote.id())).withSelfRel());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(noteModel);
-    }
+            return ResponseEntity.status(HttpStatus.CREATED).body(noteModel);
+        }
 
     @GetMapping("/{noteId}")
     public ResponseEntity<EntityModel<TeacherNoteDto>> findById(@PathVariable Long noteId) {

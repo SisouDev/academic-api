@@ -17,6 +17,9 @@ import com.institution.management.academic_api.exception.type.institution.Instit
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityExistsException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -99,6 +102,19 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departments.stream()
                 .map(departmentMapper::toSummaryDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DepartmentSummaryDto> findAll(String searchTerm, Pageable pageable) {
+        Specification<Department> spec = (root, query, cb) -> {
+            if (searchTerm == null || searchTerm.isBlank()) {
+                return cb.conjunction();
+            }
+            return cb.like(cb.lower(root.get("name")), "%" + searchTerm.toLowerCase() + "%");
+        };
+        return departmentRepository.findAll(spec, pageable)
+                .map(departmentMapper::toSummaryDto);
     }
 
     private Department findDepartmentByIdOrThrow(Long id) {

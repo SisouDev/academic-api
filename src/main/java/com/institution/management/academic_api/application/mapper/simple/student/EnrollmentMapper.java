@@ -4,6 +4,7 @@ import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.mapper.wrappers.common.PersonMapperWrapper;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import org.mapstruct.*;
 
 
@@ -17,10 +18,15 @@ public interface EnrollmentMapper {
 
     @Mapping(target = "status", source = "status.displayName")
     @Mapping(target = "courseSection", source = "courseSection")
-    @Mapping(target = "teacher", source = "courseSection.teacher")
+    @Mapping(target = "teacher", source = "courseSection.teacher", qualifiedByName = "mapTeacherToEnrolledInfo")
     @Mapping(target = "courseSectionInfo", source = "courseSection")
     EnrollmentSummaryDto toSummaryDto(Enrollment enrollment);
 
+    @Mapping(target = "status", source = "status.displayName")
+    @Mapping(target = "student", source = "student")
+    @Mapping(target = "courseSection", source = "courseSection")
+    @Mapping(target = "assessments", source = "assessments")
+    @Mapping(target = "attendanceRecords", source = "attendanceRecords")
     EnrollmentDetailsDto toDetailsDto(Enrollment enrollment);
 
     @Mapping(target = "id", ignore = true)
@@ -47,4 +53,15 @@ public interface EnrollmentMapper {
     @Mapping(target = "studentEmail", source = "student.email")
     @Mapping(target = "status", source = "status.displayName")
     ClassListStudentDto toClassListDto(Enrollment enrollment);
+
+    @Named("mapTeacherToEnrolledInfo")
+    default EnrolledTeacherInfo mapTeacherToEnrolledInfo(Teacher teacher) {
+        if (teacher == null) {
+            return new EnrolledTeacherInfo(null, "A definir");
+        }
+        return new EnrolledTeacherInfo(
+                teacher.getId(),
+                teacher.getFirstName() + " " + teacher.getLastName()
+        );
+    }
 }
