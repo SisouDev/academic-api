@@ -43,7 +43,10 @@ public record InstitutionDetailsDto(
         long teacherCount,
 
         @Schema(description = "Total de cursos oferecidos na instituição.", example = "42")
-        long courseCount
+        long courseCount,
+
+        @Schema(description = "Total de turmas na instituição.", example = "85")
+        long sectionCount
 
 ) {}
 

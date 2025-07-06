@@ -7,9 +7,12 @@ import com.institution.management.academic_api.application.mapper.simple.student
 import com.institution.management.academic_api.domain.model.entities.student.Assessment;
 import com.institution.management.academic_api.domain.model.entities.student.AssessmentDefinition;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
+import com.institution.management.academic_api.domain.model.enums.common.NotificationType;
 import com.institution.management.academic_api.domain.repository.student.AssessmentDefinitionRepository;
 import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
+import com.institution.management.academic_api.domain.repository.user.UserRepository;
+import com.institution.management.academic_api.domain.service.common.NotificationService;
 import com.institution.management.academic_api.domain.service.student.AssessmentService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.student.AssessmentNotFoundException;
@@ -29,6 +32,8 @@ public class AssessmentServiceImpl implements AssessmentService {
     private final AssessmentMapper assessmentMapper;
     private final EnrollmentRepository enrollmentRepository;
     private final AssessmentDefinitionRepository definitionRepository;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -41,8 +46,23 @@ public class AssessmentServiceImpl implements AssessmentService {
         Assessment assessment = assessmentMapper.toEntity(request);
         assessment.setEnrollment(enrollment);
         assessment.setAssessmentDefinition(definition);
-
         Assessment savedAssessment = assessmentRepository.save(assessment);
+
+        Long studentPersonId = enrollment.getStudent().getId();
+
+        userRepository.findByPersonId(studentPersonId).ifPresent(studentUser -> {
+            String message = "Sua nota em '" + savedAssessment.getAssessmentDefinition().getTitle() + "' foi lançada: " + savedAssessment.getScore();
+            String link = "/student/class/" + enrollment.getId() + "/details";
+
+            notificationService.createNotification(
+                    studentUser,
+                    message,
+                    link,
+                    NotificationType.GRADE_POSTED
+            );
+        });
+
+
         return assessmentMapper.toDto(savedAssessment);
     }
 

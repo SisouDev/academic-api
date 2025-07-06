@@ -28,6 +28,13 @@ public class StudentResponseDto extends PersonResponseDto {
     @Schema(description = "Total de faltas acumuladas do aluno em todas as disciplinas.", example = "12")
     private int totalAbsences;
 
+    @Schema(description = "Lista de matérias em que o aluno está atualmente matriculado.")
+    private List<EnrolledSubjectDto> currentSubjects;
+
+    @Schema(description = "Nome do curso principal do aluno.", example = "Engenharia de Software")
+    private String courseName;
+
+
     @Override
     public String getPersonType() {
         return "STUDENT";

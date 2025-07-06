@@ -34,6 +34,7 @@ public interface InstitutionMapper {
     @Mapping(target = "teacherCount", source = "members", qualifiedByName = "countTeachers")
     @Mapping(target = "courseCount", source = "departments", qualifiedByName = "countCourses")
     @Mapping(target = "formattedAddress", source = "address", qualifiedByName = "formatAddressToString")
+    @Mapping(target = "sectionCount", source = "departments", qualifiedByName = "countSections")
     InstitutionDetailsDto toDetailsDto(Institution institution);
 
 
@@ -82,4 +83,13 @@ public interface InstitutionMapper {
         return String.format("%s, %s - %s, %s", address.getStreet(), address.getNumber(), address.getCity(), address.getState());
     }
 
+    @Named("countSections")
+    default long countSections(List<Department> departments) {
+        if (departments == null) return 0;
+        return departments.stream()
+                .flatMap(department -> department.getCourses().stream())
+                .flatMap(course -> course.getSubjects().stream())
+                .mapToLong(subject -> subject.getCourseSections() != null ? subject.getCourseSections().size() : 0)
+                .sum();
+    }
 }

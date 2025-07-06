@@ -36,6 +36,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/uploads/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers(HttpMethod.GET).authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/enrollments/attendance", "/api/v1/teacher-notes").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/teachers/{id}/status").hasRole("TEACHER")

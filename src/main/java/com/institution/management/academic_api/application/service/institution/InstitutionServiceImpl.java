@@ -1,11 +1,17 @@
 package com.institution.management.academic_api.application.service.institution;
 
+import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
+import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionRequestDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionDetailsDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionSummaryDto;
 import com.institution.management.academic_api.application.dto.institution.UpdateInstitutionRequestDto;
+import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
+import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionMapper;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
+import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
 import com.institution.management.academic_api.domain.service.institution.InstitutionService;
 import com.institution.management.academic_api.exception.type.institution.InstitutionAlreadyExistsException;
@@ -13,6 +19,8 @@ import com.institution.management.academic_api.exception.type.institution.Instit
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +33,8 @@ import java.util.stream.Collectors;
 public class InstitutionServiceImpl implements InstitutionService {
     private final InstitutionMapper institutionMapper;
     private final InstitutionRepository institutionRepository;
+    private final PersonMapper personMapper;
+    private final CourseSectionMapper courseSectionMapper;
 
     @Override
     @Transactional
@@ -55,6 +65,39 @@ public class InstitutionServiceImpl implements InstitutionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PersonSummaryDto> findTeachersByInstitution(Long id) {
+        Institution institution = findInstitutionByIdOrThrow(id);
+        return institution.getMembers().stream()
+                .filter(Teacher.class::isInstance)
+                .map(personMapper::toSummaryDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonSummaryDto> findStudentsByInstitution(Long id) {
+        Institution institution = findInstitutionByIdOrThrow(id);
+        return institution.getMembers().stream()
+                .filter(Student.class::isInstance)
+                .map(personMapper::toSummaryDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseSectionSummaryDto> findCourseSectionsByInstitution(Long id) {
+        Institution institution = findInstitutionByIdOrThrow(id);
+
+        return institution.getDepartments().stream()
+                .flatMap(department -> department.getCourses().stream())
+                .flatMap(course -> course.getSubjects().stream())
+                .flatMap(subject -> subject.getCourseSections().stream())
+                .map(courseSectionMapper::toSummaryDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     @LogActivity("Atualizou uma instituição.")
     public InstitutionDetailsDto update(Long id, UpdateInstitutionRequestDto request) {
@@ -75,6 +118,13 @@ public class InstitutionServiceImpl implements InstitutionService {
             throw new InstitutionCannotBeDeletedException("It is not possible to delete the institution because it has associated departments or members.");
         }
         institutionRepository.delete(institutionToDelete);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<InstitutionSummaryDto> findPaginated(Pageable pageable) {
+        return institutionRepository.findAll(pageable)
+                .map(institutionMapper::toSummaryDto);
     }
 
     private Institution findInstitutionByIdOrThrow(Long id) {
