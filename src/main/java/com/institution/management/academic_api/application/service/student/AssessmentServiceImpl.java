@@ -4,10 +4,10 @@ import com.institution.management.academic_api.application.dto.student.Assessmen
 import com.institution.management.academic_api.application.dto.student.CreateAssessmentRequestDto;
 import com.institution.management.academic_api.application.dto.student.UpdateAssessmentRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.student.AssessmentMapper;
+import com.institution.management.academic_api.application.notifiers.student.AssessmentNotifier;
 import com.institution.management.academic_api.domain.model.entities.student.Assessment;
 import com.institution.management.academic_api.domain.model.entities.student.AssessmentDefinition;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
-import com.institution.management.academic_api.domain.model.enums.common.NotificationType;
 import com.institution.management.academic_api.domain.repository.student.AssessmentDefinitionRepository;
 import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
@@ -34,6 +34,7 @@ public class AssessmentServiceImpl implements AssessmentService {
     private final AssessmentDefinitionRepository definitionRepository;
     private final NotificationService notificationService;
     private final UserRepository userRepository;
+    private final AssessmentNotifier assessmentNotifier;
 
     @Override
     @Transactional
@@ -48,20 +49,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         assessment.setAssessmentDefinition(definition);
         Assessment savedAssessment = assessmentRepository.save(assessment);
 
-        Long studentPersonId = enrollment.getStudent().getId();
-
-        userRepository.findByPersonId(studentPersonId).ifPresent(studentUser -> {
-            String message = "Sua nota em '" + savedAssessment.getAssessmentDefinition().getTitle() + "' foi lançada: " + savedAssessment.getScore();
-            String link = "/student/class/" + enrollment.getId() + "/details";
-
-            notificationService.createNotification(
-                    studentUser,
-                    message,
-                    link,
-                    NotificationType.GRADE_POSTED
-            );
-        });
-
+        assessmentNotifier.notifyStudentOfNewGrade(savedAssessment);
 
         return assessmentMapper.toDto(savedAssessment);
     }
@@ -73,6 +61,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         Assessment assessmentToUpdate = findAssessmentByIdOrThrow(assessmentId);
         assessmentMapper.updateFromDto(request, assessmentToUpdate);
         Assessment savedAssessment = assessmentRepository.save(assessmentToUpdate);
+        assessmentNotifier.notifyStudentOfGradeUpdate(assessmentToUpdate);
         return assessmentMapper.toDto(savedAssessment);
     }
 
@@ -81,6 +70,7 @@ public class AssessmentServiceImpl implements AssessmentService {
     @LogActivity("Deletou uma avaliação.")
     public void deleteAssessment(Long assessmentId) {
         Assessment assessmentToDelete = findAssessmentByIdOrThrow(assessmentId);
+        assessmentNotifier.notifyStudentOfGradeDeletion(assessmentToDelete);
         assessmentRepository.delete(assessmentToDelete);
     }
 

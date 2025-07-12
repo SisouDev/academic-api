@@ -5,6 +5,7 @@ import com.institution.management.academic_api.application.dto.course.CourseSumm
 import com.institution.management.academic_api.application.dto.course.CreateCourseRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseMapper;
+import com.institution.management.academic_api.application.notifiers.course.CourseNotifier;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.course.Course;
 import com.institution.management.academic_api.domain.model.entities.specification.CourseSpecification;
@@ -29,6 +30,7 @@ public class CourseServiceImpl implements CourseService {
     private final DepartmentRepository departmentRepository;
     private final CourseRepository courseRepository;
     private final CourseMapper courseMapper;
+    private final CourseNotifier courseNotifier;
 
     @Override
     @Transactional
@@ -42,6 +44,7 @@ public class CourseServiceImpl implements CourseService {
         newCourse.setDepartment(department);
 
         Course savedCourse = courseRepository.save(newCourse);
+        courseNotifier.notifyAdminOfNewCourse(savedCourse);
         return courseMapper.toDetailsDto(savedCourse);
     }
 
@@ -59,6 +62,7 @@ public class CourseServiceImpl implements CourseService {
         Course courseToUpdate = findCourseByIdOrThrow(id);
         courseMapper.updateFromDto(request, courseToUpdate);
         Course updatedCourse = courseRepository.save(courseToUpdate);
+        courseNotifier.notifyAdminOfCourseUpdate(courseToUpdate);
         return courseMapper.toDetailsDto(updatedCourse);
     }
 
@@ -67,6 +71,7 @@ public class CourseServiceImpl implements CourseService {
     @LogActivity("Deletou um curso.")
     public void delete(Long id) {
         Course courseToDelete = findCourseByIdOrThrow(id);
+        courseNotifier.notifyAdminOfCourseDeletion(courseToDelete);
         courseRepository.delete(courseToDelete);
     }
 

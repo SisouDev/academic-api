@@ -2,10 +2,7 @@ package com.institution.management.academic_api.domain.service.teacher;
 
 import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,4 +22,7 @@ public interface TeacherService {
     Page<TeacherSummaryDto> findPaginated(String searchTerm, Pageable pageable);
 
     List<CourseSectionSummaryDto> findSectionsForCurrentTeacher();
+
+    List<TeacherCourseSectionDto> findSectionsForCurrentTeacherDashboard();
+
 }

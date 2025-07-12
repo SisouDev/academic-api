@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.domain.model.entities.course;
 
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
+import com.institution.management.academic_api.domain.model.entities.academic.Lesson;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import jakarta.persistence.*;
@@ -47,4 +48,8 @@ public class CourseSection {
     @OneToMany(mappedBy = "courseSection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Enrollment> enrollments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "courseSection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private List<Lesson> lessons = new ArrayList<>();
 }

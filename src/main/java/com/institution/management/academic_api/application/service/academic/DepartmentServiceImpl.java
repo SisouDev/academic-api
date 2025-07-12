@@ -5,6 +5,7 @@ import com.institution.management.academic_api.application.dto.academic.Departme
 import com.institution.management.academic_api.application.dto.academic.DepartmentSummaryDto;
 import com.institution.management.academic_api.application.dto.academic.UpdateDepartmentRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.academic.DepartmentMapper;
+import com.institution.management.academic_api.application.notifiers.academic.DepartmentNotifier;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.user.User;
@@ -35,6 +36,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final InstitutionRepository institutionRepository;
     private final UserRepository userRepository;
+    private final DepartmentNotifier departmentNotifier;
 
 
     @Override
@@ -50,6 +52,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         Department savedDepartment = departmentRepository.save(newDepartment);
 
+        departmentNotifier.notifyAdminOfNewDepartment(savedDepartment);
         return departmentMapper.toDetailsDto(savedDepartment);
     }
 
@@ -75,8 +78,10 @@ public class DepartmentServiceImpl implements DepartmentService {
     @LogActivity("Atualizou um departamento acadêmico.")
     public DepartmentDetailsDto update(Long id, UpdateDepartmentRequestDto request) {
         Department departmentToUpdate = findDepartmentByIdOrThrow(id);
+        String oldName = departmentToUpdate.getName();
         departmentMapper.updateFromDto(request, departmentToUpdate);
         Department updatedDepartment = departmentRepository.save(departmentToUpdate);
+        departmentNotifier.notifyAdminOfDepartmentUpdate(oldName, departmentToUpdate);
         return departmentMapper.toDetailsDto(updatedDepartment);
     }
 
@@ -85,6 +90,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @LogActivity("Deletou um departamento acadêmico.")
     public void delete(Long id) {
         Department departmentToDelete = findDepartmentByIdOrThrow(id);
+        departmentNotifier.notifyAdminOfDepartmentDeletion(departmentToDelete);
         departmentRepository.delete(departmentToDelete);
     }
 

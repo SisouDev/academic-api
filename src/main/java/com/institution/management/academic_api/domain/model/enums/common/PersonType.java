@@ -1,21 +1,27 @@
 package com.institution.management.academic_api.domain.model.enums.common;
 
+import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.entities.employee.Employee;
+import com.institution.management.academic_api.domain.model.entities.institution.InstitutionAdmin;
+import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import lombok.Getter;
 
 import java.util.stream.Stream;
 
 @Getter
 public enum PersonType {
-    STUDENT("Student"),
-    TEACHER("Teacher"),
-    STAFF("Staff"),
-    GUARDIAN("Guardian"),
-    EMPLOYEE("Employee");
+    STUDENT("Student", Student.class),
+    TEACHER("Teacher", Teacher.class),
+    STAFF("Staff", InstitutionAdmin.class),
+    EMPLOYEE("Employee", Employee.class);
 
     private final String displayName;
+    private final Class<? extends Person> entityClass;
 
-    PersonType(String displayName) {
+    PersonType(String displayName, Class<? extends Person> entityClass) {
         this.displayName = displayName;
+        this.entityClass = entityClass;
     }
 
     public static PersonType fromDisplayName(String text) {

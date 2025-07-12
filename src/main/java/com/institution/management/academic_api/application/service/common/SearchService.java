@@ -1,7 +1,10 @@
 package com.institution.management.academic_api.application.service.common;
 
-import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
+import com.institution.management.academic_api.application.dto.common.PersonSearchResultDto;
+import com.institution.management.academic_api.application.dto.common.SearchResponseDto;
+import com.institution.management.academic_api.application.dto.common.SubjectSearchResultDto;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
+import com.institution.management.academic_api.application.mapper.simple.course.SubjectMapper;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.specification.PersonSpecification;
 import com.institution.management.academic_api.domain.model.entities.user.User;
@@ -12,72 +15,80 @@ import com.institution.management.academic_api.domain.repository.course.SubjectR
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SearchService {
 
     private final PersonRepository personRepository;
     private final SubjectRepository subjectRepository;
-    private final PersonMapper personMapper;
     private final UserRepository userRepository;
+    private final PersonMapper personMapper;
+    private final SubjectMapper subjectMapper;
 
+    @Transactional(readOnly = true)
+    public SearchResponseDto search(String searchTerm) {
+        User currentUser = getCurrentUser();
 
-    public Page<PersonSummaryDto> searchPeople(String searchTerm, Pageable pageable) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            return Page.empty();
-        }
+        List<PersonSearchResultDto> peopleResults = searchPeopleByRole(currentUser, searchTerm);
+        List<SubjectSearchResultDto> subjectResults = searchSubjectsByRole(currentUser, searchTerm);
 
-
-        String username = authentication.getName();
-
-        User currentUser = userRepository.findByLogin(username)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado no banco de dados: " + username));
-
-        if (isAdmin(currentUser)) {
-            Specification<Person> spec = PersonSpecification.searchByTerm(searchTerm);
-            return personRepository.findAll(spec, pageable).map(personMapper::toSummaryDto);
-
-        } else if (isEmployee(currentUser)) {
-            Specification<Person> spec = PersonSpecification.searchByTerm(searchTerm);
-            return personRepository.findAll(spec, pageable).map(personMapper::toSummaryDto);
-
-        } else if (isStudent(currentUser)) {
-            Specification<Person> spec = PersonSpecification.searchByTermAndType(searchTerm, PersonType.STUDENT, false);
-            return personRepository.findAll(spec, pageable).map(personMapper::toSummaryDto);
-        }
-
-        return Page.empty();
+        return new SearchResponseDto(peopleResults, subjectResults);
     }
 
-    private boolean isAdmin(User user) {
-        if (user == null || user.getRoles() == null) {
-            return false;
+    private List<PersonSearchResultDto> searchPeopleByRole(User user, String term) {
+        if (hasRole(user, RoleName.ROLE_ADMIN) || hasRole(user, RoleName.ROLE_EMPLOYEE)) {
+            Specification<Person> spec = PersonSpecification.searchByTerm(term);
+            return personRepository.findAll(spec).stream()
+                    .map(personMapper::toSearchResultDto)
+                    .collect(Collectors.toList());
         }
-        return user.getRoles().stream()
-                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+        if (hasRole(user, RoleName.ROLE_TEACHER)) {
+            Specification<Person> spec = PersonSpecification.searchByTerm(term)
+                    .and((root, query, cb) -> root.get("personType").in(PersonType.STUDENT, PersonType.EMPLOYEE));
+            return personRepository.findAll(spec).stream()
+                    .map(personMapper::toSearchResultDto)
+                    .collect(Collectors.toList());
+        }
+        if (hasRole(user, RoleName.ROLE_STUDENT)) {
+            Specification<Person> spec = PersonSpecification.searchByTermAndType(term, PersonType.TEACHER, true);
+            return personRepository.findAll(spec).stream()
+                    .map(personMapper::toSearchResultDto)
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
-    private boolean isEmployee(User user) {
-        if (user == null || user.getRoles() == null) {
-            return false;
+    private List<SubjectSearchResultDto> searchSubjectsByRole(User user, String term) {
+        if (hasRole(user, RoleName.ROLE_ADMIN) || hasRole(user, RoleName.ROLE_TEACHER)) {
+            return subjectRepository.findByNameContainingIgnoreCase(term).stream()
+                    .map(subjectMapper::toSearchResultDto)
+                    .collect(Collectors.toList());
         }
-        return user.getRoles().stream()
-                .anyMatch(role -> role.getName() == RoleName.ROLE_EMPLOYEE);
+        if (hasRole(user, RoleName.ROLE_STUDENT)) {
+            return subjectRepository.findEnrolledSubjectsByStudentIdAndName(user.getPerson().getId(), term).stream()
+                    .map(subjectMapper::toSearchResultDto)
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
-    private boolean isStudent(User user) {
-        if (user == null || user.getRoles() == null) {
-            return false;
-        }
-        return user.getRoles().stream()
-                .anyMatch(role -> role.getName() == RoleName.ROLE_USER);
+    private User getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByLogin(username).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+    }
+
+    private boolean hasRole(User user, RoleName roleName) {
+        return user.getRoles().stream().anyMatch(role -> role.getName() == roleName);
     }
 }

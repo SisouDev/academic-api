@@ -4,13 +4,14 @@ import com.institution.management.academic_api.application.dto.teacher.CreateLes
 import com.institution.management.academic_api.application.dto.teacher.LessonPlanDto;
 import com.institution.management.academic_api.application.dto.teacher.UpdateLessonPlanRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.teacher.LessonPlanMapper;
+import com.institution.management.academic_api.application.notifiers.teacher.LessonPlanNotifier;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.teacher.LessonPlan;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.teacher.LessonPlanRepository;
 import com.institution.management.academic_api.domain.service.teacher.LessonPlanService;
-import com.institution.management.academic_api.exception.type.teacher.LessonPlanAlreadyExistsException;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
+import com.institution.management.academic_api.exception.type.teacher.LessonPlanAlreadyExistsException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
     private final LessonPlanRepository lessonPlanRepository;
     private final CourseSectionRepository courseSectionRepository;
     private final LessonPlanMapper lessonPlanMapper;
+    private final LessonPlanNotifier lessonPlanNotifier;
 
     @Override
     @Transactional
@@ -38,6 +40,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
         LessonPlan newLessonPlan = lessonPlanMapper.toEntity(request);
         newLessonPlan.setCourseSection(courseSection);
         LessonPlan savedLessonPlan = lessonPlanRepository.save(newLessonPlan);
+        lessonPlanNotifier.notifyStudentsOfNewLessonPlan(savedLessonPlan);
         return lessonPlanMapper.toDto(savedLessonPlan);
     }
 
@@ -51,6 +54,7 @@ public class LessonPlanServiceImpl implements LessonPlanService {
         lessonPlanMapper.updateFromDto(request, lessonPlanToUpdate);
 
         LessonPlan updatedLessonPlan = lessonPlanRepository.save(lessonPlanToUpdate);
+        lessonPlanNotifier.notifyStudentsOfLessonPlanUpdate(lessonPlanToUpdate);
         return lessonPlanMapper.toDto(updatedLessonPlan);
     }
 
@@ -66,9 +70,11 @@ public class LessonPlanServiceImpl implements LessonPlanService {
     @Transactional
     @LogActivity("Deletou um plano de aula.")
     public void delete(Long lessonPlanId) {
-        if (!lessonPlanRepository.existsById(lessonPlanId)) {
-            throw new EntityNotFoundException("LessonPlan not found with id: " + lessonPlanId);
-        }
-        lessonPlanRepository.deleteById(lessonPlanId);
+        LessonPlan lessonPlanToDelete = lessonPlanRepository.findById(lessonPlanId)
+                .orElseThrow(() -> new EntityNotFoundException("LessonPlan not found with id: " + lessonPlanId));
+
+        lessonPlanNotifier.notifyStudentsOfLessonPlanDeletion(lessonPlanToDelete);
+
+        lessonPlanRepository.delete(lessonPlanToDelete);
     }
 }

@@ -3,6 +3,7 @@ package com.institution.management.academic_api.application.service.teacher;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherNoteRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherNoteDto;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherNoteMapper;
+import com.institution.management.academic_api.application.notifiers.teacher.TeacherNoteNotifier;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.entities.teacher.TeacherNote;
@@ -28,6 +29,7 @@ public class TeacherNoteServiceImpl implements TeacherNoteService {
     private final EnrollmentRepository enrollmentRepository;
     private final TeacherRepository teacherRepository;
     private final TeacherNoteMapper noteMapper;
+    private final TeacherNoteNotifier noteNotifier;
 
     @Override
     @Transactional
@@ -48,6 +50,7 @@ public class TeacherNoteServiceImpl implements TeacherNoteService {
 
         TeacherNote savedNote = noteRepository.save(newNote);
         System.out.println(savedNote);
+        noteNotifier.notifyStudentOfNewNote(savedNote);
 
         return noteMapper.toDto(savedNote);
     }
@@ -72,6 +75,11 @@ public class TeacherNoteServiceImpl implements TeacherNoteService {
     @Override
     @Transactional
     public void delete(Long noteId) {
+        TeacherNote noteToDelete = noteRepository.findById(noteId)
+                .orElseThrow(() -> new EntityNotFoundException("Note not found: " + noteId));
+
+        noteNotifier.notifyStudentOfNoteDeletion(noteToDelete);
+
         noteRepository.deleteById(noteId);
     }
 }

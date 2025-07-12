@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.application.mapper.simple.common;
 
 import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
+import com.institution.management.academic_api.application.dto.common.PersonSearchResultDto;
 import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionAdminResponseDto;
@@ -33,6 +34,10 @@ public interface PersonMapper {
     @SubclassMapping(source = Employee.class, target = EmployeeResponseDto.class)
     @SubclassMapping(source = InstitutionAdmin.class, target = InstitutionAdminResponseDto.class)
     PersonResponseDto toResponseDto(Person person);
+
+    @Mapping(target = "fullName", expression = "java(person.getFirstName() + \" \" + person.getLastName())")
+    @Mapping(target = "personType", expression = "java(person.getPersonType().getDisplayName())")
+    PersonSearchResultDto toSearchResultDto(Person person);
 
     @Mapping(target = "fullName", source = "person", qualifiedByName = "personToFullName")
     PersonSummaryDto toSummaryDto(Person person);

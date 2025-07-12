@@ -1,17 +1,24 @@
 package com.institution.management.academic_api.application.service.student;
 
+import com.institution.management.academic_api.application.dto.academic.LessonDetailsDto;
 import com.institution.management.academic_api.application.dto.student.*;
+import com.institution.management.academic_api.application.mapper.simple.academic.LessonMapper;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.student.EnrollmentMapper;
 import com.institution.management.academic_api.application.mapper.simple.student.StudentMapper;
+import com.institution.management.academic_api.application.notifiers.student.StudentNotifier;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
+import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.specification.StudentSpecification;
+import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
+import com.institution.management.academic_api.domain.repository.academic.LessonRepository;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
@@ -56,6 +63,10 @@ public class StudentServiceImpl implements StudentService {
     private final EnrollmentMapper enrollmentMapper;
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StudentNotifier studentNotifier;
+    private final LessonRepository lessonRepository;
+    private final LessonMapper lessonMapper;
+
 
     @Override
     @Transactional
@@ -87,7 +98,8 @@ public class StudentServiceImpl implements StudentService {
         newUser.setRoles(Collections.singleton(studentRole));
 
         userRepository.save(newUser);
-
+        studentNotifier.notifyStudentOfNewAccount(savedStudent);
+        studentNotifier.notifyAdminOfNewStudent(savedStudent);
         return studentMapper.toResponseDto(savedStudent);
     }
 
@@ -140,6 +152,7 @@ public class StudentServiceImpl implements StudentService {
 
         studentRepository.save(studentToUpdate);
         userRepository.save(userToUpdate);
+        studentNotifier.notifyStudentOfStatusChange(studentToUpdate);
         return studentMapper.toResponseDto(studentToUpdate);
     }
 
@@ -151,6 +164,34 @@ public class StudentServiceImpl implements StudentService {
         return studentPage.map(studentMapper::toSummaryDto);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public StudentSubjectDetailsDto findSubjectDetails(Long subjectId, User user) {
+        Student student = studentRepository.findByEmail(user.getLogin())
+                .orElseThrow(() -> new EntityNotFoundException("Aluno não encontrado para o usuário logado."));
+        Enrollment enrollment = student.getEnrollments().stream()
+                .filter(e -> e.getCourseSection().getSubject().getId().equals(subjectId) && e.getStatus() == EnrollmentStatus.ACTIVE)
+                .findFirst()
+                .orElseThrow(() -> new AccessDeniedException("O aluno não está matriculado nesta matéria."));
+
+        CourseSection section = enrollment.getCourseSection();
+        Teacher teacher = section.getTeacher();
+
+        List<LessonDetailsDto> lessons = lessonRepository.findByCourseSectionIdOrderByLessonDateDesc(section.getId())
+                .stream()
+                .map(lessonMapper::toDetailsDto)
+                .collect(Collectors.toList());
+
+        return new StudentSubjectDetailsDto(
+                section.getSubject().getId(),
+                section.getSubject().getId(),
+                section.getSubject().getName(),
+                section.getName(),
+                teacher.getFirstName() + " " + teacher.getLastName(),
+                teacher.getEmail(),
+                lessons
+        );
+    }
 
     private Institution findInstitutionByIdOrThrow(Long id) {
         return institutionRepository.findById(id)

@@ -11,7 +11,19 @@ public enum NotificationType {
     ATTENDANCE_UPDATE("Attendance update"),
     TEACHER_NOTE("Teacher note"),
     SYSTEM_ALERT("System alert"),
-    GENERAL_INFO("General info");
+    GENERAL_INFO("General info"),
+    CREATE("Create"),
+    UPDATE("Update"),
+    CALENDAR_EVENT("Calendar event"),
+    TASK_ASSIGNED("Task assigned"),
+    FINANCIAL("Financial"),
+    ALERT("Alert"),
+    SUCCESS("Success"),
+    WARNING("Warning"),
+    ACTION_REQUIRED("Action required"),
+    INVITATION("Invitation"),
+    SECURITY_ALERT("Security alert"),
+    ACADEMIC_UPDATE("Academic update");
 
     private final String displayName;
 

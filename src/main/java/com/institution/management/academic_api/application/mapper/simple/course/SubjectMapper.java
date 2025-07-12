@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.application.mapper.simple.course;
 
+import com.institution.management.academic_api.application.dto.common.SubjectSearchResultDto;
 import com.institution.management.academic_api.application.dto.course.CreateSubjectRequestDto;
 import com.institution.management.academic_api.application.dto.course.SubjectDetailsDto;
 import com.institution.management.academic_api.application.dto.course.SubjectSummaryDto;
@@ -28,4 +29,7 @@ public interface SubjectMapper {
     @Mapping(target = "course", ignore = true)
     @Mapping(target = "courseSections", ignore = true)
     void updateFromDto(UpdateSubjectRequestDto dto, @MappingTarget Subject entity);
+
+    @Mapping(target = "courseName", source = "course.name")
+    SubjectSearchResultDto toSearchResultDto(Subject subject);
 }

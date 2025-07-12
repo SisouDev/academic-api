@@ -4,7 +4,7 @@ CREATE TABLE institutions (
                               register_id VARCHAR(255) NOT NULL UNIQUE,
                               created_at TIMESTAMP NOT NULL,
 
-    -- Campos do @Embedded Address
+
                               street VARCHAR(255),
                               "number" VARCHAR(50),
                               complement VARCHAR(255),

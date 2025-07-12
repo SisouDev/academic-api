@@ -12,7 +12,10 @@ public enum RoleName {
     ROLE_USER("User"),
     ROLE_FINANCE("Finance"),
     ROLE_EMPLOYEE("Employee"),
-    ROLE_MANAGER("Manager");
+    ROLE_MANAGER("Manager"),
+    ROLE_TECHNICIAN("Technician"),
+    ROLE_HR_ANALYST("HR Analyst"),
+    ROLE_LIBRARIAN("Librarian");
 
     private final String displayName;
 

@@ -3,6 +3,8 @@ package com.institution.management.academic_api.domain.repository.academic;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,5 +23,6 @@ public interface AcademicTermRepository extends JpaRepository<AcademicTerm, Long
 
     boolean existsByYearAndSemesterAndInstitution(Year year, Integer semester, Institution institution);
 
-    List<AcademicTerm> findAllByInstitutionId(Long institutionId);
+    Page<AcademicTerm> findAllByInstitutionId(Long institutionId, Pageable pageable);
+
 }

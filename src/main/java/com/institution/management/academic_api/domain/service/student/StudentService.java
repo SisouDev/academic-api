@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.domain.service.student;
 
 import com.institution.management.academic_api.application.dto.student.*;
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,5 +19,7 @@ public interface StudentService {
     Page<StudentSummaryDto> findPaginated(String searchTerm, Long institutionId, Pageable pageable);
 
     List<EnrollmentSummaryDto> findEnrollmentsForCurrentStudent();
+
+    StudentSubjectDetailsDto findSubjectDetails(Long subjectId, User user);
 
 }

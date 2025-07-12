@@ -17,39 +17,30 @@ public class PersonSpecification {
 
     public static Specification<Person> searchByTerm(String searchTerm) {
         return (root, query, cb) -> {
-            log.info("Executando especificação de busca com o termo: '{}'", searchTerm);
-
             if (searchTerm == null || searchTerm.isBlank()) {
                 return cb.conjunction();
             }
-
             List<Predicate> predicates = new ArrayList<>();
             String[] searchTerms = searchTerm.toLowerCase().split("\\s+");
 
             for (String term : searchTerms) {
                 String likePattern = "%" + term + "%";
-                log.info("Criando predicado para o termo: '{}' com o padrão LIKE: '{}'", term, likePattern);
-
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("firstName")), likePattern),
                         cb.like(cb.lower(root.get("lastName")), likePattern)
                 ));
             }
-
-            log.info("Total de predicados a serem combinados com AND: {}", predicates.size());
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
-
     public static Specification<Person> searchByTermAndType(String searchTerm, PersonType type, boolean includeType) {
         Specification<Person> spec = searchByTerm(searchTerm);
+
         return spec.and((root, query, cb) -> {
-            if (includeType) {
-                return cb.equal(root.get("personType"), type);
-            } else {
-                return cb.notEqual(root.get("personType"), type);
-            }
+            var typePredicate = cb.equal(root.type(), type.getEntityClass());
+
+            return includeType ? typePredicate : cb.not(typePredicate);
         });
     }
 }

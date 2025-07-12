@@ -4,6 +4,7 @@ import com.institution.management.academic_api.application.dto.student.Assessmen
 import com.institution.management.academic_api.application.dto.student.CreateAssessmentDefinitionRequestDto;
 import com.institution.management.academic_api.application.dto.student.UpdateAssessmentDefinitionRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.student.AssessmentDefinitionMapper;
+import com.institution.management.academic_api.application.notifiers.student.AssessmentDefinitionNotifier;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.student.AssessmentDefinition;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
@@ -23,6 +24,7 @@ public class AssessmentDefinitionServiceImpl implements AssessmentDefinitionServ
     private final AssessmentDefinitionRepository repository;
     private final CourseSectionRepository courseSectionRepository;
     private final AssessmentDefinitionMapper mapper;
+    private final AssessmentDefinitionNotifier notifier;
 
     @Override
     @Transactional
@@ -32,8 +34,11 @@ public class AssessmentDefinitionServiceImpl implements AssessmentDefinitionServ
 
         AssessmentDefinition newDef = mapper.toEntity(request);
         newDef.setCourseSection(courseSection);
+        AssessmentDefinition savedDef = repository.save(newDef);
 
-        return mapper.toDto(repository.save(newDef));
+        notifier.notifyStudentsOfNewAssessment(savedDef);
+
+        return mapper.toDto(savedDef);
     }
 
     @Override
@@ -55,15 +60,18 @@ public class AssessmentDefinitionServiceImpl implements AssessmentDefinitionServ
         AssessmentDefinition definition = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Assessment definition not found."));
         mapper.updateFromDto(request, definition);
+        notifier.notifyStudentsOfAssessmentUpdate(definition);
         return mapper.toDto(repository.save(definition));
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new EntityNotFoundException("Assessment definition not found.");
-        }
-        repository.deleteById(id);
+        AssessmentDefinition definition = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Assessment definition not found."));
+
+        notifier.notifyStudentsOfAssessmentDeletion(definition);
+
+        repository.delete(definition);
     }
 }

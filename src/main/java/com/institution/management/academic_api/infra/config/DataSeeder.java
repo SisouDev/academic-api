@@ -60,21 +60,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
+@Order(1)
 public class DataSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
@@ -240,6 +239,8 @@ public class DataSeeder implements CommandLineRunner {
         createdDepartments.put("ADM", createDepartmentIfNotExists("Administração", "DADM", institution));
         createdDepartments.put("DIR", createDepartmentIfNotExists("Direito", "DDIR", institution));
         createdDepartments.put("PSI", createDepartmentIfNotExists("Psicologia", "DPSI", institution));
+        createdDepartments.put("TI", createDepartmentIfNotExists("Tecnologia da Informação", "DTI", institution));
+        createdDepartments.put("HR", createDepartmentIfNotExists("Recursos Humanos", "DHR", institution));
 
 
         log.info("Seeding de Departamentos finalizado.");
@@ -1154,6 +1155,8 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         log.info("Criando funcionário de exemplo: {} {}...", firstName, lastName);
+        Set<RoleName> rolesForEmployee = new HashSet<>();
+        rolesForEmployee.add(RoleName.ROLE_EMPLOYEE);
 
         var employeeRequest = new CreateEmployeeRequestDto(
                 firstName,
@@ -1163,7 +1166,8 @@ public class DataSeeder implements CommandLineRunner {
                 hiringDate,
                 institution.getId(),
                 1L,
-                document
+                document,
+                rolesForEmployee
         );
 
         try {

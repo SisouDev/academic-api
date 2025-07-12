@@ -2,14 +2,13 @@ package com.institution.management.academic_api.application.service.teacher;
 
 import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.*;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
+import com.institution.management.academic_api.application.notifiers.teacher.TeacherNotifier;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
+import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.specification.TeacherSpecification;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
@@ -20,6 +19,7 @@ import com.institution.management.academic_api.domain.model.enums.common.RoleNam
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
+import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
@@ -58,6 +58,8 @@ public class TeacherServiceImpl implements TeacherService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PersonRepository personRepository;
+    private final TeacherNotifier teacherNotifier;
+    private final CourseSectionRepository courseSectionRepository;
 
     @Override
     @Transactional
@@ -92,6 +94,8 @@ public class TeacherServiceImpl implements TeacherService {
 
         userRepository.save(newUser);
 
+        teacherNotifier.notifyTeacherOfNewAccount(savedTeacher);
+        teacherNotifier.notifyAdminOfNewTeacher(savedTeacher);
         return teacherMapper.toResponseDto(savedTeacher);
     }
 
@@ -130,6 +134,35 @@ public class TeacherServiceImpl implements TeacherService {
         return teacherRepository.findAll(spec, pageable).map(teacherMapper::toSummaryDto);
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherCourseSectionDto> findSectionsForCurrentTeacherDashboard() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Teacher teacher = teacherRepository.findByUser_Login(username)
+                .orElseThrow(() -> new AccessDeniedException("O usuário logado não é um professor ou não foi encontrado."));
+
+        List<AcademicTermStatus> activeStatuses = List.of(
+                AcademicTermStatus.IN_PROGRESS,
+                AcademicTermStatus.ENROLLMENT_OPEN
+        );
+
+        List<CourseSection> activeSections = courseSectionRepository.findSectionsByTeacherAndTermStatusIn(
+                teacher,
+                activeStatuses
+        );
+
+        return activeSections.stream()
+                .map(section -> new TeacherCourseSectionDto(
+                        section.getId(),
+                        section.getSubject().getId(),
+                        section.getName(),
+                        section.getSubject().getName(),
+                        section.getSubject().getCourse().getName(),
+                        section.getLessons().size()
+                ))
+                .collect(Collectors.toList());
+    }
 
     private Institution findInstitutionByIdOrThrow(Long id) {
         return institutionRepository.findById(id)

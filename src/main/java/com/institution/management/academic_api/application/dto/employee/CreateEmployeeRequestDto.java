@@ -1,9 +1,11 @@
 package com.institution.management.academic_api.application.dto.employee;
 
 import com.institution.management.academic_api.application.dto.common.DocumentDto;
+import com.institution.management.academic_api.domain.model.enums.common.RoleName;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Schema(description = "Dados para cadastrar um novo funcionário.")
 public record CreateEmployeeRequestDto(
@@ -28,5 +30,7 @@ public record CreateEmployeeRequestDto(
         @Schema(description = "ID do departamento ao qual o funcionário pertence.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         Long departmentId,
 
-        DocumentDto document
+        DocumentDto document,
+
+        Set<RoleName> roles
 ) {}

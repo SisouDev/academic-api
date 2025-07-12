@@ -3,11 +3,9 @@ package com.institution.management.academic_api.application.controller.teacher;
 import com.institution.management.academic_api.application.controller.course.CourseSectionController;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
-import com.institution.management.academic_api.application.dto.teacher.TeacherSummaryDto;
-import com.institution.management.academic_api.application.dto.teacher.UpdateTeacherRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.*;
 import com.institution.management.academic_api.domain.service.teacher.TeacherService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -64,6 +62,13 @@ public class TeacherController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(CollectionModel.of(sectionModels));
+    }
+
+    @GetMapping("/my-sections")
+    @Operation(summary = "Busca um resumo das turmas do professor logado para o dashboard de aulas")
+    public ResponseEntity<List<TeacherCourseSectionDto>> getMySectionsForDashboard() {
+        List<TeacherCourseSectionDto> sections = teacherService.findSectionsForCurrentTeacherDashboard();
+        return ResponseEntity.ok(sections);
     }
 
     @GetMapping("/{id:\\d+}")

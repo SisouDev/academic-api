@@ -1,16 +1,19 @@
 package com.institution.management.academic_api.application.service.user;
 
+import com.institution.management.academic_api.application.dto.file.FileUploadResponseDto;
 import com.institution.management.academic_api.application.dto.user.*;
 import com.institution.management.academic_api.application.mapper.simple.user.UserMapper;
-import com.institution.management.academic_api.application.service.common.FileStorageService;
+import com.institution.management.academic_api.application.notifiers.user.UserNotifier;
 import com.institution.management.academic_api.domain.model.entities.common.ActivityLog;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
 import com.institution.management.academic_api.domain.model.entities.user.User;
+import com.institution.management.academic_api.domain.model.enums.file.ReferenceType;
 import com.institution.management.academic_api.domain.repository.common.ActivityLogRepository;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
+import com.institution.management.academic_api.domain.service.file.FileUploadService;
 import com.institution.management.academic_api.domain.service.user.UserService;
 import com.institution.management.academic_api.exception.type.user.InvalidPasswordException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
@@ -37,8 +40,10 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    private final FileStorageService fileStorageService;
+    private final FileUploadService fileUploadService;
     private final ActivityLogRepository activityLogRepository;
+    private final UserNotifier userNotifier;
+
 
     @Override
     @Transactional
@@ -65,6 +70,7 @@ public class UserServiceImpl implements UserService {
         newUser.setPasswordHash(hashedPassword);
 
         User savedUser = userRepository.save(newUser);
+        userNotifier.notifyUserWelcome(savedUser);
 
         return userMapper.toResponseDto(savedUser);
     }
@@ -90,7 +96,7 @@ public class UserServiceImpl implements UserService {
 
         String newHashedPassword = passwordEncoder.encode(request.newPassword());
         user.setPasswordHash(newHashedPassword);
-
+        userNotifier.notifyPasswordChange(user);
     }
 
     @Override
@@ -124,11 +130,18 @@ public class UserServiceImpl implements UserService {
     @LogActivity("Atualizou a foto de perfil")
     public void updateProfilePicture(Long userId, MultipartFile file) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + userId));
 
-        String fileUrl = fileStorageService.store(file);
+        FileUploadResponseDto fileResponse = fileUploadService.uploadFile(
+                file,
+                user.getPerson().getId(),
+                ReferenceType.PROFILE_PICTURE
+        );
 
-        personRepository.updateProfilePictureUrl(user.getPerson().getId(), fileUrl);
+        String fileUrl = fileResponse.fileDownloadUri();
+
+        Person person = user.getPerson();
+        person.setProfilePictureUrl(fileUrl);
     }
 
     @Override
@@ -146,7 +159,7 @@ public class UserServiceImpl implements UserService {
 
         String newPassword = generateRandomPassword(8);
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-
+        userNotifier.notifyPasswordReset(user);
     }
 
     private String generateRandomPassword(int length) {

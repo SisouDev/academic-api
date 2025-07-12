@@ -20,7 +20,10 @@ public interface EnrollmentMapper {
     @Mapping(target = "courseSection", source = "courseSection")
     @Mapping(target = "teacher", source = "courseSection.teacher", qualifiedByName = "mapTeacherToEnrolledInfo")
     @Mapping(target = "courseSectionInfo", source = "courseSection")
+    @Mapping(target = "subjectId", source = "courseSection.subject.id")
+    @Mapping(target = "totalAbsences", source = "totalAbsences")
     EnrollmentSummaryDto toSummaryDto(Enrollment enrollment);
+
 
     @Mapping(target = "status", source = "status.displayName")
     @Mapping(target = "student", source = "student")

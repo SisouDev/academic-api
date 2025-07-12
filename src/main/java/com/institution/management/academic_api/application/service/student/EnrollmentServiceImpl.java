@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.service.student;
 
 import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.mapper.simple.student.EnrollmentMapper;
+import com.institution.management.academic_api.application.notifiers.student.EnrollmentNotifier;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.student.AttendanceRecord;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
@@ -39,6 +40,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final CourseSectionRepository courseSectionRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final StudentRepository studentRepository;
+    private final EnrollmentNotifier enrollmentNotifier;
+
 
     @Override
     @Transactional
@@ -62,6 +65,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         newEnrollment.setStatus(EnrollmentStatus.ACTIVE);
 
         Enrollment savedEnrollment = enrollmentRepository.save(newEnrollment);
+        enrollmentNotifier.notifyStudentOfNewEnrollment(savedEnrollment);
         return enrollmentMapper.toDetailsDto(savedEnrollment);
     }
 
@@ -90,6 +94,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (request.status() != null && !request.status().isBlank()) {
             EnrollmentStatus newStatus = EnrollmentStatus.valueOf(request.status().toUpperCase());
             enrollmentToUpdate.setStatus(newStatus);
+            enrollmentNotifier.notifyStudentOfStatusChange(enrollmentToUpdate);
         }
         if (request.totalAbsences() != null) {
             enrollmentToUpdate.setTotalAbsences(request.totalAbsences());

@@ -9,6 +9,7 @@ import com.institution.management.academic_api.application.dto.institution.Updat
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionMapper;
+import com.institution.management.academic_api.application.notifiers.institution.InstitutionNotifier;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
@@ -35,6 +36,7 @@ public class InstitutionServiceImpl implements InstitutionService {
     private final InstitutionRepository institutionRepository;
     private final PersonMapper personMapper;
     private final CourseSectionMapper courseSectionMapper;
+    private final InstitutionNotifier institutionNotifier;
 
     @Override
     @Transactional
@@ -46,7 +48,7 @@ public class InstitutionServiceImpl implements InstitutionService {
         Institution newInstitution = institutionMapper.toEntity(request);
         newInstitution.setCreatedAt(LocalDateTime.now());
         Institution savedInstitution = institutionRepository.save(newInstitution);
-
+        institutionNotifier.notifyAdminOfNewInstitution(savedInstitution);
         return institutionMapper.toDetailsDto(savedInstitution);
     }
 
@@ -106,6 +108,7 @@ public class InstitutionServiceImpl implements InstitutionService {
         institutionMapper.updateFromDto(request, institutionToUpdate);
 
         Institution updatedInstitution = institutionRepository.save(institutionToUpdate);
+        institutionNotifier.notifyAdminOfInstitutionUpdate(institutionToUpdate);
         return institutionMapper.toDetailsDto(updatedInstitution);
     }
 
@@ -117,6 +120,7 @@ public class InstitutionServiceImpl implements InstitutionService {
         if (!institutionToDelete.getDepartments().isEmpty() || !institutionToDelete.getMembers().isEmpty()) {
             throw new InstitutionCannotBeDeletedException("It is not possible to delete the institution because it has associated departments or members.");
         }
+        institutionNotifier.notifyAdminOfInstitutionDeletion(institutionToDelete);
         institutionRepository.delete(institutionToDelete);
     }
 

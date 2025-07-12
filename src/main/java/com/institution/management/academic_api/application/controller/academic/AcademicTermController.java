@@ -1,7 +1,5 @@
 package com.institution.management.academic_api.application.controller.academic;
 
-import com.institution.management.academic_api.application.controller.course.CourseSectionController;
-import com.institution.management.academic_api.application.controller.institution.InstitutionController;
 import com.institution.management.academic_api.application.dto.academic.AcademicTermDetailsDto;
 import com.institution.management.academic_api.application.dto.academic.AcademicTermRequestDto;
 import com.institution.management.academic_api.application.dto.academic.AcademicTermSummaryDto;
@@ -9,14 +7,14 @@ import com.institution.management.academic_api.application.dto.academic.UpdateAc
 import com.institution.management.academic_api.domain.service.academic.AcademicTermService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -27,6 +25,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class AcademicTermController {
 
     private final AcademicTermService academicTermService;
+    private final PagedResourcesAssembler<AcademicTermSummaryDto> pagedAssembler;
 
     @PostMapping
     public ResponseEntity<AcademicTermDetailsDto> create(@RequestBody @Valid AcademicTermRequestDto request) {
@@ -37,29 +36,22 @@ public class AcademicTermController {
     @GetMapping("/{id}")
     public ResponseEntity<EntityModel<AcademicTermDetailsDto>> findById(@PathVariable Long id) {
         AcademicTermDetailsDto term = academicTermService.findById(id);
-
-        EntityModel<AcademicTermDetailsDto> termModel = EntityModel.of(term,
-                linkTo(methodOn(AcademicTermController.class).findById(id)).withSelfRel(),
-                linkTo(methodOn(CourseSectionController.class).findAllByAcademicTerm(id)).withRel("course-sections"),
-                linkTo(methodOn(InstitutionController.class).findById(term.institution().id())).withRel("institution")
-        );
-
-        return ResponseEntity.ok(termModel);
+        EntityModel<AcademicTermDetailsDto> model = EntityModel.of(term,
+                linkTo(methodOn(AcademicTermController.class).findById(id)).withSelfRel());
+        return ResponseEntity.ok(model);
     }
 
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<AcademicTermSummaryDto>>> findAllByInstitution(@RequestParam Long institutionId) {
-        List<AcademicTermSummaryDto> terms = academicTermService.findAllByInstitution(institutionId);
+    public ResponseEntity<PagedModel<EntityModel<AcademicTermSummaryDto>>> findPaginated(
+            @RequestParam(required = false) Long institutionId, Pageable pageable) {
 
-        List<EntityModel<AcademicTermSummaryDto>> termModels = terms.stream()
-                .map(term -> EntityModel.of(term,
-                        linkTo(methodOn(AcademicTermController.class).findById(term.id())).withSelfRel()))
-                .collect(Collectors.toList());
+        Page<AcademicTermSummaryDto> termsPage = academicTermService.findPaginated(institutionId, pageable);
 
-        CollectionModel<EntityModel<AcademicTermSummaryDto>> collectionModel = CollectionModel.of(termModels,
-                linkTo(methodOn(AcademicTermController.class).findAllByInstitution(institutionId)).withSelfRel());
+        PagedModel<EntityModel<AcademicTermSummaryDto>> pagedModel = pagedAssembler.toModel(termsPage,
+                term -> EntityModel.of(term,
+                        linkTo(methodOn(AcademicTermController.class).findById(term.id())).withSelfRel()));
 
-        return ResponseEntity.ok(collectionModel);
+        return ResponseEntity.ok(pagedModel);
     }
 
     @PutMapping("/{id}")

@@ -11,6 +11,7 @@ import com.institution.management.academic_api.application.dto.user.CreateUserRe
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.employee.EmployeeMapper;
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionAdminMapper;
+import com.institution.management.academic_api.application.notifiers.employee.EmployeeNotifier;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
@@ -38,6 +39,7 @@ import com.institution.management.academic_api.exception.type.user.InvalidRoleAs
 import com.institution.management.academic_api.exception.type.user.UserNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -46,14 +48,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
@@ -67,6 +70,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final PersonRepository personRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final EmployeeNotifier employeeNotifier;
 
     @Override
     @Transactional
@@ -80,22 +84,46 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee newEmployee = employeeMapper.toEntity(request);
         newEmployee.setInstitution(institution);
         newEmployee.setJobPosition(position);
-        newEmployee.setHiringDate(LocalDate.now());
+        newEmployee.setHiringDate(request.hiringDate());
         newEmployee.setStatus(PersonStatus.ACTIVE);
         newEmployee.setCreatedAt(LocalDateTime.now());
 
         Employee savedEmployee = employeeRepository.save(newEmployee);
         String defaultPassword = savedEmployee.getDocument().getNumber();
 
-        var employeeRole = roleRepository.findByName(RoleName.ROLE_EMPLOYEE)
-                .orElseThrow(() -> new InvalidRoleAssignmentException("Employee Role not found in the system."));
+        Set<Role> assignedRoles = new HashSet<>();
+
+        roleRepository.findByName(RoleName.ROLE_EMPLOYEE)
+                .ifPresent(assignedRoles::add);
+
+        if (request.roles() != null && !request.roles().isEmpty()) {
+            request.roles().forEach(roleName ->
+                    roleRepository.findByName(roleName)
+                            .ifPresentOrElse(
+                                    assignedRoles::add,
+                                    () -> log.warn("Role '{}' não encontrada no banco de dados e não será atribuída.", roleName)
+                            )
+            );
+        }
+
+        Set<Long> roleIds = assignedRoles.stream()
+                .map(Role::getId)
+                .collect(Collectors.toSet());
+
+        if (roleIds.isEmpty()) {
+            throw new InvalidRoleAssignmentException("Nenhum papel válido foi encontrado para ser atribuído ao usuário.");
+        }
+
         CreateUserRequestDto userRequest = new CreateUserRequestDto(
                 savedEmployee.getEmail(),
                 defaultPassword,
                 savedEmployee.getId(),
-                Set.of(employeeRole.getId())
+                roleIds
         );
+
         userService.create(userRequest);
+
+        employeeNotifier.notifyAdminOfNewEmployee(savedEmployee);
         return employeeMapper.toDto(savedEmployee);
     }
 
@@ -136,10 +164,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         Person staffMember = personRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Staff member not found with ID: " + id));
 
-        if (!(staffMember instanceof Employee || staffMember instanceof InstitutionAdmin)) {
-            throw new InvalidRoleAssignmentException("The person found does not belong to the staff.");
+        if (staffMember instanceof Employee employee) {
+            return employeeMapper.toDetailsDto(employee);
         }
-        return personMapper.toResponseDto(staffMember);
+        else if (staffMember instanceof InstitutionAdmin admin) {
+            return institutionAdminMapper.toDto(admin);
+        }
+        else {
+            throw new InvalidRoleAssignmentException("The person found does not belong to the team.");
+        }
     }
 
     @Override
@@ -202,9 +235,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @LogActivity("Deletou um funcionário.")
     public void delete(Long id) {
-        if (!personRepository.existsById(id)) {
-            throw new UserNotFoundException("Staff member not found with ID: " + id);
-        }
+        Employee employeeToDelete = findEmployeeByIdOrThrow(id);
+
+        employeeNotifier.notifyAdminOfEmployeeDeletion(employeeToDelete);
+
         personRepository.deleteById(id);
     }
 

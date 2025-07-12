@@ -4,6 +4,7 @@ import com.institution.management.academic_api.application.dto.course.CreateSubj
 import com.institution.management.academic_api.application.dto.course.SubjectDetailsDto;
 import com.institution.management.academic_api.application.dto.course.SubjectSummaryDto;
 import com.institution.management.academic_api.application.dto.course.UpdateSubjectRequestDto;
+import com.institution.management.academic_api.application.dto.student.StudentSubjectDetailsDto;
 
 import java.util.List;
 
@@ -17,4 +18,7 @@ public interface SubjectService {
     SubjectDetailsDto update(Long id, UpdateSubjectRequestDto request);
 
     void delete(Long id);
+
+    StudentSubjectDetailsDto findSubjectDetailsForPage(Long subjectId);
+
 }

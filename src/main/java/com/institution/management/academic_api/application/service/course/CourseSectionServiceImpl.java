@@ -5,6 +5,7 @@ import com.institution.management.academic_api.application.dto.course.CourseSect
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
+import com.institution.management.academic_api.application.notifiers.course.CourseSectionNotifier;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
@@ -39,6 +40,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     private final CourseSectionMapper courseSectionMapper;
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
+    private final CourseSectionNotifier courseSectionNotifier;
 
     @Override
     @Transactional
@@ -61,6 +63,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         newCourseSection.setSubject(subject);
         newCourseSection.setTeacher(teacher);
         CourseSection savedCourseSection = courseSectionRepository.save(newCourseSection);
+        courseSectionNotifier.notifyTeacherOfNewAssignment(savedCourseSection);
         return courseSectionMapper.toDetailsDto(savedCourseSection);
 
     }
@@ -87,8 +90,10 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     @LogActivity("Atualizou uma seção de curso.")
     public CourseSectionDetailsDto update(Long id, UpdateCourseSectionRequestDto request) {
         CourseSection courseSectionToUpdate = findCourseSectionByIdOrThrow(id);
+        String oldTeacherName = courseSectionToUpdate.getTeacher().getFirstName();
         courseSectionMapper.updateFromDto(request, courseSectionToUpdate);
         CourseSection savedCourseSection = courseSectionRepository.save(courseSectionToUpdate);
+        courseSectionNotifier.notifyTeacherOfUpdate(courseSectionToUpdate, oldTeacherName);
         return courseSectionMapper.toDetailsDto(savedCourseSection);
     }
 
@@ -97,6 +102,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     @LogActivity("Deletou uma seção de curso.")
     public void delete(Long id) {
         CourseSection courseSectionToDelete = findCourseSectionByIdOrThrow(id);
+        courseSectionNotifier.notifyTeacherOfCancellation(courseSectionToDelete);
         courseSectionRepository.delete(courseSectionToDelete);
     }
 
