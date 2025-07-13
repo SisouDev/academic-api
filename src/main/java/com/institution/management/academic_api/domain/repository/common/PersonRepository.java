@@ -38,4 +38,6 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Person p SET p.profilePictureUrl = :url WHERE p.id = :id")
     void updateProfilePictureUrl(@Param("id") Long id, @Param("url") String url);
+
+    Optional<Person> findByUser_Login(String creatorEmail);
 }

@@ -9,10 +9,12 @@ import com.institution.management.academic_api.application.notifiers.announcemen
 import com.institution.management.academic_api.domain.factory.announcement.AnnouncementFactory;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.announcement.Announcement;
+import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.announcement.AnnouncementRepository;
+import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.service.announcement.AnnouncementService;
@@ -40,12 +42,16 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     private final AnnouncementNotifier announcementNotifier;
     private final DepartmentRepository departmentRepository;
     private final CourseSectionRepository courseSectionRepository;
+    private final PersonRepository personRepository;
+
+
 
     @Override
     @Transactional
     @LogActivity("Publicou um novo aviso.")
     public AnnouncementDetailsDto create(CreateAnnouncementRequestDto dto, String creatorEmail) {
-        Employee creator = findEmployeeByEmailOrThrow(creatorEmail);
+        Person creator = personRepository.findByUser_Login(creatorEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Pessoa criadora não encontrada com email: " + creatorEmail));
         Announcement newAnnouncement = announcementFactory.create(dto, creator);
 
         if (dto.targetDepartmentId() != null) {
@@ -98,12 +104,14 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AnnouncementDetailsDto findById(Long id) {
         Announcement announcement = findAnnouncementByIdOrThrow(id);
         return announcementMapper.toDetailsDto(announcement);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AnnouncementSummaryDto> findVisibleForCurrentUser() {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Employee currentUser = employeeRepository.findByEmail(userEmail)
