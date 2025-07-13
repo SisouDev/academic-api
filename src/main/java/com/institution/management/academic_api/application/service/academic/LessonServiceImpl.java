@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.service.academic;
 
 import com.institution.management.academic_api.application.dto.academic.CreateLessonRequestDto;
 import com.institution.management.academic_api.application.dto.academic.LessonDetailsDto;
+import com.institution.management.academic_api.application.dto.academic.LessonSummaryDto;
 import com.institution.management.academic_api.application.dto.academic.UpdateLessonRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.academic.LessonMapper;
 import com.institution.management.academic_api.application.notifiers.academic.LessonNotifier;
@@ -19,6 +20,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -78,6 +82,20 @@ public class LessonServiceImpl implements LessonService {
         Lesson lessonToDelete = findLessonByIdOrThrow(id);
         checkTeacherPermission(lessonToDelete.getCourseSection());
         lessonRepository.delete(lessonToDelete);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LessonSummaryDto> findAllBySection(Long sectionId) {
+        if (!courseSectionRepository.existsById(sectionId)) {
+            throw new EntityNotFoundException("Turma (CourseSection) não encontrada com ID: " + sectionId);
+        }
+
+        List<Lesson> lessons = lessonRepository.findByCourseSectionIdOrderByLessonDateDesc(sectionId);
+
+        return lessons.stream()
+                .map(lessonMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 
     private Lesson findLessonByIdOrThrow(Long id) {

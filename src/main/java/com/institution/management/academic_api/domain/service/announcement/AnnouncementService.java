@@ -18,4 +18,6 @@ public interface AnnouncementService {
 
     List<AnnouncementSummaryDto> findVisibleForCurrentUser();
 
+    List<AnnouncementSummaryDto> findByCourseSection(Long courseSectionId);
+
 }

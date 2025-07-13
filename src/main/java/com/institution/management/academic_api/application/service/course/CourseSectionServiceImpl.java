@@ -4,20 +4,27 @@ import com.institution.management.academic_api.application.dto.course.CourseSect
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.ClassListStudentDto;
+import com.institution.management.academic_api.application.dto.teacher.CourseSectionDetailsForTeacherDto;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.application.notifiers.course.CourseSectionNotifier;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
+import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
+import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import com.institution.management.academic_api.domain.repository.academic.AcademicTermRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.course.SubjectRepository;
+import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.service.course.CourseSectionService;
 import com.institution.management.academic_api.exception.type.academic.AcademicTermNotFoundException;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.common.InvalidOperationException;
 import com.institution.management.academic_api.exception.type.course.CourseSectionAlreadyExistsInCourseException;
 import com.institution.management.academic_api.exception.type.course.CourseSectionNotFoundException;
@@ -26,10 +33,14 @@ import com.institution.management.academic_api.exception.type.teacher.TeacherNot
 import com.institution.management.academic_api.exception.type.teacher.TeacherNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +52,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
     private final CourseSectionNotifier courseSectionNotifier;
+    private final AssessmentRepository assessmentRepository;
 
     @Override
     @Transactional
@@ -66,6 +78,45 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         courseSectionNotifier.notifyTeacherOfNewAssignment(savedCourseSection);
         return courseSectionMapper.toDetailsDto(savedCourseSection);
 
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CourseSectionDetailsForTeacherDto findDetailsForTeacher(Long sectionId) {
+        CourseSection section = courseSectionRepository.findById(sectionId)
+                .orElseThrow(() -> new EntityNotFoundException("Turma não encontrada com ID: " + sectionId));
+
+        checkTeacherPermission(section);
+        int lessonCount = section.getLessons().size();
+        int studentCount = section.getEnrollments().size();
+        long pendingAssessments = 0;
+
+        List<ClassListStudentDto> enrolledStudents = section.getEnrollments().stream()
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ACTIVE)
+                .map(enrollment -> {
+                    Student student = enrollment.getStudent();
+                    BigDecimal averageGrade = assessmentRepository.findAverageScoreByEnrollment(enrollment);
+
+                    return new ClassListStudentDto(
+                            student.getId(),
+                            student.getFirstName() + " " + student.getLastName(),
+                            student.getEmail(),
+                            averageGrade
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return new CourseSectionDetailsForTeacherDto(
+                section.getId(),
+                section.getSubject().getId(),
+                section.getName(),
+                section.getSubject().getName(),
+                lessonCount,
+                studentCount,
+                pendingAssessments,
+                section.getLessonPlan() != null ? section.getLessonPlan().getId() : null,
+                enrolledStudents
+        );
     }
 
     @Override
@@ -124,5 +175,14 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     private Teacher findTeacherTermByIdOrThrow(Long id) {
         return teacherRepository.findById(id)
                 .orElseThrow(() -> new TeacherNotFoundException("Teacher not found with id: " + id));
+    }
+
+    private void checkTeacherPermission(CourseSection courseSection) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User teacherUser = courseSection.getTeacher().getUser();
+
+        if (teacherUser == null || !teacherUser.getLogin().equals(username)) {
+            throw new AccessDeniedException("Acesso negado. Você não é o professor desta turma.");
+        }
     }
 }

@@ -4,6 +4,7 @@ import com.institution.management.academic_api.application.dto.course.CourseSect
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.CourseSectionDetailsForTeacherDto;
 
 import java.util.List;
 
@@ -13,4 +14,5 @@ public interface CourseSectionService {
     List<CourseSectionSummaryDto> findAllByAcademicTerm(Long academicTermId);
     CourseSectionDetailsDto update(Long id, UpdateCourseSectionRequestDto request);
     void delete(Long id);
+    CourseSectionDetailsForTeacherDto findDetailsForTeacher(Long sectionId);
 }

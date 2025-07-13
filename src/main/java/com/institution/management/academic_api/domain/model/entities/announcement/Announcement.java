@@ -2,6 +2,7 @@ package com.institution.management.academic_api.domain.model.entities.announceme
 
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.enums.announcement.AnnouncementScope;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -41,5 +42,9 @@ public class Announcement {
     private LocalDateTime createdAt;
 
     private LocalDateTime expiresAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_section_id")
+    private CourseSection targetCourseSection;
 
 }

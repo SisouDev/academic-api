@@ -7,9 +7,13 @@ import com.institution.management.academic_api.application.dto.announcement.Upda
 import com.institution.management.academic_api.application.mapper.simple.announcement.AnnouncementMapper;
 import com.institution.management.academic_api.application.notifiers.announcement.AnnouncementNotifier;
 import com.institution.management.academic_api.domain.factory.announcement.AnnouncementFactory;
+import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.announcement.Announcement;
+import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
+import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.announcement.AnnouncementRepository;
+import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.service.announcement.AnnouncementService;
 import com.institution.management.academic_api.domain.service.common.NotificationService;
@@ -34,6 +38,8 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     private final AnnouncementMapper announcementMapper;
     private final NotificationService notificationService;
     private final AnnouncementNotifier announcementNotifier;
+    private final DepartmentRepository departmentRepository;
+    private final CourseSectionRepository courseSectionRepository;
 
     @Override
     @Transactional
@@ -41,9 +47,34 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     public AnnouncementDetailsDto create(CreateAnnouncementRequestDto dto, String creatorEmail) {
         Employee creator = findEmployeeByEmailOrThrow(creatorEmail);
         Announcement newAnnouncement = announcementFactory.create(dto, creator);
+
+        if (dto.targetDepartmentId() != null) {
+            Department targetDepartment = departmentRepository.findById(dto.targetDepartmentId())
+                    .orElseThrow(() -> new EntityNotFoundException("Departamento alvo não encontrado."));
+            newAnnouncement.setTargetDepartment(targetDepartment);
+        }
+
+        if (dto.targetCourseSectionId() != null) {
+            CourseSection targetSection = courseSectionRepository.findById(dto.targetCourseSectionId())
+                    .orElseThrow(() -> new EntityNotFoundException("Turma alvo não encontrada."));
+            newAnnouncement.setTargetCourseSection(targetSection);
+        }
+
         Announcement savedAnnouncement = announcementRepository.save(newAnnouncement);
         announcementNotifier.notifyNewAnnouncement(savedAnnouncement);
         return announcementMapper.toDetailsDto(savedAnnouncement);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AnnouncementSummaryDto> findByCourseSection(Long courseSectionId) {
+        if (!courseSectionRepository.existsById(courseSectionId)) {
+            throw new EntityNotFoundException("Turma não encontrada: " + courseSectionId);
+        }
+        return announcementRepository.findByTargetCourseSectionIdOrderByCreatedAtDesc(courseSectionId)
+                .stream()
+                .map(announcementMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -34,4 +34,7 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
 
     Page<Assessment> findTop3ByEnrollment_StudentOrderByAssessmentDateDesc(Student student, Pageable pageable);
 
+    @Query("SELECT AVG(a.score) FROM Assessment a WHERE a.enrollment = :enrollment")
+    BigDecimal findAverageScoreByEnrollment(@Param("enrollment") Enrollment enrollment);
+
 }

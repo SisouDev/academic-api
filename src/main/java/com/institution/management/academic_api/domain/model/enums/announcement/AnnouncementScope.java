@@ -4,8 +4,9 @@ import java.util.stream.Stream;
 
 @Getter
 public enum AnnouncementScope {
-    INSTITUTION("Institution-wide"),
-    DEPARTMENT("Department-specific");
+    INSTITUTION("Institution wide"),
+    COURSE_SECTION("Course section specific"),
+    DEPARTMENT("Department specific");
 
     private final String displayName;
 

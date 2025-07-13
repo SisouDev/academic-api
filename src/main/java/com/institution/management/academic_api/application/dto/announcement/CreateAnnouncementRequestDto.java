@@ -17,5 +17,8 @@ public record CreateAnnouncementRequestDto(
         LocalDateTime expiresAt,
 
         @Schema(description = "ID do departamento alvo, se o escopo for 'DEPARTMENT'. Caso contrário, deve ser nulo.", example = "4")
-        Long targetDepartmentId
+        Long targetDepartmentId,
+
+        @Schema(description = "ID da turma alvo, se o escopo for 'COURSE_SECTION'. Caso contrário, nulo.", example = "50")
+        Long targetCourseSectionId
 ) {}

@@ -65,21 +65,28 @@ public class AnnouncementController {
         AnnouncementDetailsDto announcement = announcementService.findById(id);
         EntityModel<AnnouncementDetailsDto> resource = EntityModel.of(announcement,
                 linkTo(methodOn(AnnouncementController.class).findById(id)).withSelfRel(),
-                linkTo(methodOn(AnnouncementController.class).findAllVisible()).withRel("all-announcements"));
+                linkTo(methodOn(AnnouncementController.class).findById(id)).withSelfRel());
         return ResponseEntity.ok(resource);
     }
 
     @GetMapping
-    @Operation(summary = "Busca todos os avisos visíveis para o usuário logado")
-    public ResponseEntity<CollectionModel<EntityModel<AnnouncementSummaryDto>>> findAllVisible() {
-        List<AnnouncementSummaryDto> announcements = announcementService.findVisibleForCurrentUser();
+    @Operation(summary = "Busca avisos visíveis, com filtro opcional por turma")
+    public ResponseEntity<CollectionModel<EntityModel<AnnouncementSummaryDto>>> findAll(
+            @RequestParam(required = false) Long courseSectionId) {
+
+        List<AnnouncementSummaryDto> announcements;
+
+        if (courseSectionId != null) {
+            announcements = announcementService.findByCourseSection(courseSectionId);
+        } else {
+            announcements = announcementService.findVisibleForCurrentUser();
+        }
 
         List<EntityModel<AnnouncementSummaryDto>> resources = announcements.stream()
                 .map(announcement -> EntityModel.of(announcement,
                         linkTo(methodOn(AnnouncementController.class).findById(announcement.id())).withSelfRel()))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(CollectionModel.of(resources,
-                linkTo(methodOn(AnnouncementController.class).findAllVisible()).withSelfRel()));
+        return ResponseEntity.ok(CollectionModel.of(resources));
     }
 }

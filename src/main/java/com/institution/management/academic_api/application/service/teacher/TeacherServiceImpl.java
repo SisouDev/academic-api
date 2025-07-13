@@ -159,7 +159,12 @@ public class TeacherServiceImpl implements TeacherService {
                         section.getName(),
                         section.getSubject().getName(),
                         section.getSubject().getCourse().getName(),
-                        section.getLessons().size()
+                        section.getSubject().getCourse().getDepartment().getName(),
+                        section.getAcademicTerm().getYear().toString() + "/" + section.getAcademicTerm().getSemester(),
+                        section.getRoom(),
+                        section.getEnrollments().size(),
+                        section.getAcademicTerm().getStatus().getDisplayName(),
+                        false
                 ))
                 .collect(Collectors.toList());
     }
@@ -185,19 +190,30 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CourseSectionSummaryDto> findSectionsForCurrentTeacher() {
+    public List<TeacherCourseSectionDto> findSectionsForCurrentTeacher() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Teacher teacher = teacherRepository.findByUser_Login(username)
+                .orElseThrow(() -> new AccessDeniedException("O usuário logado não é um professor ou não foi encontrado."));
 
-        Teacher teacher = teacherRepository.findByEmail(username)
-                .orElseThrow(() -> new AccessDeniedException("The logged in user is not a teacher or was not found."));
+        List<AcademicTermStatus> activeStatuses = List.of(
+                AcademicTermStatus.IN_PROGRESS,
+                AcademicTermStatus.ENROLLMENT_OPEN
+        );
 
-        return teacher.getCourseSections().stream()
-                .filter(section -> {
-                    if (section.getAcademicTerm() == null) return false;
-                    AcademicTermStatus status = section.getAcademicTerm().getStatus();
-                    return status == AcademicTermStatus.ENROLLMENT_OPEN || status == AcademicTermStatus.IN_PROGRESS;
-                })
-                .map(courseSectionMapper::toSummaryDto)
-                .collect(Collectors.toList());
+        List<CourseSection> sections = courseSectionRepository.findSectionsByTeacherAndTermStatusIn(teacher, activeStatuses);
+
+        return sections.stream().map(section -> new TeacherCourseSectionDto(
+                section.getId(),
+                section.getSubject().getId(),
+                section.getName(),
+                section.getSubject().getName(),
+                section.getSubject().getCourse().getName(),
+                section.getSubject().getCourse().getDepartment().getName(),
+                section.getAcademicTerm().getYear().toString() + "/" + section.getAcademicTerm().getSemester(),
+                section.getRoom(),
+                section.getEnrollments().size(),
+                section.getAcademicTerm().getStatus().getDisplayName(),
+                false
+        )).collect(Collectors.toList());
     }
 }

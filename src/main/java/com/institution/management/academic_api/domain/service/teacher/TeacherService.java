@@ -21,8 +21,7 @@ public interface TeacherService {
 
     Page<TeacherSummaryDto> findPaginated(String searchTerm, Pageable pageable);
 
-    List<CourseSectionSummaryDto> findSectionsForCurrentTeacher();
-
     List<TeacherCourseSectionDto> findSectionsForCurrentTeacherDashboard();
 
+    List<TeacherCourseSectionDto> findSectionsForCurrentTeacher();
 }

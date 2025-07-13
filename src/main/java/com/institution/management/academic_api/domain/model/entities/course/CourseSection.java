@@ -3,6 +3,7 @@ package com.institution.management.academic_api.domain.model.entities.course;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.entities.academic.Lesson;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
+import com.institution.management.academic_api.domain.model.entities.teacher.LessonPlan;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -52,4 +53,8 @@ public class CourseSection {
     @OneToMany(mappedBy = "courseSection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Lesson> lessons = new ArrayList<>();
+
+    @OneToOne(mappedBy = "courseSection", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @ToString.Exclude
+    private LessonPlan lessonPlan;
 }

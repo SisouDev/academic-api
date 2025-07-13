@@ -1,17 +1,21 @@
 package com.institution.management.academic_api.application.controller.course;
 
 import com.institution.management.academic_api.application.controller.academic.AcademicTermController;
+import com.institution.management.academic_api.application.controller.academic.LessonController;
 import com.institution.management.academic_api.application.dto.course.CourseSectionDetailsDto;
 import com.institution.management.academic_api.application.dto.course.CourseSectionSummaryDto;
 import com.institution.management.academic_api.application.dto.course.CreateCourseSectionRequestDto;
 import com.institution.management.academic_api.application.dto.course.UpdateCourseSectionRequestDto;
+import com.institution.management.academic_api.application.dto.teacher.CourseSectionDetailsForTeacherDto;
 import com.institution.management.academic_api.domain.service.course.CourseSectionService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +63,21 @@ public class CourseSectionController {
                 linkTo(methodOn(CourseSectionController.class).findAllByAcademicTerm(academicTermId)).withSelfRel());
 
         return ResponseEntity.ok(collectionModel);
+    }
+
+    @GetMapping("/{id}/details-for-teacher")
+    @Operation(summary = "Busca os detalhes e resumos de uma turma para o professor")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<EntityModel<CourseSectionDetailsForTeacherDto>> getDetailsForTeacher(@PathVariable Long id) {
+        CourseSectionDetailsForTeacherDto details = courseSectionService.findDetailsForTeacher(id);
+
+        EntityModel<CourseSectionDetailsForTeacherDto> model = EntityModel.of(details,
+                linkTo(methodOn(CourseSectionController.class).getDetailsForTeacher(id)).withSelfRel(),
+                linkTo(methodOn(SubjectController.class).findById(details.subjectId())).withRel("subject"),
+                linkTo(methodOn(LessonController.class).findAllBySection(id)).withRel("lessons")
+        );
+
+        return ResponseEntity.ok(model);
     }
 
     @PutMapping("/{id}")

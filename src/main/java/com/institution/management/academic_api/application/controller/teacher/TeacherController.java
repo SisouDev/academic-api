@@ -39,14 +39,14 @@ public class TeacherController {
     }
 
     @GetMapping("/me/sections")
-    public ResponseEntity<CollectionModel<EntityModel<CourseSectionSummaryDto>>> getMySections() {
-        List<CourseSectionSummaryDto> sections = teacherService.findSectionsForCurrentTeacher();
+    @Operation(summary = "Busca um resumo HATEOAS de todas as turmas ativas do professor logado")
+    public ResponseEntity<CollectionModel<EntityModel<TeacherCourseSectionDto>>> getMySections() {
+        List<TeacherCourseSectionDto> sections = teacherService.findSectionsForCurrentTeacher();
 
-        List<EntityModel<CourseSectionSummaryDto>> sectionModels = sections.stream()
+        List<EntityModel<TeacherCourseSectionDto>> sectionModels = sections.stream()
                 .map(section -> EntityModel.of(section,
-                        linkTo(methodOn(CourseSectionController.class).findById(section.id())).withSelfRel()))
-                .collect(Collectors.toList());
-
+                        linkTo(methodOn(CourseSectionController.class).findById(section.id())).withSelfRel()
+                )).collect(Collectors.toList());
         var selfLink = linkTo(methodOn(TeacherController.class).getMySections()).withSelfRel();
 
         return ResponseEntity.ok(CollectionModel.of(sectionModels, selfLink));

@@ -2,17 +2,22 @@ package com.institution.management.academic_api.application.controller.academic;
 
 import com.institution.management.academic_api.application.dto.academic.CreateLessonRequestDto;
 import com.institution.management.academic_api.application.dto.academic.LessonDetailsDto;
+import com.institution.management.academic_api.application.dto.academic.LessonSummaryDto;
 import com.institution.management.academic_api.application.dto.academic.UpdateLessonRequestDto;
 import com.institution.management.academic_api.domain.service.academic.LessonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -54,6 +59,22 @@ public class LessonController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         lessonService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/section/{sectionId}")
+    @Operation(summary = "Busca todas as aulas de uma turma específica")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CollectionModel<EntityModel<LessonSummaryDto>>> findAllBySection(@PathVariable Long sectionId) {
+        List<LessonSummaryDto> lessons = lessonService.findAllBySection(sectionId);
+
+        List<EntityModel<LessonSummaryDto>> lessonModels = lessons.stream()
+                .map(lesson -> EntityModel.of(lesson,
+                        linkTo(methodOn(LessonController.class).findById(lesson.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(LessonController.class).findAllBySection(sectionId)).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(lessonModels, selfLink));
     }
 
     private EntityModel<LessonDetailsDto> addLinks(LessonDetailsDto lesson) {

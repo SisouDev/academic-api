@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.mapper.simple.academ
 
 import com.institution.management.academic_api.application.dto.academic.CreateLessonRequestDto;
 import com.institution.management.academic_api.application.dto.academic.LessonDetailsDto;
+import com.institution.management.academic_api.application.dto.academic.LessonSummaryDto;
 import com.institution.management.academic_api.domain.model.entities.academic.Lesson;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,4 +17,6 @@ public interface LessonMapper {
     Lesson toEntity(CreateLessonRequestDto dto);
 
     LessonDetailsDto toDetailsDto(Lesson lesson);
+
+    LessonSummaryDto toSummaryDto(Lesson lesson);
 }

@@ -16,4 +16,6 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
     List<Announcement> findByScope(AnnouncementScope scope);
 
     List<Announcement> findTop3ByOrderByCreatedAtDesc();
+
+    List<Announcement> findByTargetCourseSectionIdOrderByCreatedAtDesc(Long courseSectionId);
 }
