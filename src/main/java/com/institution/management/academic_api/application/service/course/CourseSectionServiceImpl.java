@@ -98,6 +98,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
                     BigDecimal averageGrade = assessmentRepository.findAverageScoreByEnrollment(enrollment);
 
                     return new ClassListStudentDto(
+                            enrollment.getId(),
                             student.getId(),
                             student.getFirstName() + " " + student.getLastName(),
                             student.getEmail(),

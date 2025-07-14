@@ -65,6 +65,14 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<DepartmentSummaryDto> findAllForSelection() {
+        return departmentRepository.findAll().stream()
+                .map(departmentMapper::toSummaryDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<DepartmentSummaryDto> findAllByInstitution(Long institutionId) {
         Institution institution = findInstitutionByIdOrThrow(institutionId);
         List<Department> departments = departmentRepository.findAllByInstitution(institution);

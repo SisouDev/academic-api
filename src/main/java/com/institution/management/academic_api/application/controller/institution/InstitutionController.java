@@ -53,7 +53,7 @@ public class InstitutionController {
         InstitutionDetailsDto institution = institutionService.findById(id);
         EntityModel<InstitutionDetailsDto> model = EntityModel.of(institution,
                 linkTo(methodOn(InstitutionController.class).findById(id)).withSelfRel(),
-                linkTo(methodOn(DepartmentController.class).findAll(null, Pageable.unpaged())).withRel("departments"));
+                linkTo(methodOn(DepartmentController.class).findAll()).withRel("departments"));
         return ResponseEntity.ok(model);
     }
 

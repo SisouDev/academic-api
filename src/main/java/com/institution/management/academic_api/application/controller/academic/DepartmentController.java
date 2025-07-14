@@ -7,12 +7,9 @@ import com.institution.management.academic_api.application.dto.academic.UpdateDe
 import com.institution.management.academic_api.domain.service.academic.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,20 +28,21 @@ public class DepartmentController {
     private final DepartmentService departmentService;
     private final PagedResourcesAssembler<DepartmentSummaryDto> pagedAssembler;
 
-    @GetMapping
-    public ResponseEntity<PagedModel<EntityModel<DepartmentSummaryDto>>> findAll(
-            @RequestParam(required = false) String searchTerm, Pageable pageable) {
+    @GetMapping("/all-for-selection")
+    public ResponseEntity<CollectionModel<EntityModel<DepartmentSummaryDto>>> findAll() {
+        List<DepartmentSummaryDto> departments = departmentService.findAllForSelection();
+        List<EntityModel<DepartmentSummaryDto>> departmentModels = departments.stream()
+                .map(dept -> EntityModel.of(dept,
+                        linkTo(methodOn(DepartmentController.class).findById(dept.id())).withSelfRel()
+                )).collect(Collectors.toList());
 
-        Page<DepartmentSummaryDto> departmentPage = departmentService.findAll(searchTerm, pageable);
-
-        PagedModel<EntityModel<DepartmentSummaryDto>> pagedModel = pagedAssembler.toModel(departmentPage,
-                dept -> EntityModel.of(dept,
-                        linkTo(methodOn(DepartmentController.class).findById(dept.id())).withSelfRel()));
-
-        return ResponseEntity.ok(pagedModel);
+        return ResponseEntity.ok(CollectionModel.of(departmentModels,
+                linkTo(methodOn(DepartmentController.class).findAll()).withSelfRel()
+        ));
     }
 
-    @GetMapping("/{id}")
+
+    @GetMapping("/{id:\\\\d+}")
     public ResponseEntity<EntityModel<DepartmentDetailsDto>> findById(@PathVariable Long id) {
         DepartmentDetailsDto department = departmentService.findById(id);
         EntityModel<DepartmentDetailsDto> model = EntityModel.of(department,

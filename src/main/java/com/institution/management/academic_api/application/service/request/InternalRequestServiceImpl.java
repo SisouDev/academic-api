@@ -5,8 +5,10 @@ import com.institution.management.academic_api.application.dto.request.InternalR
 import com.institution.management.academic_api.application.dto.request.UpdateInternalRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.request.InternalRequestMapper;
 import com.institution.management.academic_api.application.notifiers.request.InternalRequestNotifier;
+import com.institution.management.academic_api.application.service.utils.RoundRobinAssignerService;
 import com.institution.management.academic_api.domain.factory.request.InternalRequestFactory;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.request.InternalRequest;
 import com.institution.management.academic_api.domain.model.enums.request.RequestStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
@@ -15,6 +17,7 @@ import com.institution.management.academic_api.domain.service.common.Notificatio
 import com.institution.management.academic_api.domain.service.request.InternalRequestService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
+import com.institution.management.academic_api.infra.utils.HtmlSanitizerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,8 @@ public class InternalRequestServiceImpl implements InternalRequestService {
     private final InternalRequestMapper requestMapper;
     private final NotificationService notificationService;
     private final InternalRequestNotifier requestNotifier;
+    private final RoundRobinAssignerService roundRobinAssigner;
+    private final HtmlSanitizerService htmlSanitizerService;
 
 
     @Override
@@ -43,9 +48,22 @@ public class InternalRequestServiceImpl implements InternalRequestService {
                 .orElseThrow(() -> new EntityNotFoundException("Applicant not found with email: " + requesterEmail));
 
         InternalRequest newRequest = requestFactory.create(dto, requester);
+        Employee handler = roundRobinAssigner.getNextHandler();
+
+        if (handler != null) {
+            newRequest.setHandler(handler);
+            newRequest.setStatus(RequestStatus.IN_PROGRESS);
+        }
+
+        String safeDescription = htmlSanitizerService.sanitize(dto.description());
+        newRequest.setDescription(safeDescription);
+
         InternalRequest savedRequest = requestRepository.save(newRequest);
 
         requestNotifier.notifyDepartmentOfNewRequest(savedRequest);
+        if (handler != null) {
+            requestNotifier.notifyRequesterOfAssignment(savedRequest);
+        }
 
         return requestMapper.toDetailsDto(savedRequest);
     }

@@ -24,4 +24,6 @@ public interface TeacherService {
     List<TeacherCourseSectionDto> findSectionsForCurrentTeacherDashboard();
 
     List<TeacherCourseSectionDto> findSectionsForCurrentTeacher();
+
+    List<TeacherStudentListDto> findAllStudentsForCurrentTeacher();
 }

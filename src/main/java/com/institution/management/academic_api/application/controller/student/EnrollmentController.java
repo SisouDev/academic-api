@@ -3,12 +3,14 @@ package com.institution.management.academic_api.application.controller.student;
 import com.institution.management.academic_api.application.controller.course.CourseSectionController;
 import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.domain.service.student.EnrollmentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -66,9 +68,27 @@ public class EnrollmentController {
     }
 
     @PostMapping("/attendance")
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Registra a presença ou falta de um aluno")
     public ResponseEntity<Void> recordAttendance(@RequestBody @Valid CreateAttendanceRecordRequestDto request) {
         enrollmentService.recordAttendance(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/section/{sectionId}/class-list")
+    @Operation(summary = "Busca a lista de alunos de uma turma para o registro de frequência")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<CollectionModel<EntityModel<ClassListStudentDto>>> getClassListForAttendance(@PathVariable Long sectionId) {
+        List<ClassListStudentDto> classList = enrollmentService.findEnrollmentsByCourseSection(sectionId);
+
+        List<EntityModel<ClassListStudentDto>> studentModels = classList.stream()
+                .map(student -> EntityModel.of(student,
+                        linkTo(methodOn(StudentController.class).findById(student.studentId())).withRel("studentProfile")
+                )).collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(EnrollmentController.class).getClassListForAttendance(sectionId)).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(studentModels, selfLink));
     }
 
     @GetMapping("/by-section/{courseSectionId}")

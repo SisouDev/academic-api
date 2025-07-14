@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.controller.tasks;
 
 import com.institution.management.academic_api.application.dto.tasks.CreateTaskRequestDto;
 import com.institution.management.academic_api.application.dto.tasks.TaskDetailsDto;
+import com.institution.management.academic_api.application.dto.tasks.TaskSummaryDto;
 import com.institution.management.academic_api.application.dto.tasks.UpdateTaskRequestDto;
 import com.institution.management.academic_api.domain.service.tasks.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +41,21 @@ public class TaskController {
                 linkTo(methodOn(TaskController.class).findById(createdTask.id())).withSelfRel());
 
         return ResponseEntity.created(URI.create(resource.getRequiredLink("self").getHref())).body(resource);
+    }
+
+    @GetMapping("/my-tasks")
+    @Operation(summary = "Busca as tarefas relevantes para o usuário logado")
+    @PreAuthorize("isAuthenticated() and !hasRole('STUDENT')")
+    public ResponseEntity<CollectionModel<EntityModel<TaskSummaryDto>>> getMyTasks() {
+        List<TaskSummaryDto> tasks = taskService.findTasksForCurrentUser();
+
+        List<EntityModel<TaskSummaryDto>> taskModels = tasks.stream()
+                .map(task -> EntityModel.of(task,
+                        linkTo(methodOn(TaskController.class).findById(task.id())).withSelfRel()
+                )).collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(TaskController.class).getMyTasks()).withSelfRel();
+        return ResponseEntity.ok(CollectionModel.of(taskModels, selfLink));
     }
 
     @PatchMapping("/{id}")

@@ -16,6 +16,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,6 +63,23 @@ public class TeacherController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(CollectionModel.of(sectionModels));
+    }
+
+    @GetMapping("/me/students")
+    @Operation(summary = "Busca uma lista consolidada de todos os alunos de um professor")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<CollectionModel<EntityModel<TeacherStudentListDto>>> getAllMyStudents() {
+        List<TeacherStudentListDto> students = teacherService.findAllStudentsForCurrentTeacher();
+
+        List<EntityModel<TeacherStudentListDto>> studentModels = students.stream()
+                .map(student -> EntityModel.of(student,
+                        linkTo(methodOn(TeacherNoteController.class).getNotesByEnrollment(student.enrollmentId())).withRel("notes")
+                        //linkTo(methodOn(StudentController.class).findById(student.studentId())).withRel("studentProfile")
+                )).collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(TeacherController.class).getAllMyStudents()).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(studentModels, selfLink));
     }
 
     @GetMapping("/my-sections")

@@ -25,4 +25,6 @@ public interface DepartmentService {
 
     Page<DepartmentSummaryDto> findAll(String searchTerm, Pageable pageable);
 
+    List<DepartmentSummaryDto> findAllForSelection();
+
 }

@@ -37,7 +37,7 @@ public class CourseSectionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSection);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<EntityModel<CourseSectionDetailsDto>> findById(@PathVariable Long id) {
         CourseSectionDetailsDto section = courseSectionService.findById(id);
 

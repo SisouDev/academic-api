@@ -30,7 +30,13 @@ public class GradebookService {
     public GradebookDto getGradebookForSection(Long courseSectionId) {
         List<AssessmentDefinition> definitions = definitionRepository.findAllByCourseSectionId(courseSectionId);
         List<GradebookHeaderDto> headers = definitions.stream()
-                .map(def -> new GradebookHeaderDto(def.getId(), def.getTitle()))
+                .map(def -> new GradebookHeaderDto(
+                        def.getId(),
+                        def.getTitle(),
+                        def.getType().getDisplayName(),
+                        def.getAssessmentDate(),
+                        def.getWeight()
+                ))
                 .collect(Collectors.toList());
 
         List<Enrollment> enrollments = enrollmentRepository.findAllByCourseSectionId(courseSectionId);

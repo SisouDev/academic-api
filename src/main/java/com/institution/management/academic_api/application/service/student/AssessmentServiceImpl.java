@@ -45,8 +45,17 @@ public class AssessmentServiceImpl implements AssessmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Assessment Definition not found."));
 
         Assessment assessment = assessmentMapper.toEntity(request);
+
         assessment.setEnrollment(enrollment);
         assessment.setAssessmentDefinition(definition);
+
+        if (assessment.getAssessmentDate() == null) {
+            assessment.setAssessmentDate(definition.getAssessmentDate());
+        }
+        if (assessment.getType() == null) {
+            assessment.setType(definition.getType());
+        }
+
         Assessment savedAssessment = assessmentRepository.save(assessment);
 
         assessmentNotifier.notifyStudentOfNewGrade(savedAssessment);

@@ -52,7 +52,7 @@ public class StudentController {
         ));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<EntityModel<StudentResponseDto>> findById(@PathVariable Long id) {
         StudentResponseDto student = studentService.findById(id);
 

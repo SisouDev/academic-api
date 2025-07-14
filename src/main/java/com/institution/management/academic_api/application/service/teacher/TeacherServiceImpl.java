@@ -11,16 +11,19 @@ import com.institution.management.academic_api.domain.model.entities.common.Role
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.specification.TeacherSpecification;
+import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
+import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
+import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.teacher.TeacherService;
@@ -40,6 +43,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +64,7 @@ public class TeacherServiceImpl implements TeacherService {
     private final PersonRepository personRepository;
     private final TeacherNotifier teacherNotifier;
     private final CourseSectionRepository courseSectionRepository;
+    private final AssessmentRepository assessmentRepository;
 
     @Override
     @Transactional
@@ -105,6 +110,35 @@ public class TeacherServiceImpl implements TeacherService {
     public TeacherResponseDto findById(Long id) {
         Teacher teacher = findTeacherByIdOrThrow(id);
         return teacherMapper.toResponseDto(teacher);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherStudentListDto> findAllStudentsForCurrentTeacher() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Teacher teacher = teacherRepository.findByUser_Login(username)
+                .orElseThrow(() -> new AccessDeniedException("O usuário logado não é um professor ou não foi encontrado."));
+
+        List<AcademicTermStatus> activeStatuses = List.of(AcademicTermStatus.IN_PROGRESS, AcademicTermStatus.ENROLLMENT_OPEN);
+        List<CourseSection> activeSections = courseSectionRepository.findSectionsByTeacherAndTermStatusIn(teacher, activeStatuses);
+
+        return activeSections.stream()
+                .flatMap(section -> section.getEnrollments().stream())
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ACTIVE)
+                .map(enrollment -> {
+                    Student student = enrollment.getStudent();
+                    BigDecimal averageGrade = assessmentRepository.findAverageScoreByEnrollment(enrollment);
+
+                    return new TeacherStudentListDto(
+                            enrollment.getId(),
+                            student.getFirstName() + " " + student.getLastName(),
+                            student.getEmail(),
+                            enrollment.getCourseSection().getSubject().getCourse().getName(),
+                            enrollment.getCourseSection().getSubject().getName(),
+                            averageGrade
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

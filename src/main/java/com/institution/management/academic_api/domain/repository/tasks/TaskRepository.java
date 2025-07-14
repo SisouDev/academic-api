@@ -20,4 +20,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findTop5ByAssigneeAndStatusNotOrderByDueDateAsc(Person assignee, TaskStatus status);
 
+    List<Task> findByCreatedBy(Person person);
+
+    List<Task> findByAssignee(Person person);
 }
