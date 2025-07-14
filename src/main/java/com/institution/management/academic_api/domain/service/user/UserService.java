@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.domain.service.user;
 
+import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.user.*;
 import com.institution.management.academic_api.domain.model.entities.common.ActivityLog;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,4 +23,7 @@ public interface UserService {
     List<ActivityLog> findUserActivity(Long userId);
 
     void adminResetPassword(Long userId);
+
+    List<PersonSummaryDto> findSelectableParticipants();
+
 }

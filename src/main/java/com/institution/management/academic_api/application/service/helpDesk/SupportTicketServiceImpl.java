@@ -2,13 +2,16 @@ package com.institution.management.academic_api.application.service.helpDesk;
 
 import com.institution.management.academic_api.application.dto.helpDesk.CreateSupportTicketRequestDto;
 import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketDetailsDto;
+import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketSummaryDto;
 import com.institution.management.academic_api.application.dto.helpDesk.UpdateSupportTicketRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.helpDesk.SupportTicketMapper;
 import com.institution.management.academic_api.application.notifiers.helpDesk.SupportTicketNotifier;
+import com.institution.management.academic_api.application.service.utils.RoundRobinAssignerService;
 import com.institution.management.academic_api.domain.factory.helpDesk.SupportTicketFactory;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.helpDesk.SupportTicket;
+import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
@@ -36,20 +39,27 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     private final SupportTicketMapper ticketMapper;
     private final NotificationService notificationService;
     private final SupportTicketNotifier ticketNotifier;
+    private final RoundRobinAssignerService roundRobinAssigner;
 
 
     @Override
     @Transactional
     @LogActivity("Abriu um novo chamado de suporte.")
     public SupportTicketDetailsDto create(CreateSupportTicketRequestDto dto, String requesterEmail) {
-        Person requester = personRepository.findByEmail(requesterEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Applicant not found with email: " + requesterEmail));
+        Person requester = personRepository.findByUser_Login(requesterEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Requisitante não encontrado com email: " + requesterEmail));
 
         SupportTicket newTicket = ticketFactory.create(dto, requester);
+
+        Employee handler = roundRobinAssigner.getNextHandlerByJobPosition(JobPosition.TECHNICIAN);
+        if (handler != null) {
+            newTicket.setAssignee(handler);
+            newTicket.setStatus(TicketStatus.IN_PROGRESS);
+            ticketNotifier.notifyAssigneeOfNewTicket(newTicket);
+        }
+
         SupportTicket savedTicket = ticketRepository.save(newTicket);
-
         ticketNotifier.notifySupportTeamOfNewTicket(savedTicket);
-
         return ticketMapper.toDetailsDto(savedTicket);
     }
 
@@ -101,6 +111,14 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     public List<SupportTicketDetailsDto> findByRequester(Long personId) {
         return ticketRepository.findByRequesterId(personId).stream()
                 .map(ticketMapper::toDetailsDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupportTicketSummaryDto> findAll() {
+        return ticketRepository.findAll().stream()
+                .map(ticketMapper::toSummaryDto)
                 .collect(Collectors.toList());
     }
 

@@ -1,9 +1,9 @@
 package com.institution.management.academic_api.domain.service.calendar;
 
 import com.institution.management.academic_api.application.dto.calendar.CalendarEventDetailsDto;
-import com.institution.management.academic_api.application.dto.calendar.CalendarEventSummaryDto;
 import com.institution.management.academic_api.application.dto.calendar.CreateCalendarEventRequestDto;
 import com.institution.management.academic_api.application.dto.calendar.UpdateCalendarEventRequestDto;
+import com.institution.management.academic_api.application.dto.meeting.AgendaItemDto;
 
 import java.util.List;
 
@@ -16,5 +16,5 @@ public interface CalendarEventService {
 
     CalendarEventDetailsDto findById(Long id);
 
-    List<CalendarEventSummaryDto> findVisibleEventsForMonth(int year, int month);
+    List<AgendaItemDto> findVisibleEventsForUser(int year, int month);
 }

@@ -40,13 +40,8 @@ public class Meeting {
     @JoinColumn(name = "organizer_id", nullable = false)
     private Person organizer;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "meeting_participants",
-            joinColumns = @JoinColumn(name = "meeting_id"),
-            inverseJoinColumns = @JoinColumn(name = "person_id")
-    )
-    private Set<Person> participants = new HashSet<>();
+    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<MeetingParticipant> participants = new HashSet<>();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

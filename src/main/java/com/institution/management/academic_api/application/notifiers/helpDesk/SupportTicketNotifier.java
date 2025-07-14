@@ -44,6 +44,24 @@ public class SupportTicketNotifier {
                 );
     }
 
+    public void notifyAssigneeOfNewTicket(SupportTicket ticket) {
+        if (ticket.getAssignee() == null || ticket.getAssignee().getUser() == null) return;
+
+        String message = String.format(
+                "Um novo chamado de suporte foi atribuído a você: #%d - %s",
+                ticket.getId(),
+                ticket.getTitle()
+        );
+        String link = "/support/tickets/" + ticket.getId();
+
+        notificationService.createNotification(
+                ticket.getAssignee().getUser(),
+                message,
+                link,
+                NotificationType.TASK_ASSIGNED
+        );
+    }
+
     public void notifyRequesterOfAssignment(SupportTicket ticket) {
         if (ticket.getAssignee() == null) return;
 

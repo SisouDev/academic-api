@@ -2,13 +2,16 @@ package com.institution.management.academic_api.application.controller.helpDesk;
 
 import com.institution.management.academic_api.application.dto.helpDesk.CreateSupportTicketRequestDto;
 import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketDetailsDto;
+import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketSummaryDto;
 import com.institution.management.academic_api.application.dto.helpDesk.UpdateSupportTicketRequestDto;
 import com.institution.management.academic_api.domain.service.helpDesk.SupportTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +48,21 @@ public class SupportTicketController {
     public ResponseEntity<Void> assignTicket(@PathVariable Long ticketId, @PathVariable Long assigneeId) {
         ticketService.assignTicket(ticketId, assigneeId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @Operation(summary = "Busca todos os chamados de suporte")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'EMPLOYEE', 'STUDENT')")
+    public ResponseEntity<CollectionModel<EntityModel<SupportTicketSummaryDto>>> findAll() {
+        List<SupportTicketSummaryDto> tickets = ticketService.findAll();
+
+        List<EntityModel<SupportTicketSummaryDto>> resources = tickets.stream()
+                .map(ticket -> EntityModel.of(ticket,
+                        linkTo(methodOn(SupportTicketController.class).findById(ticket.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(CollectionModel.of(resources,
+                linkTo(methodOn(SupportTicketController.class).findAll()).withSelfRel()));
     }
 
     @PatchMapping("/{ticketId}")

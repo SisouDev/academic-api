@@ -1,7 +1,9 @@
 package com.institution.management.academic_api.application.service.user;
 
+import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.file.FileUploadResponseDto;
 import com.institution.management.academic_api.application.dto.user.*;
+import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.user.UserMapper;
 import com.institution.management.academic_api.application.notifiers.user.UserNotifier;
 import com.institution.management.academic_api.domain.model.entities.common.ActivityLog;
@@ -30,6 +32,7 @@ import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final FileUploadService fileUploadService;
     private final ActivityLogRepository activityLogRepository;
     private final UserNotifier userNotifier;
+    private final PersonMapper personMapper;
 
 
     @Override
@@ -123,6 +127,14 @@ public class UserServiceImpl implements UserService {
 
         user.setRoles(newRoles);
         return userMapper.toResponseDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonSummaryDto> findSelectableParticipants() {
+        return personRepository.findAllNonStudents().stream()
+                .map(personMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 
     @Override

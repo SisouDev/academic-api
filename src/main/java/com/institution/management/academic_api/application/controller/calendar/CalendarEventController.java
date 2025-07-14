@@ -1,9 +1,10 @@
 package com.institution.management.academic_api.application.controller.calendar;
 
+import com.institution.management.academic_api.application.controller.meeting.MeetingController;
 import com.institution.management.academic_api.application.dto.calendar.CalendarEventDetailsDto;
-import com.institution.management.academic_api.application.dto.calendar.CalendarEventSummaryDto;
 import com.institution.management.academic_api.application.dto.calendar.CreateCalendarEventRequestDto;
 import com.institution.management.academic_api.application.dto.calendar.UpdateCalendarEventRequestDto;
+import com.institution.management.academic_api.application.dto.meeting.AgendaItemDto;
 import com.institution.management.academic_api.domain.service.calendar.CalendarEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,19 +65,25 @@ public class CalendarEventController {
     }
 
     @GetMapping("/month")
-    @Operation(summary = "Busca todos os eventos visíveis para o usuário no mês e ano especificados")
-    public ResponseEntity<CollectionModel<EntityModel<CalendarEventSummaryDto>>> findForMonth(
+    @Operation(summary = "Busca todos os eventos e reuniões do usuário no mês e ano especificados")
+    public ResponseEntity<CollectionModel<EntityModel<AgendaItemDto>>> findAgendaForMonth(
             @RequestParam int year,
             @RequestParam int month) {
 
-        List<CalendarEventSummaryDto> events = calendarEventService.findVisibleEventsForMonth(year, month);
+        List<AgendaItemDto> agendaItems = calendarEventService.findVisibleEventsForUser(year, month);
 
-        List<EntityModel<CalendarEventSummaryDto>> resources = events.stream()
-                .map(event -> EntityModel.of(event,
-                        linkTo(methodOn(CalendarEventController.class).findById(event.id())).withSelfRel()))
+        List<EntityModel<AgendaItemDto>> resources = agendaItems.stream()
+                .map(item -> {
+                    var itemLink = item.isMeeting()
+                            ? linkTo(methodOn(MeetingController.class).findById(item.id())).withSelfRel()
+                            : linkTo(methodOn(CalendarEventController.class).findById(item.id())).withSelfRel();
+                    return EntityModel.of(item, itemLink);
+                })
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(CollectionModel.of(resources,
-                linkTo(methodOn(CalendarEventController.class).findForMonth(year, month)).withSelfRel()));
+        var selfLink = linkTo(methodOn(CalendarEventController.class).findAgendaForMonth(year, month)).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(resources, selfLink));
     }
+
 }

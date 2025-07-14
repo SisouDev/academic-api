@@ -9,6 +9,7 @@ import com.institution.management.academic_api.domain.model.entities.library.Lib
 import com.institution.management.academic_api.domain.model.entities.library.Loan;
 import com.institution.management.academic_api.domain.model.entities.library.Reservation;
 import com.institution.management.academic_api.domain.model.entities.meeting.Meeting;
+import com.institution.management.academic_api.domain.model.entities.meeting.MeetingParticipant;
 import com.institution.management.academic_api.domain.model.entities.request.InternalRequest;
 import com.institution.management.academic_api.domain.model.entities.tasks.Task;
 import com.institution.management.academic_api.domain.model.enums.inventory.MaterialType;
@@ -197,12 +198,12 @@ public class DataSeederV3 implements CommandLineRunner {
     private void seedMeetings() {
         log.info("Seeding meetings...");
         List<Person> people = personRepository.findAll();
-        if (people.isEmpty()) {
-            log.warn("Could not seed meetings because no people were found.");
+        if (people.size() < 3) {
+            log.warn("Could not seed meetings because fewer than 3 people were found.");
             return;
         }
         Person organizer = people.get(0);
-        Set<Person> participants = new HashSet<>(people.subList(0, Math.min(people.size(), 3)));
+        List<Person> invitedPeople = people.subList(1, 3);
 
         Meeting meeting = new Meeting();
         meeting.setTitle("Reunião de Planejamento do Projeto 'Phoenix'");
@@ -211,8 +212,23 @@ public class DataSeederV3 implements CommandLineRunner {
         meeting.setEndTime(LocalDateTime.now().plusDays(2).withHour(15).withMinute(30));
         meeting.setVisibility(MeetingVisibility.PUBLIC);
         meeting.setOrganizer(organizer);
-        meeting.setParticipants(participants);
         meeting.setCreatedAt(LocalDateTime.now());
+
+        Set<MeetingParticipant> participants = new HashSet<>();
+
+        MeetingParticipant organizerParticipant = new MeetingParticipant();
+        organizerParticipant.setMeeting(meeting);
+        organizerParticipant.setParticipant(organizer);
+        participants.add(organizerParticipant);
+
+        for (Person p : invitedPeople) {
+            MeetingParticipant participant = new MeetingParticipant();
+            participant.setMeeting(meeting);
+            participant.setParticipant(p);
+            participants.add(participant);
+        }
+
+        meeting.setParticipants(participants);
 
         meetingRepository.save(meeting);
         log.info("Seeded 1 meeting.");

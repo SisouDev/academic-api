@@ -3,6 +3,7 @@ package com.institution.management.academic_api.application.controller.meeting;
 import com.institution.management.academic_api.application.dto.meeting.CreateMeetingRequestDto;
 import com.institution.management.academic_api.application.dto.meeting.MeetingDetailsDto;
 import com.institution.management.academic_api.application.dto.meeting.UpdateMeetingRequestDto;
+import com.institution.management.academic_api.domain.model.enums.meeting.MeetingParticipantStatus;
 import com.institution.management.academic_api.domain.service.meeting.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +57,23 @@ public class MeetingController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         meetingService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{meetingId}/rsvp")
+    @Operation(summary = "Responde a um convite de reunião (RSVP)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<EntityModel<MeetingDetailsDto>> rsvpToMeeting(
+            @PathVariable Long meetingId,
+            @RequestParam MeetingParticipantStatus status) {
+
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        MeetingDetailsDto updatedMeeting = meetingService.rsvp(meetingId, userEmail, status);
+
+        EntityModel<MeetingDetailsDto> resource = EntityModel.of(updatedMeeting,
+                linkTo(methodOn(MeetingController.class).findById(updatedMeeting.id())).withSelfRel());
+
+        return ResponseEntity.ok(resource);
     }
 
     @GetMapping("/{id}")

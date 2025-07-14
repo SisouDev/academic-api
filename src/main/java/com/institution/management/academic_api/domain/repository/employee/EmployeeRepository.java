@@ -30,4 +30,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     long countByHiringDateAfter(LocalDate date);
 
+    List<Employee> findByJobPosition(JobPosition position);
 }

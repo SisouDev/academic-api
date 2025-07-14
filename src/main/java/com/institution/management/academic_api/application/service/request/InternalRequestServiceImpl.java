@@ -10,6 +10,7 @@ import com.institution.management.academic_api.domain.factory.request.InternalRe
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.request.InternalRequest;
+import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import com.institution.management.academic_api.domain.model.enums.request.RequestStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.request.InternalRequestRepository;
@@ -48,7 +49,7 @@ public class InternalRequestServiceImpl implements InternalRequestService {
                 .orElseThrow(() -> new EntityNotFoundException("Applicant not found with email: " + requesterEmail));
 
         InternalRequest newRequest = requestFactory.create(dto, requester);
-        Employee handler = roundRobinAssigner.getNextHandler();
+        Employee handler = roundRobinAssigner.getNextHandlerByJobPosition(JobPosition.TECHNICIAN);
 
         if (handler != null) {
             newRequest.setHandler(handler);

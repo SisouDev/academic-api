@@ -8,13 +8,17 @@ import com.institution.management.academic_api.application.notifiers.meeting.Mee
 import com.institution.management.academic_api.domain.factory.meeting.MeetingFactory;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.meeting.Meeting;
+import com.institution.management.academic_api.domain.model.entities.meeting.MeetingParticipant;
+import com.institution.management.academic_api.domain.model.enums.meeting.MeetingParticipantStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
+import com.institution.management.academic_api.domain.repository.meeting.MeetingParticipantRepository;
 import com.institution.management.academic_api.domain.repository.meeting.MeetingRepository;
 import com.institution.management.academic_api.domain.service.common.NotificationService;
 import com.institution.management.academic_api.domain.service.meeting.MeetingService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +37,7 @@ public class MeetingServiceImpl implements MeetingService {
     private final MeetingMapper meetingMapper;
     private final NotificationService notificationService;
     private final MeetingNotifier meetingNotifier;
+    private final MeetingParticipantRepository meetingParticipantRepository;
 
     @Override
     @Transactional
@@ -78,6 +83,25 @@ public class MeetingServiceImpl implements MeetingService {
         return meetingRepository.findById(id)
                 .map(meetingMapper::toDetailsDto)
                 .orElseThrow(() -> new EntityNotFoundException("Meeting not found with id: " + id));
+    }
+
+    @Override
+    @Transactional
+    @LogActivity("Respondeu a um convite de reunião (RSVP).")
+    public MeetingDetailsDto rsvp(Long meetingId, String userEmail, MeetingParticipantStatus status) {
+        Person userPerson = personRepository.findByUser_Login(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado: " + userEmail));
+
+        Meeting meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new EntityNotFoundException("Reunião não encontrada: " + meetingId));
+
+        MeetingParticipant participant = meetingParticipantRepository.findByMeetingAndParticipant(meeting, userPerson)
+                .orElseThrow(() -> new AccessDeniedException("Você não foi convidado para esta reunião."));
+
+        participant.setStatus(status);
+        meetingParticipantRepository.save(participant);
+
+        return meetingMapper.toDetailsDto(meeting);
     }
 
     @Override

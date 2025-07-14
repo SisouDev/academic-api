@@ -40,4 +40,7 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
     void updateProfilePictureUrl(@Param("id") Long id, @Param("url") String url);
 
     Optional<Person> findByUser_Login(String creatorEmail);
+
+    @Query("SELECT p FROM Person p WHERE TYPE(p) != Student")
+    List<Person> findAllNonStudents();
 }

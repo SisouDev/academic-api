@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.application.notifiers.meeting;
 
+import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.meeting.Meeting;
 import com.institution.management.academic_api.domain.model.enums.common.NotificationType;
 import com.institution.management.academic_api.domain.service.common.NotificationService;
@@ -16,10 +17,11 @@ public class MeetingNotifier {
         String message = String.format("Você foi convidado para a reunião: '%s'", meeting.getTitle());
         String link = "/calendar/meetings/" + meeting.getId();
 
-        meeting.getParticipants().forEach(participant -> {
-            if (!participant.getId().equals(meeting.getOrganizer().getId())) {
+        meeting.getParticipants().forEach(meetingParticipant -> {
+            Person participantPerson = meetingParticipant.getParticipant();
+            if (!participantPerson.getId().equals(meeting.getOrganizer().getId())) {
                 notificationService.createNotification(
-                        participant.getUser(),
+                        participantPerson.getUser(),
                         message,
                         link,
                         NotificationType.INVITATION
@@ -28,6 +30,7 @@ public class MeetingNotifier {
         });
     }
 
+
     public void notifyParticipantsOfCancellation(Meeting meeting) {
         String message = String.format("A reunião '%s' agendada para %s foi cancelada.",
                 meeting.getTitle(),
@@ -35,10 +38,11 @@ public class MeetingNotifier {
         );
         String link = "/calendar";
 
-        meeting.getParticipants().forEach(participant -> {
-            if (!participant.getId().equals(meeting.getOrganizer().getId())) {
+        meeting.getParticipants().forEach(meetingParticipant -> {
+            Person participantPerson = meetingParticipant.getParticipant();
+            if (!participantPerson.getId().equals(meeting.getOrganizer().getId())) {
                 notificationService.createNotification(
-                        participant.getUser(),
+                        participantPerson.getUser(),
                         message,
                         link,
                         NotificationType.ALERT
