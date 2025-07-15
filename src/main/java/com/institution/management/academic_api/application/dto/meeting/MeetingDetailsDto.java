@@ -32,6 +32,7 @@ public record MeetingDetailsDto(
         @Schema(description = "Organizador da reunião.")
         PersonSummaryDto organizer,
 
-        @Schema(description = "Lista de participantes da reunião.")
-        Set<PersonSummaryDto> participants
+        @Schema(description = "Lista de participantes da reunião e seus status de resposta.")
+        Set<MeetingParticipantDto> participants
+
 ) {}

@@ -1,14 +1,21 @@
 package com.institution.management.academic_api.application.service.user;
 
+import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
 import com.institution.management.academic_api.application.dto.common.PersonSummaryDto;
 import com.institution.management.academic_api.application.dto.file.FileUploadResponseDto;
 import com.institution.management.academic_api.application.dto.user.*;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
+import com.institution.management.academic_api.application.mapper.simple.employee.EmployeeMapper;
+import com.institution.management.academic_api.application.mapper.simple.student.StudentMapper;
+import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.application.mapper.simple.user.UserMapper;
 import com.institution.management.academic_api.application.notifiers.user.UserNotifier;
 import com.institution.management.academic_api.domain.model.entities.common.ActivityLog;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
+import com.institution.management.academic_api.domain.model.entities.employee.Employee;
+import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.file.ReferenceType;
 import com.institution.management.academic_api.domain.repository.common.ActivityLogRepository;
@@ -23,9 +30,11 @@ import com.institution.management.academic_api.exception.type.user.UserAlreadyEx
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
@@ -47,6 +56,10 @@ public class UserServiceImpl implements UserService {
     private final ActivityLogRepository activityLogRepository;
     private final UserNotifier userNotifier;
     private final PersonMapper personMapper;
+    private final StudentMapper studentMapper;
+    private final TeacherMapper teacherMapper;
+    private final EmployeeMapper employeeMapper;
+
 
 
     @Override
@@ -82,10 +95,23 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponseDto findById(Long id) {
-        return userRepository.findById(id)
-                .map(userMapper::toResponseDto)
+        User user = userRepository.findByIdWithPerson(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+
+        return getFullUserProfile(user);
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponseDto findMyProfile(String userEmail) {
+        User user = userRepository.findByLoginWithFullPerson(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Logged user not found."));
+
+        return getFullUserProfile(user);
+    }
+
+
 
     @Override
     @Transactional
@@ -174,6 +200,24 @@ public class UserServiceImpl implements UserService {
         userNotifier.notifyPasswordReset(user);
     }
 
+    @Override
+    @Transactional
+    @LogActivity("Atualizou o próprio perfil.")
+    public void updateMyProfile(String userEmail, UpdateProfileRequestDto request) {
+        User user = userRepository.findByLogin(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário logado não encontrado."));
+
+        Person person = user.getPerson();
+
+        if (StringUtils.hasText(request.email())) {
+            person.setEmail(request.email());
+        }
+
+        if (StringUtils.hasText(request.phone())) {
+            person.setPhone(request.phone());
+        }
+    }
+
     private String generateRandomPassword(int length) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         SecureRandom random = new SecureRandom();
@@ -182,5 +226,41 @@ public class UserServiceImpl implements UserService {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    private UserResponseDto getFullUserProfile(User user) {
+        UserResponseDto baseResponseDto = userMapper.toResponseDto(user);
+
+        Person personEntity = user.getPerson();
+
+        PersonResponseDto detailedPersonDto = switch (personEntity) {
+            case Student student -> {
+                Hibernate.initialize(student.getEnrollments());
+                Hibernate.initialize(student.getInstitution());
+                yield studentMapper.toResponseDto(student);
+            }
+
+            case Teacher teacher -> {
+                Hibernate.initialize(teacher.getCourseSections());
+                Hibernate.initialize(teacher.getSubjects());
+                yield teacherMapper.toResponseDto(teacher);
+            }
+
+            case Employee employee -> {
+                Hibernate.initialize(employee.getJobPosition());
+                Hibernate.initialize(employee.getDepartment());
+                yield employeeMapper.toDto(employee);
+            }
+
+            case null, default -> baseResponseDto.person();
+        };
+
+        return new UserResponseDto(
+                baseResponseDto.id(),
+                baseResponseDto.login(),
+                baseResponseDto.active(),
+                detailedPersonDto,
+                baseResponseDto.roles()
+        );
     }
 }

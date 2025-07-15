@@ -26,4 +26,9 @@ public interface UserService {
 
     List<PersonSummaryDto> findSelectableParticipants();
 
+    UserResponseDto findMyProfile(String userEmail);
+
+    void updateMyProfile(String userEmail, UpdateProfileRequestDto request);
+
+
 }

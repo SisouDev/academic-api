@@ -4,11 +4,14 @@ import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.mapper.simple.common.AddressMapper;
 import com.institution.management.academic_api.application.mapper.wrappers.student.EnrollmentMapperWrapper;
 import com.institution.management.academic_api.domain.model.entities.common.Address;
+import com.institution.management.academic_api.domain.model.entities.student.Assessment;
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import org.mapstruct.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,11 +31,11 @@ public interface StudentMapper {
     @Mapping(target = "birthDate", source = "birthDate")
     @Mapping(target = "address", source = "address")
     @Mapping(target = "enrollments", source = "enrollments")
-    @Mapping(target = "formattedAddress", source = "address", qualifiedByName = "formatAddressToString")
-    @Mapping(target = "generalAverage", ignore = true)
-    @Mapping(target = "totalAbsences", ignore = true)
+    @Mapping(target = "generalAverage", source = "enrollments", qualifiedByName = "calculateGeneralAverage")
+    @Mapping(target = "totalAbsences", source = "enrollments", qualifiedByName = "sumTotalAbsences")
     @Mapping(target = "currentSubjects", source = "enrollments", qualifiedByName = "findCurrentSubjects")
     @Mapping(target = "courseName", source = "enrollments", qualifiedByName = "findCourseNameFromEnrollments")
+    @Mapping(target = "formattedAddress", source = "address", qualifiedByName = "formatAddressToString")
     StudentResponseDto toResponseDto(Student student);
 
     @Mapping(target = "id", ignore = true)
@@ -87,6 +90,55 @@ public interface StudentMapper {
                 .findFirst()
                 .map(e -> e.getCourseSection().getSubject().getCourse().getName())
                 .orElse("Nenhum curso ativo");
+    }
+    @Named("calculateGeneralAverage")
+    default double calculateGeneralAverage(List<Enrollment> enrollments) {
+        if (enrollments == null || enrollments.isEmpty()) {
+            return 0.0;
+        }
+
+        return enrollments.stream()
+                .filter(e -> e.getStatus() == EnrollmentStatus.ACTIVE)
+                .map(this::calculateWeightedFinalGrade)
+                .mapToDouble(BigDecimal::doubleValue)
+                .average()
+                .orElse(0.0);
+    }
+
+    @Named("sumTotalAbsences")
+    default int sumTotalAbsences(List<Enrollment> enrollments) {
+        if (enrollments == null) {
+            return 0;
+        }
+        return enrollments.stream()
+                .mapToInt(Enrollment::getTotalAbsences)
+                .sum();
+    }
+
+    default BigDecimal calculateWeightedFinalGrade(Enrollment enrollment) {
+        List<Assessment> assessments = enrollment.getAssessments();
+        if (assessments == null || assessments.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal totalWeightedScore = BigDecimal.ZERO;
+        BigDecimal totalWeight = BigDecimal.ZERO;
+
+        for (Assessment assessment : assessments) {
+            BigDecimal score = assessment.getScore();
+            BigDecimal weight = assessment.getAssessmentDefinition().getWeight();
+
+            if (score != null && weight != null) {
+                totalWeightedScore = totalWeightedScore.add(score.multiply(weight));
+                totalWeight = totalWeight.add(weight);
+            }
+        }
+
+        if (totalWeight.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return totalWeightedScore.divide(totalWeight, 2, RoundingMode.HALF_UP);
     }
 
 }
