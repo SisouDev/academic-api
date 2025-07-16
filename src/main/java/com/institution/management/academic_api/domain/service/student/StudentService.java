@@ -1,5 +1,7 @@
 package com.institution.management.academic_api.domain.service.student;
 
+import com.institution.management.academic_api.application.dto.academic.LessonSummaryDto;
+import com.institution.management.academic_api.application.dto.course.CourseDetailsDto;
 import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import org.springframework.data.domain.Page;
@@ -22,4 +24,9 @@ public interface StudentService {
 
     StudentSubjectDetailsDto findSubjectDetails(Long subjectId, User user);
 
+    CourseDetailsDto findCourseDetailsForCurrentStudent();
+
+    List<LessonSummaryDto> findLessonsForCurrentStudent(Pageable pageable);
+
+    List<StudentTeacherNoteDto> findTeacherNotesForCurrentStudent();
 }

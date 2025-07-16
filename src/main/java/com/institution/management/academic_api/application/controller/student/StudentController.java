@@ -1,14 +1,22 @@
 package com.institution.management.academic_api.application.controller.student;
 
+import com.institution.management.academic_api.application.controller.academic.LessonController;
+import com.institution.management.academic_api.application.controller.course.CourseController;
 import com.institution.management.academic_api.application.controller.course.CourseSectionController;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
+import com.institution.management.academic_api.application.controller.teacher.TeacherNoteController;
+import com.institution.management.academic_api.application.dto.academic.LessonSummaryDto;
+import com.institution.management.academic_api.application.dto.course.CourseDetailsDto;
 import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.domain.service.student.StudentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.data.web.SortDefault;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
@@ -93,6 +101,51 @@ public class StudentController {
         );
 
         return ResponseEntity.ok(pagedModel);
+    }
+
+    @GetMapping("/me/course")
+    @Operation(summary = "Busca os detalhes do curso do aluno logado")
+    public ResponseEntity<EntityModel<CourseDetailsDto>> findMyCourseDetails() {
+        CourseDetailsDto courseDetails = studentService.findCourseDetailsForCurrentStudent();
+
+        EntityModel<CourseDetailsDto> resource = EntityModel.of(courseDetails,
+                linkTo(methodOn(StudentController.class).findMyCourseDetails()).withSelfRel(),
+                linkTo(methodOn(CourseController.class).findById(courseDetails.id())).withRel("course-details")
+        );
+
+        return ResponseEntity.ok(resource);
+    }
+
+    @GetMapping("/me/lessons")
+    @Operation(summary = "Busca uma lista agregada de aulas de todas as turmas do aluno logado")
+    public ResponseEntity<CollectionModel<EntityModel<LessonSummaryDto>>> findMyLessons(
+            @SortDefault(sort = "lessonDate", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        List<LessonSummaryDto> lessons = studentService.findLessonsForCurrentStudent(pageable);
+
+        List<EntityModel<LessonSummaryDto>> lessonResources = lessons.stream()
+                .map(lesson -> EntityModel.of(lesson,
+                        linkTo(methodOn(LessonController.class).findById(lesson.id())).withSelfRel()
+                )).collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(StudentController.class).findMyLessons(pageable)).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(lessonResources, selfLink));
+    }
+
+    @GetMapping("/me/teacher-notes")
+    @Operation(summary = "Busca uma lista agregada de anotações dos professores para o aluno logado")
+    public ResponseEntity<CollectionModel<EntityModel<StudentTeacherNoteDto>>> findMyTeacherNotes() {
+        List<StudentTeacherNoteDto> notes = studentService.findTeacherNotesForCurrentStudent();
+
+        List<EntityModel<StudentTeacherNoteDto>> noteResources = notes.stream()
+                .map(note -> EntityModel.of(note,
+                        linkTo(methodOn(TeacherNoteController.class).findById(note.id())).withSelfRel()
+                )).collect(Collectors.toList());
+
+        var selfLink = linkTo(methodOn(StudentController.class).findMyTeacherNotes()).withSelfRel();
+
+        return ResponseEntity.ok(CollectionModel.of(noteResources, selfLink));
     }
 
 }

@@ -1191,7 +1191,14 @@ public class DataSeeder implements CommandLineRunner {
             createdDefinitions.put("Prova 1", createAssessmentDefinitionIfNotExists("Prova 1", "EXAM", pooSection, new BigDecimal("40.0")));
             createdDefinitions.put("Projeto Final", createAssessmentDefinitionIfNotExists("Projeto Final", "PROJECT", pooSection, new BigDecimal("60.0")));
         }
+
+        CourseSection bdSection = courseSections.get("DB_A");
+        if (bdSection != null) {
+            createdDefinitions.put("Projeto Final BD", createAssessmentDefinitionIfNotExists("Projeto Final", "PROJECT", bdSection, new BigDecimal("100.0")));
+        }
+
         return createdDefinitions;
+
     }
 
     private AssessmentDefinition createAssessmentDefinitionIfNotExists(String title, String type, CourseSection section, BigDecimal weight) {

@@ -1,12 +1,16 @@
 package com.institution.management.academic_api.application.service.student;
 
 import com.institution.management.academic_api.application.dto.academic.LessonDetailsDto;
+import com.institution.management.academic_api.application.dto.academic.LessonSummaryDto;
+import com.institution.management.academic_api.application.dto.course.CourseDetailsDto;
 import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.mapper.simple.academic.LessonMapper;
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.student.EnrollmentMapper;
 import com.institution.management.academic_api.application.mapper.simple.student.StudentMapper;
+import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherNoteMapper;
 import com.institution.management.academic_api.application.notifiers.student.StudentNotifier;
+import com.institution.management.academic_api.domain.model.entities.academic.Lesson;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
@@ -14,6 +18,7 @@ import com.institution.management.academic_api.domain.model.entities.specificati
 import com.institution.management.academic_api.domain.model.entities.student.Enrollment;
 import com.institution.management.academic_api.domain.model.entities.student.Student;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
+import com.institution.management.academic_api.domain.model.entities.teacher.TeacherNote;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
@@ -24,7 +29,9 @@ import com.institution.management.academic_api.domain.repository.common.RoleRepo
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
 import com.institution.management.academic_api.domain.repository.student.EnrollmentRepository;
 import com.institution.management.academic_api.domain.repository.student.StudentRepository;
+import com.institution.management.academic_api.domain.repository.teacher.TeacherNoteRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
+import com.institution.management.academic_api.domain.service.course.CourseService;
 import com.institution.management.academic_api.domain.service.student.StudentService;
 import com.institution.management.academic_api.domain.service.user.UserService;
 import com.institution.management.academic_api.exception.type.common.EmailAlreadyExists;
@@ -66,6 +73,9 @@ public class StudentServiceImpl implements StudentService {
     private final StudentNotifier studentNotifier;
     private final LessonRepository lessonRepository;
     private final LessonMapper lessonMapper;
+    private final CourseService courseService;
+    private final TeacherNoteMapper teacherNoteMapper;
+    private final TeacherNoteRepository teacherNoteRepository;
 
 
     @Override
@@ -108,6 +118,28 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponseDto findById(Long id) {
         Student student = findStudentByIdOrThrow(id);
         return studentMapper.toResponseDto(student);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentTeacherNoteDto> findTeacherNotesForCurrentStudent() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Student student = studentRepository.findByEmail(username)
+                .orElseThrow(() -> new AccessDeniedException("Usuário logado não é um aluno ou não foi encontrado."));
+
+        List<Long> enrollmentIds = student.getEnrollments().stream()
+                .map(Enrollment::getId)
+                .collect(Collectors.toList());
+
+        if (enrollmentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<TeacherNote> notes = teacherNoteRepository.findAllByEnrollmentIdInOrderByCreatedAtDesc(enrollmentIds);
+
+        return notes.stream()
+                .map(teacherNoteMapper::toStudentDto)
+                .collect(Collectors.toList());
     }
 
 
@@ -191,6 +223,47 @@ public class StudentServiceImpl implements StudentService {
                 teacher.getEmail(),
                 lessons
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CourseDetailsDto findCourseDetailsForCurrentStudent() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Student student = studentRepository.findByEmail(username)
+                .orElseThrow(() -> new AccessDeniedException("Usuário logado não é um aluno ou não foi encontrado."));
+
+        Enrollment activeEnrollment = student.getEnrollments().stream()
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ACTIVE)
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("O aluno não possui matrículas ativas."));
+
+        Long courseId = activeEnrollment.getCourseSection().getSubject().getCourse().getId();
+
+        return courseService.findById(courseId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LessonSummaryDto> findLessonsForCurrentStudent(Pageable pageable) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Student student = studentRepository.findByEmail(username)
+                .orElseThrow(() -> new AccessDeniedException("Usuário logado não é um aluno ou não foi encontrado."));
+
+        List<Long> activeSectionIds = student.getEnrollments().stream()
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ACTIVE)
+                .map(enrollment -> enrollment.getCourseSection().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (activeSectionIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Page<Lesson> lessonsPage = lessonRepository.findAllByCourseSectionIdIn(activeSectionIds, pageable);
+
+        return lessonsPage.getContent().stream()
+                .map(lessonMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 
     private Institution findInstitutionByIdOrThrow(Long id) {

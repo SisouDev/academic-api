@@ -12,6 +12,10 @@ public interface AssessmentMapper {
 
     AssessmentMapper INSTANCE = Mappers.getMapper(AssessmentMapper.class);
 
+    @Mapping(target = "title", source = "assessmentDefinition.title")
+    @Mapping(target = "type", source = "assessmentDefinition.type")
+    @Mapping(target = "assessmentDate", source = "assessmentDefinition.assessmentDate")
+    @Mapping(target = "assessmentDefinitionId", source = "assessmentDefinition.id")
     AssessmentDto toDto(Assessment assessment);
 
     @Mapping(target = "id", ignore = true)

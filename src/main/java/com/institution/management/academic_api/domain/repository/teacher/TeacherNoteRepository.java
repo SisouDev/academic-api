@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface TeacherNoteRepository extends JpaRepository<TeacherNote, Long> {
     List<TeacherNote> findAllByEnrollmentIdOrderByCreatedAtDesc(Long enrollmentId);
+    List<TeacherNote> findAllByEnrollmentIdInOrderByCreatedAtDesc(List<Long> enrollmentIds);
 
 }
