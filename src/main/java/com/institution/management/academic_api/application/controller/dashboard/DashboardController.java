@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.application.controller.dashboard;
 
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
+import com.institution.management.academic_api.application.dto.dashboard.employee.HrAnalystDashboardDto;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.service.dashboard.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +34,20 @@ public class DashboardController {
         Object dashboardData = dashboardService.getDashboardDataForUser(authenticatedUser);
 
         return ResponseEntity.ok(dashboardData);
+    }
+
+    @GetMapping("/hr-analyst")
+    @PreAuthorize("hasRole('HR_ANALYST')")
+    @Operation(summary = "Busca os dados do dashboard específico para o Analista de RH")
+    public ResponseEntity<EntityModel<HrAnalystDashboardDto>> getHrAnalystDashboard(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        HrAnalystDashboardDto dashboardData = dashboardService.getHrAnalystDashboard(authenticatedUser);
+
+        EntityModel<HrAnalystDashboardDto> resource = EntityModel.of(dashboardData,
+                linkTo(methodOn(DashboardController.class).getHrAnalystDashboard(authentication)).withSelfRel()
+        );
+
+        return ResponseEntity.ok(resource);
     }
 
 

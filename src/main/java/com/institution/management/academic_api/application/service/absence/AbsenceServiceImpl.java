@@ -22,6 +22,8 @@ import com.institution.management.academic_api.domain.service.common.Notificatio
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,6 +69,19 @@ public class AbsenceServiceImpl implements AbsenceService {
         absenceToReview.setReviewedAt(LocalDateTime.now());
         absenceNotifier.notifyRequesterOfReview(absenceToReview);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AbsenceDetailsDto> findAll(AbsenceStatus status, Pageable pageable) {
+        Page<Absence> page;
+        if (status != null) {
+            page = absenceRepository.findAllByStatus(status, pageable);
+        } else {
+            page = absenceRepository.findAll(pageable);
+        }
+        return page.map(absenceMapper::toDetailsDto);
+    }
+
 
     @Override
     @Transactional

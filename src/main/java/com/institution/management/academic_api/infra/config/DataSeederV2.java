@@ -149,7 +149,7 @@ public class DataSeederV2 implements CommandLineRunner {
         absence2.setType(AbsenceType.LATENESS);
         absence2.setDate(LocalDate.now().minusDays(5));
         absence2.setJustification("Problemas com o transporte público.");
-        absence2.setStatus(AbsenceStatus.PENDING_REVIEW);
+        absence2.setStatus(AbsenceStatus.PENDING);
         absence2.setCreatedAt(LocalDateTime.now().minusDays(5));
 
         absenceRepository.saveAll(List.of(absence1, absence2));

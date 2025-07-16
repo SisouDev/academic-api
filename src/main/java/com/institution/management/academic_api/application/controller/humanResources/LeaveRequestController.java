@@ -4,15 +4,21 @@ import com.institution.management.academic_api.application.dto.humanResources.Cr
 import com.institution.management.academic_api.application.dto.humanResources.LeaveRequestDetailsDto;
 import com.institution.management.academic_api.application.dto.humanResources.ReviewLeaveRequestDto;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
+import com.institution.management.academic_api.domain.model.enums.humanResources.LeaveRequestStatus;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.service.humanResources.LeaveRequestService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +58,21 @@ public class LeaveRequestController {
         String reviewerEmail = authentication.getName();
         leaveRequestService.review(id, request, reviewerEmail);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('HR_ANALYST', 'MANAGER')")
+    @Operation(summary = "Lista todas as solicitações de ausência com filtros")
+    public ResponseEntity<PagedModel<EntityModel<LeaveRequestDetailsDto>>> findAll(
+            @RequestParam(required = false) LeaveRequestStatus status,
+            Pageable pageable,
+            PagedResourcesAssembler<LeaveRequestDetailsDto> assembler) {
+
+        Page<LeaveRequestDetailsDto> requestsPage = leaveRequestService.findAll(status, pageable);
+        PagedModel<EntityModel<LeaveRequestDetailsDto>> pagedModel = assembler.toModel(requestsPage,
+                request -> EntityModel.of(request,
+                        linkTo(methodOn(LeaveRequestController.class).findById(request.id())).withSelfRel()));
+        return ResponseEntity.ok(pagedModel);
     }
 
     @GetMapping("/{id}")

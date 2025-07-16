@@ -27,7 +27,7 @@ public class AbsenceFactory {
         absence.setPerson(person);
 
         absence.setCreatedAt(LocalDateTime.now());
-        absence.setStatus(AbsenceStatus.PENDING_REVIEW);
+        absence.setStatus(AbsenceStatus.PENDING);
 
         return absence;
     }

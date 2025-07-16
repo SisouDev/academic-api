@@ -48,6 +48,7 @@ import com.institution.management.academic_api.domain.service.dashboard.Dashboar
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,7 +88,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public Object getDashboardDataForUser(User user) {
         Set<String> roles = user.getAuthorities().stream()
-                .map(auth -> auth.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
         log.info("Buscando dashboard para usuário '{}' com as roles: {}", user.getUsername(), roles);
 
@@ -95,7 +96,13 @@ public class DashboardServiceImpl implements DashboardService {
             log.info("Usuário é ADMIN. Retornando AdminDashboardDto.");
             return getAdminDashboard(user);
         }
-        if (roles.contains("ROLE_LIBRARIAN") || roles.contains("ROLE_TECHNICIAN") || roles.contains("ROLE_HR_ANALYST")) {
+
+        if (roles.contains("ROLE_HR_ANALYST")) {
+            log.info("Usuário é HR_ANALYST. Retornando HrAnalystDashboardDto.");
+            return getHrAnalystDashboard(user);
+        }
+
+        if (roles.contains("ROLE_LIBRARIAN") || roles.contains("ROLE_TECHNICIAN")) {
             log.info("Usuário é um Funcionário com cargo específico. Retornando EmployeeDashboardDto.");
             return getEmployeeDashboard(user);
         }
@@ -113,7 +120,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         log.warn("Nenhum dashboard específico encontrado para o usuário '{}'. Retornando um DTO genérico.", user.getUsername());
-        return new HashMap<>() ;
+        return new HashMap<>();
     }
 
     @Override
@@ -255,6 +262,30 @@ public class DashboardServiceImpl implements DashboardService {
         );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public HrAnalystDashboardDto getHrAnalystDashboard(User user) {
+        long unreadNotifications = notificationRepository.countByRecipientAndStatus(user, NotificationStatus.UNREAD);
+        long pendingLeaveRequests = leaveRequestRepository.countByStatus(LeaveRequestStatus.PENDING);
+
+        LocalDate startOfMonth = YearMonth.now().atDay(1);
+        long newHires = employeeRepository.countByHiringDateAfter(startOfMonth);
+
+        List<LeaveRequestSummary> recentLeaveRequests = leaveRequestRepository.findTop5ByStatusOrderByCreatedAtDesc(LeaveRequestStatus.PENDING)
+                .stream()
+                .map(lr -> new LeaveRequestSummary(
+                        lr.getId(),
+                        lr.getRequester().getFirstName() + " " + lr.getRequester().getLastName(),
+                        lr.getType().name(),
+                        lr.getStartDate(),
+                        lr.getEndDate(),
+                        lr.getStatus().name()
+                ))
+                .collect(Collectors.toList());
+
+        return new HrAnalystDashboardDto(unreadNotifications, pendingLeaveRequests, newHires, recentLeaveRequests);
+    }
+
     private EmployeeDashboardDto getEmployeeDashboard(User user) {
         Employee employee = employeeRepository.findById(user.getPerson().getId())
                 .orElseThrow(() -> new IllegalStateException("Employee not found for authenticated user."));
@@ -275,7 +306,6 @@ public class DashboardServiceImpl implements DashboardService {
 
         LibrarianSummaryDto librarianInfo = null;
         TechnicianSummaryDto technicianInfo = null;
-        HrAnalystSummaryDto hrAnalystInfo = null;
 
         if (employee.getJobPosition() == JobPosition.LIBRARIAN) {
             long pendingLoans = loanRepository.countByStatus(LoanStatus.ACTIVE);
@@ -289,27 +319,6 @@ public class DashboardServiceImpl implements DashboardService {
             technicianInfo = new TechnicianSummaryDto(openTickets, assignedAssets);
         }
 
-        if (employee.getJobPosition() == JobPosition.HR_ANALYST) {
-            long pendingLeaveRequests = leaveRequestRepository.countByStatus(LeaveRequestStatus.PENDING);
-
-            LocalDate startOfMonth = YearMonth.now().atDay(1);
-            long newHires = employeeRepository.countByHiringDateAfter(startOfMonth);
-
-            List<LeaveRequestSummary> recentLeaveRequests = leaveRequestRepository.findTop5ByStatusOrderByCreatedAtDesc(LeaveRequestStatus.PENDING)
-                    .stream()
-                    .map(lr -> new LeaveRequestSummary(
-                            lr.getId(),
-                            lr.getRequester().getFirstName() + " " + lr.getRequester().getLastName(),
-                            lr.getType().name(),
-                            lr.getStartDate(),
-                            lr.getEndDate(),
-                            lr.getStatus().name()
-                    ))
-                    .collect(Collectors.toList());
-
-            hrAnalystInfo = new HrAnalystSummaryDto(pendingLeaveRequests, newHires, recentLeaveRequests);
-        }
-
         return new EmployeeDashboardDto(
                 unreadNotifications,
                 pendingTasksCount,
@@ -317,7 +326,7 @@ public class DashboardServiceImpl implements DashboardService {
                 recentAnnouncements,
                 librarianInfo,
                 technicianInfo,
-                hrAnalystInfo
+                null
         );
     }
 }

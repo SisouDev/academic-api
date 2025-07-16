@@ -3,12 +3,18 @@ package com.institution.management.academic_api.application.controller.absence;
 import com.institution.management.academic_api.application.dto.absence.AbsenceDetailsDto;
 import com.institution.management.academic_api.application.dto.absence.CreateAbsenceRequestDto;
 import com.institution.management.academic_api.application.dto.absence.ReviewAbsenceRequestDto;
+import com.institution.management.academic_api.domain.model.enums.absence.AbsenceStatus;
 import com.institution.management.academic_api.domain.service.absence.AbsenceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +43,21 @@ public class AbsenceController {
                 linkTo(methodOn(AbsenceController.class).findById(createdAbsence.id())).withSelfRel());
 
         return ResponseEntity.created(URI.create(resource.getRequiredLink("self").getHref())).body(resource);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('HR_ANALYST', 'MANAGER')")
+    @Operation(summary = "Lista todas as justificativas de ausência com filtros")
+    public ResponseEntity<PagedModel<EntityModel<AbsenceDetailsDto>>> findAll(
+            @RequestParam(required = false) AbsenceStatus status,
+            Pageable pageable,
+            PagedResourcesAssembler<AbsenceDetailsDto> assembler) {
+
+        Page<AbsenceDetailsDto> absencesPage = absenceService.findAll(status, pageable);
+        PagedModel<EntityModel<AbsenceDetailsDto>> pagedModel = assembler.toModel(absencesPage,
+                absence -> EntityModel.of(absence,
+                        linkTo(methodOn(AbsenceController.class).findById(absence.id())).withSelfRel()));
+        return ResponseEntity.ok(pagedModel);
     }
 
     @PostMapping("/{id}/attachment")

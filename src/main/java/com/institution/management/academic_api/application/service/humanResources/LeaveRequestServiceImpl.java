@@ -16,6 +16,8 @@ import com.institution.management.academic_api.domain.service.humanResources.Lea
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +49,18 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         leaveRequestNotifier.notifyHrOfNewLeaveRequest(savedLeaveRequest);
 
         return leaveRequestMapper.toDetailsDto(savedLeaveRequest);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LeaveRequestDetailsDto> findAll(LeaveRequestStatus status, Pageable pageable) {
+        Page<LeaveRequest> page;
+        if (status != null) {
+            page = leaveRequestRepository.findAllByStatus(status, pageable);
+        } else {
+            page = leaveRequestRepository.findAll(pageable);
+        }
+        return page.map(leaveRequestMapper::toDetailsDto);
     }
 
     @Override

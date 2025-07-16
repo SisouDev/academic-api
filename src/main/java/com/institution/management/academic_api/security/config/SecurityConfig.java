@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/lessons/**").hasRole("TEACHER")
                         .requestMatchers("/api/v1/lesson-contents/**").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/enrollments/attendance", "/api/v1/teacher-notes").hasRole("TEACHER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/leave-requests").authenticated()
+                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("HR_ANALYST", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/teachers/{id}/status").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/teacher-notes/**").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/assessment-definitions/**").hasAnyRole("TEACHER", "ADMIN")

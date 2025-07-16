@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 @Getter
 public enum AbsenceStatus {
-    PENDING_REVIEW("Pending Review"),
+    PENDING("Pending"),
     APPROVED("Approved"),
     REJECTED("Rejected");
 
