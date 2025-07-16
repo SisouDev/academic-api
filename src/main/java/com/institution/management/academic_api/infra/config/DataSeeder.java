@@ -465,101 +465,79 @@ public class DataSeeder implements CommandLineRunner {
 
         Course seCourse = courses.get("SE");
         if (seCourse != null) {
-            createdSubjects.put("POO", createSubjectIfNotExists("Programação Orientada a Objetos", 90, seCourse));
-            createdSubjects.put("DB", createSubjectIfNotExists("Banco de Dados", 72, seCourse));
-            createdSubjects.put("ADS", createSubjectIfNotExists("Algoritmos e Estruturas de Dados", 90, seCourse));
-            createdSubjects.put("ENGSW", createSubjectIfNotExists(
-                    "Engenharia de Software I", 90, seCourse));
-
-            createdSubjects.put("TESTE", createSubjectIfNotExists(
-                    "Teste e Validação de Software", 72, seCourse));
-
-            createdSubjects.put("ARQ", createSubjectIfNotExists(
-                    "Arquitetura de Software", 72, seCourse));
-
-            createdSubjects.put("AGIL", createSubjectIfNotExists(
-                    "Metodologias Ágeis", 60, seCourse));
-
+            createdSubjects.put("ADS", createSubjectIfNotExists("Algoritmos e Estruturas de Dados", 90, seCourse, 1));
+            createdSubjects.put("POO", createSubjectIfNotExists("Programação Orientada a Objetos", 90, seCourse, 2));
+            createdSubjects.put("DB", createSubjectIfNotExists("Banco de Dados", 72, seCourse, 2));
+            createdSubjects.put("ENGSW", createSubjectIfNotExists("Engenharia de Software I", 90, seCourse, 3));
+            createdSubjects.put("TESTE", createSubjectIfNotExists("Teste e Validação de Software", 72, seCourse, 4));
+            createdSubjects.put("ARQ", createSubjectIfNotExists("Arquitetura de Software", 72, seCourse, 5));
+            createdSubjects.put("AGIL", createSubjectIfNotExists("Metodologias Ágeis", 60, seCourse, 6));
         }
+
         Course dsCourse = courses.get("DS");
         if (dsCourse != null) {
-            createdSubjects.put("STAT", createSubjectIfNotExists("Estatística Aplicada", 90, dsCourse));
-            createdSubjects.put("ML", createSubjectIfNotExists("Machine Learning", 72, dsCourse));
-            createdSubjects.put("MINDADOS", createSubjectIfNotExists(
-                    "Mineração de Dados", 72, dsCourse));
-
-            createdSubjects.put("BIGD", createSubjectIfNotExists(
-                    "Big Data", 72, dsCourse));
-
-            createdSubjects.put("VISDADOS", createSubjectIfNotExists(
-                    "Visualização de Dados", 60, dsCourse));
-
-            createdSubjects.put("PYDS", createSubjectIfNotExists(
-                    "Python para Ciência de Dados", 90, dsCourse));
-
+            createdSubjects.put("STAT", createSubjectIfNotExists("Estatística Aplicada", 90, dsCourse, 1));
+            createdSubjects.put("PYDS", createSubjectIfNotExists("Python para Ciência de Dados", 90, dsCourse, 2));
+            createdSubjects.put("MINDADOS", createSubjectIfNotExists("Mineração de Dados", 72, dsCourse, 3));
+            createdSubjects.put("ML", createSubjectIfNotExists("Machine Learning", 72, dsCourse, 4));
+            createdSubjects.put("BIGD", createSubjectIfNotExists("Big Data", 72, dsCourse, 5));
+            createdSubjects.put("VISDADOS", createSubjectIfNotExists("Visualização de Dados", 60, dsCourse, 6));
         }
 
         Course lcCourse = courses.get("LC");
         if(lcCourse != null){
-            createdSubjects.put("TL", createSubjectIfNotExists("Teoria Literária", 90, lcCourse));
-            createdSubjects.put("LATIM", createSubjectIfNotExists(
-                    "Latim I", 60, lcCourse));
-
-            createdSubjects.put("HISLIT", createSubjectIfNotExists(
-                    "História da Literatura Clássica", 72, lcCourse));
-
-            createdSubjects.put("TRAG", createSubjectIfNotExists(
-                    "Tragédia Grega", 60, lcCourse));
-
-            createdSubjects.put("EPOP", createSubjectIfNotExists(
-                    "Épica e Poesia", 72, lcCourse));
+            createdSubjects.put("TL", createSubjectIfNotExists("Teoria Literária", 90, lcCourse, 1));
+            createdSubjects.put("LATIM", createSubjectIfNotExists("Latim I", 60, lcCourse, 1));
+            createdSubjects.put("HISLIT", createSubjectIfNotExists("História da Literatura Clássica", 72, lcCourse, 2));
+            createdSubjects.put("TRAG", createSubjectIfNotExists("Tragédia Grega", 60, lcCourse, 3));
+            createdSubjects.put("EPOP", createSubjectIfNotExists("Épica e Poesia", 72, lcCourse, 4));
         }
 
         Course bioCourse = courses.get("BIO");
         if (bioCourse != null) {
-            createdSubjects.put("ANAT", createSubjectIfNotExists("Anatomia Humana", 90, bioCourse));
-            createdSubjects.put("BOT", createSubjectIfNotExists("Botânica", 72, bioCourse));
-            createdSubjects.put("ECO", createSubjectIfNotExists("Ecologia", 72, bioCourse));
-            createdSubjects.put("GEN", createSubjectIfNotExists("Genética", 90, bioCourse));
+            createdSubjects.put("ANAT", createSubjectIfNotExists("Anatomia Humana", 90, bioCourse, 1));
+            createdSubjects.put("BOT", createSubjectIfNotExists("Botânica", 72, bioCourse, 2));
+            createdSubjects.put("ECO", createSubjectIfNotExists("Ecologia", 72, bioCourse, 3));
+            createdSubjects.put("GEN", createSubjectIfNotExists("Genética", 90, bioCourse, 4));
         }
 
         Course psicoCourse = courses.get("PSICO");
         if (psicoCourse != null) {
-            createdSubjects.put("PSIBAS", createSubjectIfNotExists("Fundamentos da Psicologia", 60, psicoCourse));
-            createdSubjects.put("DEVHUM", createSubjectIfNotExists("Desenvolvimento Humano", 72, psicoCourse));
-            createdSubjects.put("TEORIAS", createSubjectIfNotExists("Teorias da Personalidade", 72, psicoCourse));
-            createdSubjects.put("PSICLIN", createSubjectIfNotExists("Psicologia Clínica", 90, psicoCourse));
+            createdSubjects.put("PSIBAS", createSubjectIfNotExists("Fundamentos da Psicologia", 60, psicoCourse, 1));
+            createdSubjects.put("DEVHUM", createSubjectIfNotExists("Desenvolvimento Humano", 72, psicoCourse, 2));
+            createdSubjects.put("TEORIAS", createSubjectIfNotExists("Teorias da Personalidade", 72, psicoCourse, 3));
+            createdSubjects.put("PSICLIN", createSubjectIfNotExists("Psicologia Clínica", 90, psicoCourse, 4));
         }
 
         Course dirCourse = courses.get("DIR");
         if (dirCourse != null) {
-            createdSubjects.put("DIRCON", createSubjectIfNotExists("Direito Constitucional", 90, dirCourse));
-            createdSubjects.put("DIRCIV", createSubjectIfNotExists("Direito Civil I", 72, dirCourse));
-            createdSubjects.put("DIRADM", createSubjectIfNotExists("Direito Administrativo", 72, dirCourse));
-            createdSubjects.put("FILDIR", createSubjectIfNotExists("Filosofia do Direito", 60, dirCourse));
+            createdSubjects.put("FILDIR", createSubjectIfNotExists("Filosofia do Direito", 60, dirCourse, 1));
+            createdSubjects.put("DIRCON", createSubjectIfNotExists("Direito Constitucional", 90, dirCourse, 1));
+            createdSubjects.put("DIRCIV", createSubjectIfNotExists("Direito Civil I", 72, dirCourse, 2));
+            createdSubjects.put("DIRADM", createSubjectIfNotExists("Direito Administrativo", 72, dirCourse, 3));
         }
 
         Course matCourse = courses.get("MAT");
         if (matCourse != null) {
-            createdSubjects.put("ALGAB", createSubjectIfNotExists("Álgebra Abstrata", 90, matCourse));
-            createdSubjects.put("CALC3", createSubjectIfNotExists("Cálculo III", 90, matCourse));
-            createdSubjects.put("TOP", createSubjectIfNotExists("Topologia Geral", 72, matCourse));
-            createdSubjects.put("LOG", createSubjectIfNotExists("Lógica Matemática", 72, matCourse));
+            createdSubjects.put("CALC3", createSubjectIfNotExists("Cálculo III", 90, matCourse, 1));
+            createdSubjects.put("LOG", createSubjectIfNotExists("Lógica Matemática", 72, matCourse, 2));
+            createdSubjects.put("ALGAB", createSubjectIfNotExists("Álgebra Abstrata", 90, matCourse, 3));
+            createdSubjects.put("TOP", createSubjectIfNotExists("Topologia Geral", 72, matCourse, 4));
         }
 
         Course quiCourse = courses.get("QUI");
         if (quiCourse != null) {
-            createdSubjects.put("QUIORG", createSubjectIfNotExists("Química Orgânica I", 72, quiCourse));
-            createdSubjects.put("QUIANA", createSubjectIfNotExists("Química Analítica", 72, quiCourse));
-            createdSubjects.put("FISQUI", createSubjectIfNotExists("Fisico-Química", 90, quiCourse));
-            createdSubjects.put("LAB", createSubjectIfNotExists("Práticas de Laboratório", 60, quiCourse));
+            createdSubjects.put("QUIORG", createSubjectIfNotExists("Química Orgânica I", 72, quiCourse, 1));
+            createdSubjects.put("QUIANA", createSubjectIfNotExists("Química Analítica", 72, quiCourse, 2));
+            createdSubjects.put("FISQUI", createSubjectIfNotExists("Fisico-Química", 90, quiCourse, 3));
+            createdSubjects.put("LAB", createSubjectIfNotExists("Práticas de Laboratório", 60, quiCourse, 4));
         }
 
         log.info("Seeding de Disciplinas finalizado.");
         return createdSubjects;
     }
 
-    private Subject createSubjectIfNotExists(String name, int workloadHours, Course course) {
+    private Subject createSubjectIfNotExists(String name, int workloadHours, Course course, Integer semester) {
         return subjectRepository.findByNameAndCourse(name, course)
                 .orElseGet(() -> {
                     log.info("Criando disciplina de exemplo: '{}' para o curso '{}'...", name, course.getName());
@@ -567,7 +545,8 @@ public class DataSeeder implements CommandLineRunner {
                     var subjectRequest = new CreateSubjectRequestDto(
                             name,
                             workloadHours,
-                            course.getId()
+                            course.getId(),
+                            semester
                     );
 
                     SubjectDetailsDto createdSubjectDto = subjectService.create(subjectRequest);

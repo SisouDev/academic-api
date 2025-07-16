@@ -10,5 +10,7 @@ public record CreateSubjectRequestDto(
         Integer workloadHours,
 
         @Schema(description = "ID do Curso ao qual a disciplina pertence.", requiredMode = Schema.RequiredMode.REQUIRED, example = "101")
-        Long courseId
+        Long courseId,
+
+        Integer semester
 ) {}

@@ -62,6 +62,7 @@ public interface CourseMapper {
                     subject.getId(),
                     subject.getName(),
                     subject.getWorkloadHours(),
+                    subject.getSemester(),
                     courseSummary,
                     sectionSummaries,
                     teacherId,

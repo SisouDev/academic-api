@@ -12,7 +12,7 @@ public record SubjectDetailsDto(
 
         @Schema(description = "Carga horária da disciplina em horas.", example = "90")
         Integer workloadHours,
-
+        Integer semester,
         @Schema(description = "Curso ao qual a disciplina pertence.")
         CourseSummaryDto course,
 

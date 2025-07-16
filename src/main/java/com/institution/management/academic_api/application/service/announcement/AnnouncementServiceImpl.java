@@ -12,11 +12,13 @@ import com.institution.management.academic_api.domain.model.entities.announcemen
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
+import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.announcement.AnnouncementRepository;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
+import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.announcement.AnnouncementService;
 import com.institution.management.academic_api.domain.service.common.NotificationService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
@@ -43,6 +45,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     private final DepartmentRepository departmentRepository;
     private final CourseSectionRepository courseSectionRepository;
     private final PersonRepository personRepository;
+    private final UserRepository userRepository;
 
 
 
@@ -113,13 +116,16 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     @Override
     @Transactional(readOnly = true)
     public List<AnnouncementSummaryDto> findVisibleForCurrentUser() {
-        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        Employee currentUser = employeeRepository.findByEmail(userEmail)
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepository.findByLogin(username)
                 .orElseThrow(() -> new EntityNotFoundException("Current user not found."));
 
-        Long departmentId = (currentUser.getDepartment() != null) ? currentUser.getDepartment().getId() : null;
+        Person person = user.getPerson();
 
-        return announcementRepository.findVisibleAnnouncements(departmentId).stream()
+        List<Announcement> announcements = announcementRepository.findVisibleForPerson(person.getId());
+
+        return announcements.stream()
                 .map(announcementMapper::toSummaryDto)
                 .collect(Collectors.toList());
     }

@@ -29,6 +29,10 @@ public class Subject {
     @Column
     private Integer workloadHours;
 
+    @Column(nullable = false)
+    private Integer semester;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
     @ToString.Exclude
