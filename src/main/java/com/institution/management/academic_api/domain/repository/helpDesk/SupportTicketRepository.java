@@ -4,12 +4,13 @@ import com.institution.management.academic_api.domain.model.entities.common.Pers
 import com.institution.management.academic_api.domain.model.entities.helpDesk.SupportTicket;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface SupportTicketRepository extends JpaRepository<SupportTicket, Long> {
+public interface SupportTicketRepository extends JpaRepository<SupportTicket, Long>, JpaSpecificationExecutor<SupportTicket> {
     List<SupportTicket> findByRequesterId(Long requesterId);
 
     List<SupportTicket> findByAssigneeId(Long assigneeId);

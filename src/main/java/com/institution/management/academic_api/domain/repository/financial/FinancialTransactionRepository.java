@@ -1,6 +1,8 @@
 package com.institution.management.academic_api.domain.repository.financial;
 
 import com.institution.management.academic_api.domain.model.entities.financial.FinancialTransaction;
+import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
+import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -15,4 +17,6 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
 
     @Query("SELECT SUM(t.amount) FROM FinancialTransaction t WHERE t.student.id = :studentId")
     Optional<BigDecimal> getBalanceForStudent(Long studentId);
+
+    long countByTypeAndStatus(TransactionType transactionType, TransactionStatus transactionStatus);
 }

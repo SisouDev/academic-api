@@ -7,6 +7,7 @@ import com.institution.management.academic_api.application.notifiers.it.AssetNot
 import com.institution.management.academic_api.domain.factory.it.AssetFactory;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.it.Asset;
+import com.institution.management.academic_api.domain.model.entities.specification.AssetSpecification;
 import com.institution.management.academic_api.domain.model.enums.it.AssetStatus;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.it.AssetRepository;
@@ -16,6 +17,9 @@ import com.institution.management.academic_api.exception.type.common.EntityNotFo
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityExistsException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,5 +99,15 @@ public class AssetServiceImpl implements AssetService {
         return assetRepository.findAll().stream()
                 .map(assetMapper::toDetailsDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AssetDetailsDto> findAll(AssetStatus status, Long assignedToId, Pageable pageable) {
+        Specification<Asset> spec = AssetSpecification.filterBy(status, assignedToId);
+
+        Page<Asset> assetsPage = assetRepository.findAll(spec, pageable);
+
+        return assetsPage.map(assetMapper::toDetailsDto);
     }
 }

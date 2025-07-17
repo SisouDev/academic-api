@@ -2,14 +2,17 @@ package com.institution.management.academic_api.application.controller.helpDesk;
 
 import com.institution.management.academic_api.application.dto.helpDesk.CreateSupportTicketRequestDto;
 import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketDetailsDto;
-import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketSummaryDto;
 import com.institution.management.academic_api.application.dto.helpDesk.UpdateSupportTicketRequestDto;
+import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import com.institution.management.academic_api.domain.service.helpDesk.SupportTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -50,21 +53,6 @@ public class SupportTicketController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    @Operation(summary = "Busca todos os chamados de suporte")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'EMPLOYEE', 'STUDENT')")
-    public ResponseEntity<CollectionModel<EntityModel<SupportTicketSummaryDto>>> findAll() {
-        List<SupportTicketSummaryDto> tickets = ticketService.findAll();
-
-        List<EntityModel<SupportTicketSummaryDto>> resources = tickets.stream()
-                .map(ticket -> EntityModel.of(ticket,
-                        linkTo(methodOn(SupportTicketController.class).findById(ticket.id())).withSelfRel()))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(CollectionModel.of(resources,
-                linkTo(methodOn(SupportTicketController.class).findAll()).withSelfRel()));
-    }
-
     @PatchMapping("/{ticketId}")
     @Operation(summary = "Atualiza o status ou prioridade de um chamado")
     public ResponseEntity<EntityModel<SupportTicketDetailsDto>> update(@PathVariable Long ticketId, @RequestBody UpdateSupportTicketRequestDto request) {
@@ -96,5 +84,18 @@ public class SupportTicketController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(resources);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN', 'MANAGER')")
+    @Operation(summary = "Lista todos os chamados de suporte com filtros")
+    public ResponseEntity<PagedModel<EntityModel<SupportTicketDetailsDto>>> findAll(
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) Long assigneeId,
+            Pageable pageable,
+            PagedResourcesAssembler<SupportTicketDetailsDto> assembler) {
+
+        Page<SupportTicketDetailsDto> ticketsPage = ticketService.findAll(status, assigneeId, pageable);
+        return ResponseEntity.ok(assembler.toModel(ticketsPage));
     }
 }

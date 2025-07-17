@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.application.service.dashboard;
 
+import com.institution.management.academic_api.application.dto.announcement.AnnouncementSummaryDto;
 import com.institution.management.academic_api.application.dto.dashboard.admin.ActivityFeedItem;
 import com.institution.management.academic_api.application.dto.dashboard.admin.AdminDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
@@ -21,7 +22,8 @@ import com.institution.management.academic_api.domain.model.enums.academic.Acade
 import com.institution.management.academic_api.domain.model.enums.announcement.AnnouncementScope;
 import com.institution.management.academic_api.domain.model.enums.common.NotificationStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
-import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
+import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
+import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import com.institution.management.academic_api.domain.model.enums.humanResources.LeaveRequestStatus;
 import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
@@ -33,6 +35,7 @@ import com.institution.management.academic_api.domain.repository.common.Notifica
 import com.institution.management.academic_api.domain.repository.course.CourseRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
+import com.institution.management.academic_api.domain.repository.financial.FinancialTransactionRepository;
 import com.institution.management.academic_api.domain.repository.helpDesk.SupportTicketRepository;
 import com.institution.management.academic_api.domain.repository.humanResources.LeaveRequestRepository;
 import com.institution.management.academic_api.domain.repository.it.AssetRepository;
@@ -45,6 +48,7 @@ import com.institution.management.academic_api.domain.repository.tasks.TaskRepos
 import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.dashboard.DashboardService;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -83,6 +87,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final SupportTicketRepository supportTicketRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final FinancialTransactionRepository financialTransactionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -102,20 +107,28 @@ public class DashboardServiceImpl implements DashboardService {
             return getHrAnalystDashboard(user);
         }
 
-        if (roles.contains("ROLE_LIBRARIAN") || roles.contains("ROLE_TECHNICIAN")) {
-            log.info("Usuário é um Funcionário com cargo específico. Retornando EmployeeDashboardDto.");
+        if (roles.contains("ROLE_TECHNICIAN")) {
+            log.info("Usuário é TECHNICIAN. Retornando TechnicianDashboardDto.");
+            return getTechnicianDashboard(user);
+        }
+
+        if (roles.contains("ROLE_LIBRARIAN")) {
+            log.info("Usuário é LIBRARIAN. Retornando EmployeeDashboardDto.");
             return getEmployeeDashboard(user);
         }
+
         if (roles.contains("ROLE_TEACHER")) {
             log.info("Usuário é TEACHER, retornando TeacherDashboardDto.");
             return getTeacherDashboard(user);
         }
+
         if (roles.contains("ROLE_STUDENT")) {
             log.info("Usuário é STUDENT, retornando StudentDashboardDto.");
             return getStudentDashboard(user);
         }
+
         if (roles.contains("ROLE_EMPLOYEE")) {
-            log.info("Usuário é EMPLOYEE, retornando EmployeeDashboardDto.");
+            log.info("Usuário é EMPLOYEE genérico, retornando EmployeeDashboardDto.");
             return getEmployeeDashboard(user);
         }
 
@@ -287,12 +300,73 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private EmployeeDashboardDto getEmployeeDashboard(User user) {
+        CommonEmployeeData commonData = getCommonEmployeeData(user);
+
+        LibrarianSummaryDto librarianInfo = null;
+        if (user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_LIBRARIAN"))) {
+            long pendingLoans = loanRepository.countByStatus(LoanStatus.PENDING);
+            long overdueBooks = loanRepository.countByStatus(LoanStatus.OVERDUE);
+            librarianInfo = new LibrarianSummaryDto(pendingLoans, overdueBooks);
+        }
+
+        return new EmployeeDashboardDto(
+                commonData.unreadNotifications(),
+                commonData.pendingTasksCount(),
+                commonData.myOpenTasks(),
+                commonData.recentAnnouncements(),
+                librarianInfo,
+                null,
+                null
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TechnicianDashboardDto getTechnicianDashboard(User user) {
+        CommonEmployeeData commonData = getCommonEmployeeData(user);
         Employee employee = employeeRepository.findById(user.getPerson().getId())
-                .orElseThrow(() -> new IllegalStateException("Employee not found for authenticated user."));
+                .orElseThrow(() -> new EntityNotFoundException("Funcionário não encontrado para o usuário autenticado."));
+
+        long openTickets = supportTicketRepository.countByAssigneeAndStatus(employee, TicketStatus.OPEN);
+        long assignedAssets = assetRepository.countByAssignedTo(employee);
+
+        return new TechnicianDashboardDto(
+                commonData.unreadNotifications(),
+                commonData.pendingTasksCount(),
+                commonData.myOpenTasks(),
+                commonData.recentAnnouncements(),
+                openTickets,
+                assignedAssets
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LibrarianDashboardDto getLibrarianDashboard(User user) {
+        CommonEmployeeData commonData = getCommonEmployeeData(user);
+
+        long pendingLoans = loanRepository.countByStatus(LoanStatus.PENDING);
+        long overdueBooks = loanRepository.countByStatus(LoanStatus.OVERDUE);
+        long unpaidFines = financialTransactionRepository.countByTypeAndStatus(TransactionType.LATE_FINE, TransactionStatus.PENDING);
+
+        // 3. Monta o DTO completo
+        return new LibrarianDashboardDto(
+                commonData.unreadNotifications(),
+                commonData.pendingTasksCount(),
+                commonData.myOpenTasks(),
+                commonData.recentAnnouncements(),
+                pendingLoans,
+                overdueBooks,
+                unpaidFines
+        );
+    }
+
+    private CommonEmployeeData getCommonEmployeeData(User user) {
+        Employee employee = employeeRepository.findById(user.getPerson().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Funcionário não encontrado para o usuário autenticado."));
 
         long unreadNotifications = notificationRepository.countByRecipientAndStatus(user, NotificationStatus.UNREAD);
-
-        long pendingTasksCount = taskRepository.countByAssigneeAndStatusNot(employee, TaskStatus.IN_PROGRESS);
+        long pendingTasksCount = taskRepository.countByAssigneeAndStatusNot(employee, TaskStatus.DONE);
 
         List<TaskSummary> myOpenTasks = taskRepository.findTop5ByAssigneeAndStatusNotOrderByDueDateAsc(employee, TaskStatus.DONE)
                 .stream()
@@ -301,32 +375,15 @@ public class DashboardServiceImpl implements DashboardService {
 
         List<AnnouncementSummaryDto> recentAnnouncements = announcementRepository.findTop3ByOrderByCreatedAtDesc()
                 .stream()
-                .map(a -> new AnnouncementSummaryDto(a.getId(), a.getTitle(), a.getScope().name(), a.getCreatedAt()))
+                .map(a -> new AnnouncementSummaryDto(
+                        a.getId(),
+                        a.getTitle(),
+                        a.getCreatedAt(),
+                        a.getCreatedBy().getFirstName() + " " + a.getCreatedBy().getLastName(),
+                        a.getScope().name()))
                 .collect(Collectors.toList());
 
-        LibrarianSummaryDto librarianInfo = null;
-        TechnicianSummaryDto technicianInfo = null;
-
-        if (employee.getJobPosition() == JobPosition.LIBRARIAN) {
-            long pendingLoans = loanRepository.countByStatus(LoanStatus.ACTIVE);
-            long overdueBooks = loanRepository.countByStatusAndReturnDateBefore(LoanStatus.OVERDUE, LocalDate.now());
-            librarianInfo = new LibrarianSummaryDto(pendingLoans, overdueBooks);
-        }
-
-        if (employee.getJobPosition() == JobPosition.TECHNICIAN) {
-            long openTickets = supportTicketRepository.countByAssigneeAndStatus(employee, TicketStatus.OPEN);
-            long assignedAssets = assetRepository.countByAssignedTo(employee);
-            technicianInfo = new TechnicianSummaryDto(openTickets, assignedAssets);
-        }
-
-        return new EmployeeDashboardDto(
-                unreadNotifications,
-                pendingTasksCount,
-                myOpenTasks,
-                recentAnnouncements,
-                librarianInfo,
-                technicianInfo,
-                null
-        );
+        return new CommonEmployeeData(unreadNotifications, pendingTasksCount, myOpenTasks, recentAnnouncements);
     }
+
 }

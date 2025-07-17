@@ -11,6 +11,7 @@ import com.institution.management.academic_api.domain.factory.helpDesk.SupportTi
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.helpDesk.SupportTicket;
+import com.institution.management.academic_api.domain.model.entities.specification.SupportTicketSpecification;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
@@ -21,6 +22,9 @@ import com.institution.management.academic_api.domain.service.helpDesk.SupportTi
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +44,8 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     private final NotificationService notificationService;
     private final SupportTicketNotifier ticketNotifier;
     private final RoundRobinAssignerService roundRobinAssigner;
+    private final SupportTicketRepository supportTicketRepository;
+    private final SupportTicketMapper supportTicketMapper;
 
 
     @Override
@@ -112,6 +118,14 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         return ticketRepository.findByRequesterId(personId).stream()
                 .map(ticketMapper::toDetailsDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SupportTicketDetailsDto> findAll(TicketStatus status, Long assigneeId, Pageable pageable) {
+        Specification<SupportTicket> spec = SupportTicketSpecification.filterBy(status, assigneeId);
+        return supportTicketRepository.findAll(spec, pageable)
+                .map(supportTicketMapper::toDetailsDto);
     }
 
     @Override

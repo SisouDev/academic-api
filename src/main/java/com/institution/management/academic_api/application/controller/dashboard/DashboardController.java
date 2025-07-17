@@ -2,6 +2,8 @@ package com.institution.management.academic_api.application.controller.dashboard
 
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
 import com.institution.management.academic_api.application.dto.dashboard.employee.HrAnalystDashboardDto;
+import com.institution.management.academic_api.application.dto.dashboard.employee.LibrarianDashboardDto;
+import com.institution.management.academic_api.application.dto.dashboard.employee.TechnicianDashboardDto;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.service.dashboard.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,6 +52,19 @@ public class DashboardController {
         return ResponseEntity.ok(resource);
     }
 
+    @GetMapping("/technician")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    @Operation(summary = "Busca os dados do dashboard específico para o Técnico de TI")
+    public ResponseEntity<EntityModel<TechnicianDashboardDto>> getTechnicianDashboard(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        TechnicianDashboardDto dashboardData = dashboardService.getTechnicianDashboard(authenticatedUser);
+
+        EntityModel<TechnicianDashboardDto> resource = EntityModel.of(dashboardData,
+                linkTo(methodOn(DashboardController.class).getTechnicianDashboard(authentication)).withSelfRel()
+        );
+
+        return ResponseEntity.ok(resource);
+    }
 
     @GetMapping("/global-stats")
     @Operation(summary = "Busca estatísticas globais da instituição")
@@ -59,6 +74,19 @@ public class DashboardController {
         EntityModel<GlobalStatsDto> resource = EntityModel.of(stats,
                 linkTo(methodOn(DashboardController.class).getGlobalStats()).withSelfRel());
 
+        return ResponseEntity.ok(resource);
+    }
+
+    @GetMapping("/librarian")
+    @PreAuthorize("hasRole('LIBRARIAN')")
+    @Operation(summary = "Busca os dados do dashboard específico para o Bibliotecário")
+    public ResponseEntity<EntityModel<LibrarianDashboardDto>> getLibrarianDashboard(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        LibrarianDashboardDto dashboardData = dashboardService.getLibrarianDashboard(authenticatedUser);
+
+        EntityModel<LibrarianDashboardDto> resource = EntityModel.of(dashboardData,
+                linkTo(methodOn(DashboardController.class).getLibrarianDashboard(authentication)).withSelfRel()
+        );
         return ResponseEntity.ok(resource);
     }
 }

@@ -5,20 +5,18 @@ import lombok.Getter;
 import java.util.stream.Stream;
 
 @Getter
-public enum TransactionType {
-    TUITION_FEE_DEBIT("Tuition fee debit"),
-    PAYMENT_CREDIT("Payment credit"),
-    LATE_FEE_DEBIT("Late fee debit"),
-    SCHOLARSHIP_CREDIT("Scholarship credit"),
-    LATE_FINE("Late fine");
+public enum TransactionStatus {
+    PENDING("Pending"),
+    COMPLETED("Completed"),
+    CANCELLED("Cancelled");
 
     private final String displayName;
 
-    TransactionType(String displayName) {
+    TransactionStatus(String displayName) {
         this.displayName = displayName;
     }
-    public static TransactionType fromDisplayName(String text) {
-        return Stream.of(TransactionType.values())
+    public static TransactionStatus fromDisplayName(String text) {
+        return Stream.of(TransactionStatus.values())
                 .filter(scope -> scope.displayName.equalsIgnoreCase(text))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No constant with text " + text + " found"));

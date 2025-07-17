@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.domain.model.entities.financial;
 
 import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -33,6 +34,10 @@ public class FinancialTransaction {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransactionStatus status;
 
     @Column(nullable = false)
     private LocalDate transactionDate;

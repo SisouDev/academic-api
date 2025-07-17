@@ -3,15 +3,21 @@ package com.institution.management.academic_api.application.controller.library;
 import com.institution.management.academic_api.application.dto.library.CreateLoanRequestDto;
 import com.institution.management.academic_api.application.dto.library.LoanDetailsDto;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.service.library.LoanService;
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -51,15 +57,6 @@ public class LoanController {
         return ResponseEntity.ok(resource);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Busca os detalhes de um empréstimo pelo ID")
-    public ResponseEntity<EntityModel<LoanDetailsDto>> findById(@PathVariable Long id) {
-        LoanDetailsDto loan = loanService.findById(id);
-        EntityModel<LoanDetailsDto> resource = EntityModel.of(loan,
-                linkTo(methodOn(LoanController.class).findById(id)).withSelfRel());
-        return ResponseEntity.ok(resource);
-    }
-
     @GetMapping("/my-loans")
     @Operation(summary = "Lista todos os empréstimos do usuário logado")
     public ResponseEntity<CollectionModel<EntityModel<LoanDetailsDto>>> findMyLoans() {
@@ -76,5 +73,33 @@ public class LoanController {
 
         return ResponseEntity.ok(CollectionModel.of(resources,
                 linkTo(methodOn(LoanController.class).findMyLoans()).withSelfRel()));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+    @Operation(summary = "Busca um empréstimo pelo ID")
+    public ResponseEntity<EntityModel<LoanDetailsDto>> findById(@PathVariable Long id) {
+        LoanDetailsDto loan = loanService.findById(id);
+        EntityModel<LoanDetailsDto> resource = EntityModel.of(loan,
+                linkTo(methodOn(LoanController.class).findById(id)).withSelfRel());
+        return ResponseEntity.ok(resource);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+    @Operation(summary = "Lista todos os empréstimos com filtros")
+    public ResponseEntity<PagedModel<EntityModel<LoanDetailsDto>>> findAll(
+            @RequestParam(required = false) LoanStatus status,
+            Pageable pageable,
+            PagedResourcesAssembler<LoanDetailsDto> assembler) {
+
+        Page<LoanDetailsDto> loansPage = loanService.findAll(status, pageable);
+
+        PagedModel<EntityModel<LoanDetailsDto>> pagedModel = assembler.toModel(loansPage,
+                loan -> EntityModel.of(loan,
+                        linkTo(methodOn(LoanController.class).findById(loan.id())).withSelfRel())
+        );
+
+        return ResponseEntity.ok(pagedModel);
     }
 }

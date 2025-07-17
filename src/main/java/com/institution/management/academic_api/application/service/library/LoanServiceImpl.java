@@ -8,6 +8,7 @@ import com.institution.management.academic_api.application.notifiers.library.Loa
 import com.institution.management.academic_api.domain.factory.library.LoanFactory;
 import com.institution.management.academic_api.domain.model.entities.library.LibraryItem;
 import com.institution.management.academic_api.domain.model.entities.library.Loan;
+import com.institution.management.academic_api.domain.model.entities.specification.LoanSpecification;
 import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
 import com.institution.management.academic_api.domain.repository.library.LoanRepository;
 import com.institution.management.academic_api.domain.service.common.NotificationService;
@@ -16,6 +17,9 @@ import com.institution.management.academic_api.domain.service.library.LoanServic
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,5 +101,13 @@ public class LoanServiceImpl implements LoanService {
         return loanRepository.findByBorrowerId(borrowerId).stream()
                 .map(loanMapper::toDetailsDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LoanDetailsDto> findAll(LoanStatus status, Pageable pageable) {
+        Specification<Loan> spec = LoanSpecification.filterBy(status);
+        return loanRepository.findAll(spec, pageable)
+                .map(loanMapper::toDetailsDto);
     }
 }
