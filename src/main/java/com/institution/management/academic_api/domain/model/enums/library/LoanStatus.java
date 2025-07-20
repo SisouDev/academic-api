@@ -11,6 +11,7 @@ public enum LoanStatus {
     LATE("Late"),
     LOST("Lost"),
     OVERDUE("Overdue"),
+    REJECTED("Rejected"),
     PENDING("Pending");
 
     private final String displayName;

@@ -2,7 +2,7 @@ package com.institution.management.academic_api.domain.model.entities.employee;
 
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.announcement.Announcement;
-import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.entities.common.StaffMember;
 import com.institution.management.academic_api.domain.model.entities.humanResources.LeaveRequest;
 import com.institution.management.academic_api.domain.model.entities.it.Asset;
 import com.institution.management.academic_api.domain.model.entities.tasks.Task;
@@ -24,7 +24,7 @@ import java.util.List;
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class Employee extends Person {
+public class Employee extends StaffMember {
 
     @Enumerated(EnumType.STRING)
     private JobPosition jobPosition;

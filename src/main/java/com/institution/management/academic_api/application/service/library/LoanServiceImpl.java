@@ -3,6 +3,7 @@ package com.institution.management.academic_api.application.service.library;
 import com.institution.management.academic_api.application.dto.financial.CreateFinancialTransactionRequestDto;
 import com.institution.management.academic_api.application.dto.library.CreateLoanRequestDto;
 import com.institution.management.academic_api.application.dto.library.LoanDetailsDto;
+import com.institution.management.academic_api.application.dto.library.UpdateLoanStatusRequestDto;
 import com.institution.management.academic_api.application.mapper.simple.library.LoanMapper;
 import com.institution.management.academic_api.application.notifiers.library.LoanNotifier;
 import com.institution.management.academic_api.domain.factory.library.LoanFactory;
@@ -10,6 +11,7 @@ import com.institution.management.academic_api.domain.model.entities.library.Lib
 import com.institution.management.academic_api.domain.model.entities.library.Loan;
 import com.institution.management.academic_api.domain.model.entities.specification.LoanSpecification;
 import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
+import com.institution.management.academic_api.domain.repository.library.LibraryItemRepository;
 import com.institution.management.academic_api.domain.repository.library.LoanRepository;
 import com.institution.management.academic_api.domain.service.common.NotificationService;
 import com.institution.management.academic_api.domain.service.financial.FinancialTransactionService;
@@ -39,6 +41,7 @@ public class LoanServiceImpl implements LoanService {
     private final NotificationService notificationService;
     private final LoanNotifier loanNotifier;
     private final FinancialTransactionService financialTransactionService;
+    private final LibraryItemRepository libraryItemRepository;
 
     @Override
     @Transactional
@@ -109,5 +112,30 @@ public class LoanServiceImpl implements LoanService {
         Specification<Loan> spec = LoanSpecification.filterBy(status);
         return loanRepository.findAll(spec, pageable)
                 .map(loanMapper::toDetailsDto);
+    }
+
+    @Override
+    @Transactional
+    public LoanDetailsDto updateStatus(Long id, UpdateLoanStatusRequestDto request) {
+        Loan loan = loanRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Empréstimo não encontrado com o ID: " + id));
+
+        LoanStatus newStatus = request.status();
+        loan.setStatus(newStatus);
+
+        if (newStatus == LoanStatus.ACTIVE) {
+            loan.setDueDate(LocalDate.now().plusDays(14));
+        } else if (newStatus == LoanStatus.RETURNED) {
+            loan.setReturnDate(LocalDate.now());
+            LibraryItem item = loan.getLibraryItem();
+            item.setAvailableCopies(item.getAvailableCopies() + 1);
+            libraryItemRepository.save(item);
+        }
+
+        Loan updatedLoan = loanRepository.save(loan);
+
+        loanNotifier.notifyUserOfLoanStatusChange(updatedLoan);
+
+        return loanMapper.toDetailsDto(updatedLoan);
     }
 }

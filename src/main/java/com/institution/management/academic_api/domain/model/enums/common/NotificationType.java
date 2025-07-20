@@ -23,7 +23,8 @@ public enum NotificationType {
     ACTION_REQUIRED("Action required"),
     INVITATION("Invitation"),
     SECURITY_ALERT("Security alert"),
-    ACADEMIC_UPDATE("Academic update");
+    ACADEMIC_UPDATE("Academic update"),
+    LIBRARY_UPDATE("Library update");
 
     private final String displayName;
 

@@ -37,4 +37,7 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
     List<StudentDistributionData> findStudentDistributionByCourse();
 
     List<Student> findTop5ByOrderByCreatedAtDesc();
+
+    List<Student> findAllByStatus(PersonStatus status);
+
 }

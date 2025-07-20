@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class Course {
 
     @Column
     private String name;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal tuitionFee;
 
     @Column
     private String description;

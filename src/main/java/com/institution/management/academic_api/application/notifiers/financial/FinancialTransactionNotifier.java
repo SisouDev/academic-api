@@ -13,7 +13,7 @@ public class FinancialTransactionNotifier {
     private final NotificationService notificationService;
 
     public void notifyStudentOfNewTransaction(FinancialTransaction transaction) {
-        if (transaction == null || transaction.getStudent() == null || transaction.getStudent().getUser() == null) {
+        if (transaction == null || transaction.getPerson() == null || transaction.getPerson().getUser() == null) {
             return;
         }
         String message = String.format(
@@ -24,10 +24,31 @@ public class FinancialTransactionNotifier {
 
         String link = "/financial/statement/" + transaction.getId();
         notificationService.createNotification(
-                transaction.getStudent().getUser(),
+                transaction.getPerson().getUser(),
                 message,
                 link,
                 NotificationType.FINANCIAL
+        );
+    }
+
+    public void notifyUserOfPaidFine(FinancialTransaction transaction) {
+        if (transaction == null || transaction.getPerson() == null || transaction.getPerson().getUser() == null) {
+            return;
+        }
+
+        String message = String.format(
+                "Pagamento confirmado! Sua multa de '%s' no valor de R$ %.2f foi marcada como paga.",
+                transaction.getDescription(),
+                transaction.getAmount()
+        );
+
+        String link = "/financial/statement/" + transaction.getId();
+
+        notificationService.createNotification(
+                transaction.getPerson().getUser(),
+                message,
+                link,
+                NotificationType.SUCCESS
         );
     }
 }

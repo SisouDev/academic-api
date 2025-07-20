@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.domain.repository.teacher;
 
+import com.institution.management.academic_api.domain.model.entities.common.StaffMember;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
@@ -21,4 +22,6 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long>, JpaSpec
     long countByStatus(PersonStatus status);
 
     Optional<Teacher> findByUser_Login(String username);
+
+    List<? extends StaffMember> findAllByStatus(PersonStatus personStatus);
 }

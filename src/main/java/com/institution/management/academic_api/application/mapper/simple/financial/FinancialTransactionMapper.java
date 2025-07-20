@@ -12,7 +12,7 @@ import org.mapstruct.Mapping;
 public interface FinancialTransactionMapper {
 
     @Mapping(target = "type", expression = "java(transaction.getType().getDisplayName())")
-    @Mapping(target = "student", source = "student")
+    @Mapping(target = "student", source = "person")
     FinancialTransactionDetailsDto toDetailsDto(FinancialTransaction transaction);
 
     @Mapping(target = "type", expression = "java(transaction.getType().getDisplayName())")
@@ -20,7 +20,7 @@ public interface FinancialTransactionMapper {
 
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "student", ignore = true)
+    @Mapping(target = "person", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     FinancialTransaction toEntity(CreateFinancialTransactionRequestDto dto);
 }

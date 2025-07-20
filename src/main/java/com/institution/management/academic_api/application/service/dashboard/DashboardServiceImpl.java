@@ -21,7 +21,9 @@ import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.announcement.AnnouncementScope;
 import com.institution.management.academic_api.domain.model.enums.common.NotificationStatus;
+import com.institution.management.academic_api.domain.model.enums.common.PayrollStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
+import com.institution.management.academic_api.domain.model.enums.financial.OrderStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
@@ -32,10 +34,12 @@ import com.institution.management.academic_api.domain.model.enums.tasks.TaskStat
 import com.institution.management.academic_api.domain.repository.announcement.AnnouncementRepository;
 import com.institution.management.academic_api.domain.repository.calendar.CalendarEventRepository;
 import com.institution.management.academic_api.domain.repository.common.NotificationRepository;
+import com.institution.management.academic_api.domain.repository.common.PayrollRecordRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.financial.FinancialTransactionRepository;
+import com.institution.management.academic_api.domain.repository.financial.PurchaseOrderRepository;
 import com.institution.management.academic_api.domain.repository.helpDesk.SupportTicketRepository;
 import com.institution.management.academic_api.domain.repository.humanResources.LeaveRequestRepository;
 import com.institution.management.academic_api.domain.repository.it.AssetRepository;
@@ -88,6 +92,8 @@ public class DashboardServiceImpl implements DashboardService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final FinancialTransactionRepository financialTransactionRepository;
+    private final PayrollRecordRepository payrollRecordRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -126,7 +132,10 @@ public class DashboardServiceImpl implements DashboardService {
             log.info("Usuário é STUDENT, retornando StudentDashboardDto.");
             return getStudentDashboard(user);
         }
-
+        if (roles.contains("ROLE_FINANCE")){
+            log.info("Usuário é FINANCE, retornando FinanceDashboardDto.");
+            return getFinanceDashboard(user);
+        }
         if (roles.contains("ROLE_EMPLOYEE")) {
             log.info("Usuário é EMPLOYEE genérico, retornando EmployeeDashboardDto.");
             return getEmployeeDashboard(user);
@@ -347,9 +356,9 @@ public class DashboardServiceImpl implements DashboardService {
 
         long pendingLoans = loanRepository.countByStatus(LoanStatus.PENDING);
         long overdueBooks = loanRepository.countByStatus(LoanStatus.OVERDUE);
-        long unpaidFines = financialTransactionRepository.countByTypeAndStatus(TransactionType.LATE_FINE, TransactionStatus.PENDING);
+        long unpaidFines = financialTransactionRepository.countByTypeAndStatus(TransactionType.FINE, TransactionStatus.PENDING);
 
-        // 3. Monta o DTO completo
+
         return new LibrarianDashboardDto(
                 commonData.unreadNotifications(),
                 commonData.pendingTasksCount(),
@@ -386,4 +395,34 @@ public class DashboardServiceImpl implements DashboardService {
         return new CommonEmployeeData(unreadNotifications, pendingTasksCount, myOpenTasks, recentAnnouncements);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public FinanceDashboardDto getFinanceDashboard(User user) {
+        CommonEmployeeData commonData = getCommonEmployeeData(user);
+
+        LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+
+        BigDecimal receivable = financialTransactionRepository
+                .calculateTotalAmountByTypeInDateRange(TransactionType.TUITION, startOfMonth, endOfMonth)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal payable = payrollRecordRepository
+                .calculateTotalNetPayByStatusAndDateRange(PayrollStatus.PENDING, startOfMonth, endOfMonth)
+                .orElse(BigDecimal.ZERO);
+
+        long pendingPayrolls = payrollRecordRepository.countByStatus(PayrollStatus.PENDING);
+        long pendingPOs = purchaseOrderRepository.countByStatus(OrderStatus.PENDING_APPROVAL);
+
+        return new FinanceDashboardDto(
+                commonData.unreadNotifications(),
+                commonData.pendingTasksCount(),
+                commonData.myOpenTasks(),
+                commonData.recentAnnouncements(),
+                receivable,
+                payable,
+                pendingPayrolls,
+                pendingPOs
+        );
+    }
 }

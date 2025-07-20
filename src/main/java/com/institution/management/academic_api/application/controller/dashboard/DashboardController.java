@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.application.controller.dashboard;
 
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
+import com.institution.management.academic_api.application.dto.dashboard.employee.FinanceDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.employee.HrAnalystDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.employee.LibrarianDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.employee.TechnicianDashboardDto;
@@ -87,6 +88,17 @@ public class DashboardController {
         EntityModel<LibrarianDashboardDto> resource = EntityModel.of(dashboardData,
                 linkTo(methodOn(DashboardController.class).getLibrarianDashboard(authentication)).withSelfRel()
         );
+        return ResponseEntity.ok(resource);
+    }
+
+    @GetMapping("/finance")
+    @PreAuthorize("hasRole('FINANCE')")
+    @Operation(summary = "Busca os dados do dashboard específico para o setor Financeiro")
+    public ResponseEntity<EntityModel<FinanceDashboardDto>> getFinanceDashboard(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        FinanceDashboardDto dashboardData = dashboardService.getFinanceDashboard(user);
+        EntityModel<FinanceDashboardDto> resource = EntityModel.of(dashboardData,
+                linkTo(methodOn(DashboardController.class).getFinanceDashboard(authentication)).withSelfRel());
         return ResponseEntity.ok(resource);
     }
 }

@@ -3,7 +3,7 @@ version: '2.4'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: academic-db
+    container_name: academic-db-v2
     environment:
       - POSTGRES_DB=academic-api
       - POSTGRES_USER=postgres
@@ -29,7 +29,8 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin
+    container_name: pgadmin-academic
+
     environment:
       PGADMIN_DEFAULT_EMAIL: karolina.souza@estudante.ufjf.br
       PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}

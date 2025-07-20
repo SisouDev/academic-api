@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 public enum TransactionStatus {
     PENDING("Pending"),
     COMPLETED("Completed"),
+    PAID("Paid"),
     CANCELLED("Cancelled");
 
     private final String displayName;

@@ -1,7 +1,9 @@
 package com.institution.management.academic_api.domain.repository.employee;
 
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
+import com.institution.management.academic_api.domain.model.entities.common.StaffMember;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
+import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,4 +33,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     long countByHiringDateAfter(LocalDate date);
 
     List<Employee> findByJobPosition(JobPosition position);
+
+    List<? extends StaffMember> findAllByStatus(PersonStatus personStatus);
 }

@@ -6,11 +6,13 @@ import java.util.stream.Stream;
 
 @Getter
 public enum TransactionType {
-    TUITION_FEE_DEBIT("Tuition fee debit"),
-    PAYMENT_CREDIT("Payment credit"),
-    LATE_FEE_DEBIT("Late fee debit"),
-    SCHOLARSHIP_CREDIT("Scholarship credit"),
-    LATE_FINE("Late fine");
+    TUITION("Tuition"),
+    FINE("Fine"),
+    PAYMENT("Payment"),
+    FEE("Fee"),
+    SALARY_PAYMENT("Salary Payment"),
+    PURCHASE("Purchase"),
+    OTHER("Other");
 
     private final String displayName;
 

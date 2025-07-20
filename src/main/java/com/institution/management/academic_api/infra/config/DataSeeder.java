@@ -158,6 +158,8 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+
+
     private Institution seedInstitution() {
         if (!personRepository.existsByEmail("admin@instituicao.com")) {
             log.info("Criando instituição e administrador padrão...");
@@ -273,171 +275,63 @@ public class DataSeeder implements CommandLineRunner {
 
         Department csDepartment = departments.get("CS");
         if (csDepartment != null) {
-            createdCourses.put("SE", createCourseIfNotExists(
-                    "Engenharia de Software",
-                    "Um curso focado na construção de sistemas de software robustos e de alta qualidade.",
-                    10,
-                    csDepartment
-            ));
-            createdCourses.put("DS", createCourseIfNotExists(
-                    "Ciência de Dados",
-                    "Curso que aborda a análise de grandes volumes de dados, estatística e machine learning.",
-                    8,
-                    csDepartment
-            ));
-            createdCourses.put("SI", createCourseIfNotExists(
-                    "Sistemas de Informação",
-                    "Formação voltada para a gestão de tecnologia da informação, infraestrutura e análise de sistemas.",
-                    8,
-                    csDepartment
-            ));
-
-            createdCourses.put("CC", createCourseIfNotExists(
-                    "Ciência da Computação",
-                    "Curso que oferece base sólida em algoritmos, estruturas de dados, computação teórica e desenvolvimento de software.",
-                    8,
-                    csDepartment
-            ));
-
+            createdCourses.put("SE", createCourseIfNotExists("Engenharia de Software", "Um curso focado na construção de sistemas de software robustos e de alta qualidade.", 10, csDepartment, new BigDecimal("1250.00")));
+            createdCourses.put("DS", createCourseIfNotExists("Ciência de Dados", "Curso que aborda a análise de grandes volumes de dados, estatística e machine learning.", 8, csDepartment, new BigDecimal("1350.00")));
+            createdCourses.put("SI", createCourseIfNotExists("Sistemas de Informação", "Formação voltada para a gestão de tecnologia da informação, infraestrutura e análise de sistemas.", 8, csDepartment, new BigDecimal("1100.00")));
+            createdCourses.put("CC", createCourseIfNotExists("Ciência da Computação", "Curso que oferece base sólida em algoritmos, estruturas de dados, computação teórica e desenvolvimento de software.", 8, csDepartment, new BigDecimal("1300.00")));
         }
 
         Department eeDepartment = departments.get("EE");
         if (eeDepartment != null) {
-            createdCourses.put("ENE", createCourseIfNotExists(
-                    "Engenharia Eletrônica",
-                    "Foco em circuitos eletrônicos, microcontroladores, e sistemas embarcados.",
-                    10,
-                    eeDepartment
-            ));
-
-            createdCourses.put("ENP", createCourseIfNotExists(
-                    "Engenharia de Potência",
-                    "Voltado para sistemas de geração, transmissão e distribuição de energia elétrica.",
-                    10,
-                    eeDepartment
-            ));
+            createdCourses.put("ENE", createCourseIfNotExists("Engenharia Eletrônica", "Foco em circuitos eletrônicos, microcontroladores, e sistemas embarcados.", 10, eeDepartment, new BigDecimal("1180.00")));
+            createdCourses.put("ENP", createCourseIfNotExists("Engenharia de Potência", "Voltado para sistemas de geração, transmissão e distribuição de energia elétrica.", 10, eeDepartment, new BigDecimal("1180.00")));
         }
 
 
         Department lettersDepartment = departments.get("LT");
         if (lettersDepartment != null) {
-            createdCourses.put("LC", createCourseIfNotExists(
-                    "Literatura Clássica",
-                    "Estudo das grandes obras literárias da antiguidade greco-romana.",
-                    8,
-                    lettersDepartment
-            ));
-            createdCourses.put("LP", createCourseIfNotExists(
-                    "Linguística e Português",
-                    "Curso que aprofunda no estudo da língua portuguesa e suas estruturas linguísticas.",
-                    8,
-                    lettersDepartment
-            ));
+            createdCourses.put("LC", createCourseIfNotExists("Literatura Clássica", "Estudo das grandes obras literárias da antiguidade greco-romana.", 8, lettersDepartment, new BigDecimal("750.00")));
+            createdCourses.put("LP", createCourseIfNotExists("Linguística e Português", "Curso que aprofunda no estudo da língua portuguesa e suas estruturas linguísticas.", 8, lettersDepartment, new BigDecimal("750.00")));
         }
 
         Department mtDepartment = departments.get("MT");
         if (mtDepartment != null) {
-            createdCourses.put("MAT", createCourseIfNotExists(
-                    "Matemática Pura",
-                    "Exploração teórica da matemática, incluindo álgebra abstrata, análise e topologia.",
-                    8,
-                    mtDepartment
-            ));
-
-            createdCourses.put("MAP", createCourseIfNotExists(
-                    "Matemática Aplicada",
-                    "Foco em resolver problemas práticos em engenharia, física e finanças com modelagem matemática.",
-                    8,
-                    mtDepartment
-            ));
+            createdCourses.put("MAT", createCourseIfNotExists("Matemática Pura", "Exploração teórica da matemática, incluindo álgebra abstrata, análise e topologia.", 8, mtDepartment, new BigDecimal("800.00")));
+            createdCourses.put("MAP", createCourseIfNotExists("Matemática Aplicada", "Foco em resolver problemas práticos em engenharia, física e finanças com modelagem matemática.", 8, mtDepartment, new BigDecimal("820.00")));
         }
 
         Department bioDepartment = departments.get("BIO");
         if (bioDepartment != null) {
-            createdCourses.put("BIO", createCourseIfNotExists(
-                    "Biologia",
-                    "Curso dedicado ao estudo dos seres vivos, ecologia, genética e evolução.",
-                    8,
-                    bioDepartment
-            ));
-
-            createdCourses.put("MBIO", createCourseIfNotExists(
-                    "Microbiologia",
-                    "Foco no estudo de microrganismos e suas aplicações na saúde, alimentos e meio ambiente.",
-                    8,
-                    bioDepartment
-            ));
+            createdCourses.put("BIO", createCourseIfNotExists("Biologia", "Curso dedicado ao estudo dos seres vivos, ecologia, genética e evolução.", 8, bioDepartment, new BigDecimal("950.00")));
+            createdCourses.put("MBIO", createCourseIfNotExists("Microbiologia", "Foco no estudo de microrganismos e suas aplicações na saúde, alimentos e meio ambiente.", 8, bioDepartment, new BigDecimal("980.00")));
         }
         Department psiDepartment = departments.get("PSI");
         if (psiDepartment != null) {
-            createdCourses.put("PSICO", createCourseIfNotExists(
-                    "Psicologia",
-                    "Estudo do comportamento humano, processos mentais e práticas clínicas.",
-                    10,
-                    psiDepartment
-            ));
-
-            createdCourses.put("PSIEDU", createCourseIfNotExists(
-                    "Psicologia Educacional",
-                    "Curso voltado à aplicação da psicologia no contexto da educação e desenvolvimento escolar.",
-                    8,
-                    psiDepartment
-            ));
+            createdCourses.put("PSICO", createCourseIfNotExists("Psicologia", "Estudo do comportamento humano, processos mentais e práticas clínicas.", 10, psiDepartment, new BigDecimal("1100.00")));
+            createdCourses.put("PSIEDU", createCourseIfNotExists("Psicologia Educacional", "Curso voltado à aplicação da psicologia no contexto da educação e desenvolvimento escolar.", 8, psiDepartment, new BigDecimal("900.00")));
         }
         Department dirDepartment = departments.get("DIR");
         if (dirDepartment != null) {
-            createdCourses.put("DIR", createCourseIfNotExists(
-                    "Direito",
-                    "Formação completa em legislação, jurisprudência, ética e práticas jurídicas.",
-                    10,
-                    dirDepartment
-            ));
-
-            createdCourses.put("DIRPEN", createCourseIfNotExists(
-                    "Direito Penal",
-                    "Curso especializado nas normas do direito penal, criminologia e processo penal.",
-                    8,
-                    dirDepartment
-            ));
+            createdCourses.put("DIR", createCourseIfNotExists("Direito", "Formação completa em legislação, jurisprudência, ética e práticas jurídicas.", 10, dirDepartment, new BigDecimal("1400.00")));
+            createdCourses.put("DIRPEN", createCourseIfNotExists("Direito Penal", "Curso especializado nas normas do direito penal, criminologia e processo penal.", 8, dirDepartment, new BigDecimal("1450.00")));
         }
         Department quiDepartment = departments.get("QUI");
         if (quiDepartment != null) {
-            createdCourses.put("QUI", createCourseIfNotExists(
-                    "Química",
-                    "Estudo da composição, estrutura e propriedades das substâncias e suas reações.",
-                    8,
-                    quiDepartment
-            ));
-
-            createdCourses.put("QUIIND", createCourseIfNotExists(
-                    "Química Industrial",
-                    "Foco na aplicação de processos químicos na indústria e no controle de qualidade.",
-                    8,
-                    quiDepartment
-            ));
+            createdCourses.put("QUI", createCourseIfNotExists("Química", "Estudo da composição, estrutura e propriedades das substâncias e suas reações.", 8, quiDepartment, new BigDecimal("900.00")));
+            createdCourses.put("QUIIND", createCourseIfNotExists("Química Industrial", "Foco na aplicação de processos químicos na indústria e no controle de qualidade.", 8, quiDepartment, new BigDecimal("950.00")));
         }
         Department admDepartment = departments.get("ADM");
         if (admDepartment != null) {
-            createdCourses.put("ADM", createCourseIfNotExists(
-                    "Administração",
-                    "Curso que desenvolve competências em gestão empresarial, finanças e liderança.",
-                    8,
-                    admDepartment
-            ));
-
-            createdCourses.put("ADMPI", createCourseIfNotExists(
-                    "Administração Pública e Inovação",
-                    "Voltado para a gestão de instituições públicas com foco em inovação e políticas públicas.",
-                    8,
-                    admDepartment
-            ));
+            createdCourses.put("ADM", createCourseIfNotExists("Administração", "Curso que desenvolve competências em gestão empresarial, finanças e liderança.", 8, admDepartment, new BigDecimal("1050.00")));
+            createdCourses.put("ADMPI", createCourseIfNotExists("Administração Pública e Inovação", "Voltado para a gestão de instituições públicas com foco em inovação e políticas públicas.", 8, admDepartment, new BigDecimal("990.00")));
         }
 
         log.info("Seeding de Cursos finalizado.");
         return createdCourses;
     }
 
-    private Course createCourseIfNotExists(String name, String description, int duration, Department department) {
+
+    private Course createCourseIfNotExists(String name, String description, int duration, Department department, BigDecimal tuitionFee) {
         return courseRepository.findByNameAndDepartment(name, department)
                 .orElseGet(() -> {
                     log.info("Criando curso de exemplo: '{}' no departamento '{}'...", name, department.getName());
@@ -446,7 +340,8 @@ public class DataSeeder implements CommandLineRunner {
                             name,
                             description,
                             duration,
-                            department.getId()
+                            department.getId(),
+                            tuitionFee
                     );
 
                     CourseDetailsDto createdCourseDto = courseService.create(courseRequest);

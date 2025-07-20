@@ -37,4 +37,8 @@ public class Loan {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoanStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "library_item_id", nullable = false)
+    private LibraryItem libraryItem;
 }

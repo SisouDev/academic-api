@@ -1,6 +1,6 @@
 package com.institution.management.academic_api.domain.model.entities.financial;
 
-import com.institution.management.academic_api.domain.model.entities.student.Student;
+import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
 import jakarta.persistence.*;
@@ -22,8 +22,8 @@ public class FinancialTransaction {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student;
+    @JoinColumn(name = "person_id", nullable = false)
+    private Person person;
 
     @Column(nullable = false)
     private String description;

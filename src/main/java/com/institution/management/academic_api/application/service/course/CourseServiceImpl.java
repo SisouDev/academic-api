@@ -38,10 +38,13 @@ public class CourseServiceImpl implements CourseService {
     public CourseDetailsDto create(CreateCourseRequestDto request) {
         Department department = findDepartmentByIdOrThrow(request.departmentId());
         if (courseRepository.existsByNameAndDepartment(request.name(), department)){
-            throw new EntityExistsException("Course already exists.");
+            throw new EntityExistsException("Um curso com este nome já existe neste departamento.");
         }
+
         Course newCourse = courseMapper.toEntity(request);
+
         newCourse.setDepartment(department);
+        newCourse.setTuitionFee(request.tuitionFee());
 
         Course savedCourse = courseRepository.save(newCourse);
         courseNotifier.notifyAdminOfNewCourse(savedCourse);

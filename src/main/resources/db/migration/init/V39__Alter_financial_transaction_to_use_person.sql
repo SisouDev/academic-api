@@ -1,0 +1,1 @@
+ALTER TABLE financial_transactions RENAME COLUMN student_id TO person_id;

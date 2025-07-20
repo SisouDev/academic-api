@@ -2,6 +2,7 @@ package com.institution.management.academic_api.application.controller.library;
 
 import com.institution.management.academic_api.application.dto.library.CreateLoanRequestDto;
 import com.institution.management.academic_api.application.dto.library.LoanDetailsDto;
+import com.institution.management.academic_api.application.dto.library.UpdateLoanStatusRequestDto;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
@@ -9,6 +10,7 @@ import com.institution.management.academic_api.domain.service.library.LoanServic
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -101,5 +103,15 @@ public class LoanController {
         );
 
         return ResponseEntity.ok(pagedModel);
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+    @Operation(summary = "Atualiza o status de um empréstimo (ex: aprovar, recusar, devolver)")
+    public ResponseEntity<EntityModel<LoanDetailsDto>> updateStatus(@PathVariable Long id, @RequestBody @Valid UpdateLoanStatusRequestDto request) {
+        LoanDetailsDto updatedLoan = loanService.updateStatus(id, request);
+        EntityModel<LoanDetailsDto> resource = EntityModel.of(updatedLoan,
+                linkTo(methodOn(LoanController.class).findById(id)).withSelfRel());
+        return ResponseEntity.ok(resource);
     }
 }

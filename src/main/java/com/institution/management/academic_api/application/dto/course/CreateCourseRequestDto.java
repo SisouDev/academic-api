@@ -1,6 +1,8 @@
 package com.institution.management.academic_api.application.dto.course;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.math.BigDecimal;
+
 @Schema(description = "Dados para criar um novo Curso.")
 public record CreateCourseRequestDto(
         @Schema(description = "Nome do curso.", requiredMode = Schema.RequiredMode.REQUIRED, example = "Engenharia de Computação")
@@ -13,5 +15,7 @@ public record CreateCourseRequestDto(
         Integer durationInSemesters,
 
         @Schema(description = "ID do Departamento ao qual o curso pertence.", requiredMode = Schema.RequiredMode.REQUIRED, example = "12")
-        Long departmentId
+        Long departmentId,
+
+        BigDecimal tuitionFee
 ) {}

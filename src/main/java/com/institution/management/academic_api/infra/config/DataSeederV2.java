@@ -14,6 +14,7 @@ import com.institution.management.academic_api.domain.model.enums.absence.Absenc
 import com.institution.management.academic_api.domain.model.enums.absence.AbsenceType;
 import com.institution.management.academic_api.domain.model.enums.announcement.AnnouncementScope;
 import com.institution.management.academic_api.domain.model.enums.calendar.EventType;
+import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketCategory;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketPriority;
@@ -197,20 +198,22 @@ public class DataSeederV2 implements CommandLineRunner {
         }
 
         FinancialTransaction transaction1 = new FinancialTransaction();
-        transaction1.setStudent(student);
+        transaction1.setPerson(student);
         transaction1.setDescription("Pagamento da mensalidade - Mês de Julho");
         transaction1.setAmount(new BigDecimal("750.00"));
-        transaction1.setType(TransactionType.PAYMENT_CREDIT);
+        transaction1.setType(TransactionType.PAYMENT);
         transaction1.setTransactionDate(LocalDate.now().minusDays(5));
         transaction1.setCreatedAt(LocalDateTime.now());
+        transaction1.setStatus(TransactionStatus.PAID);
 
         FinancialTransaction transaction2 = new FinancialTransaction();
-        transaction2.setStudent(student);
+        transaction2.setPerson(student);
         transaction2.setDescription("Compra de material didático");
         transaction2.setAmount(new BigDecimal("120.50"));
-        transaction2.setType(TransactionType.PAYMENT_CREDIT);
+        transaction2.setType(TransactionType.PAYMENT);
         transaction2.setTransactionDate(LocalDate.now().minusDays(2));
         transaction2.setCreatedAt(LocalDateTime.now());
+        transaction2.setStatus(TransactionStatus.PENDING);
 
         financialTransactionRepository.saveAll(List.of(transaction1, transaction2));
         log.info("Seeded 2 financial transactions.");
