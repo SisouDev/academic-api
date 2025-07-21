@@ -8,6 +8,7 @@ import com.institution.management.academic_api.application.mapper.simple.course.
 import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.application.notifiers.teacher.TeacherNotifier;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
+import com.institution.management.academic_api.domain.model.entities.common.SalaryStructure;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.specification.TeacherSpecification;
@@ -17,10 +18,13 @@ import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
+import com.institution.management.academic_api.domain.model.enums.common.SalaryLevel;
+import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
+import com.institution.management.academic_api.domain.repository.common.SalaryStructureRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
 import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
@@ -29,6 +33,7 @@ import com.institution.management.academic_api.domain.repository.user.UserReposi
 import com.institution.management.academic_api.domain.service.teacher.TeacherService;
 import com.institution.management.academic_api.domain.service.user.UserService;
 import com.institution.management.academic_api.exception.type.common.EmailAlreadyExists;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.exception.type.institution.InstitutionNotFoundException;
 import com.institution.management.academic_api.exception.type.teacher.TeacherNotFoundException;
 import com.institution.management.academic_api.exception.type.user.InvalidRoleAssignmentException;
@@ -65,6 +70,7 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherNotifier teacherNotifier;
     private final CourseSectionRepository courseSectionRepository;
     private final AssessmentRepository assessmentRepository;
+    private final SalaryStructureRepository salaryStructureRepository;
 
     @Override
     @Transactional
@@ -83,6 +89,13 @@ public class TeacherServiceImpl implements TeacherService {
         newTeacher.setInstitution(institution);
         newTeacher.setStatus(PersonStatus.ACTIVE);
         newTeacher.setCreatedAt(LocalDateTime.now());
+        SalaryLevel defaultLevel = SalaryLevel.JUNIOR;
+        SalaryStructure salaryStructure = salaryStructureRepository.findByJobPositionAndLevel(JobPosition.TEACHER, defaultLevel)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Estrutura salarial para o cargo " + JobPosition.TEACHER + " e nível " + defaultLevel + " não encontrada."
+                ));
+
+        newTeacher.setSalaryStructure(salaryStructure);
         Teacher savedTeacher = teacherRepository.save(newTeacher);
 
         User newUser = new User();

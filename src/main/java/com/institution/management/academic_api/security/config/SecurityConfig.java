@@ -35,31 +35,37 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/uploads/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers(HttpMethod.GET).authenticated()
-                        .requestMatchers("/api/v1/meetings/**").hasAnyRole("TEACHER", "ADMIN", "EMPLOYEE", "FINANCE", "MANAGER", "TECHNICIAN", "HR_ANALYST", "LIBRARIAN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/support-tickets").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/support-tickets/**").hasAnyRole("TECHNICIAN", "ADMIN")
-                        .requestMatchers("/api/v1/internal-requests/**").hasAnyRole("TEACHER", "ADMIN", "EMPLOYEE", "FINANCE", "MANAGER", "TECHNICIAN", "HR_ANALYST", "LIBRARIAN")
+                        .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/uploads/**", "/ws/**").permitAll()
+
+                        // 2. REGRAS ESPECÍFICAS POR ENDPOINT (As mais importantes vêm aqui)
+                        // RH & Financeiro
+                        .requestMatchers("/api/v1/employees/**").hasAnyRole("ADMIN", "HR_ANALYST", "FINANCE")
+                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("HR_ANALYST", "MANAGER", "ADMIN")
+
+                        // Docente
                         .requestMatchers("/api/v1/assessments/**").hasRole("TEACHER")
                         .requestMatchers("/api/v1/announcements/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/v1/lessons/**").hasRole("TEACHER")
                         .requestMatchers("/api/v1/lesson-contents/**").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/enrollments/attendance", "/api/v1/teacher-notes").hasRole("TEACHER")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/leave-requests").authenticated()
-                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("HR_ANALYST", "MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/teachers/{id}/status").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/teacher-notes/**").hasRole("TEACHER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/assessment-definitions/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/assessment-definitions").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/assessment-definitions/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/assessment-definitions/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/lesson-plans").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/lesson-plans/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/lesson-plans/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/v1/assessment-definitions/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/v1/lesson-plans/**").hasAnyRole("TEACHER", "ADMIN")
 
+                        // TI
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/support-tickets/**").hasAnyRole("TECHNICIAN", "ADMIN")
+
+                        // 3. REGRAS GENÉRICAS PARA USUÁRIOS AUTENTICADOS (Menos específicas)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/leave-requests").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/support-tickets").authenticated()
+                        .requestMatchers("/api/v1/meetings/**").authenticated()
+                        .requestMatchers("/api/v1/internal-requests/**").authenticated()
+
+                        // 4. REGRA GENÉRICA FINAL PARA QUALQUER GET
+                        .requestMatchers(HttpMethod.GET).authenticated()
+
+                        // 5. REGRA DE FALLBACK (Qualquer outra coisa não permitida acima, só para ADMIN)
                         .anyRequest().hasRole("ADMIN")
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

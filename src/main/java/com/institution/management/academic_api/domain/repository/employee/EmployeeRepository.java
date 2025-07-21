@@ -7,6 +7,7 @@ import com.institution.management.academic_api.domain.model.enums.common.PersonS
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,8 +18,6 @@ import java.util.Optional;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     boolean existsEmployeeByEmail(String email);
-
-    Page<Employee> findAll(Pageable pageable);
 
     Page<Employee> findByInstitutionId(Long institutionId, Pageable pageable);
 
@@ -35,4 +34,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByJobPosition(JobPosition position);
 
     List<? extends StaffMember> findAllByStatus(PersonStatus personStatus);
+
+    Page<Employee> findAll(Specification<Employee> spec, Pageable pageable);
 }

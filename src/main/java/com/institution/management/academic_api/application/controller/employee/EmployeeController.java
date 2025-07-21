@@ -3,10 +3,11 @@ package com.institution.management.academic_api.application.controller.employee;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
 import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
+import com.institution.management.academic_api.application.dto.employee.EmployeeListDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
-import com.institution.management.academic_api.application.dto.employee.EmployeeSummaryDto;
 import com.institution.management.academic_api.application.dto.employee.UpdateEmployeeRequestDto;
 import com.institution.management.academic_api.domain.service.employee.EmployeeService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -59,14 +61,17 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public ResponseEntity<PagedModel<EntityModel<EmployeeSummaryDto>>> getAllEmployees(
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_ANALYST', 'FINANCE')")
+    @Operation(summary = "Lista todos os funcionários com paginação e filtro")
+    public ResponseEntity<PagedModel<EntityModel<EmployeeListDto>>> getAllEmployees(
             @RequestParam(required = false) Long institutionId,
+            @RequestParam(required = false) String searchTerm,
             Pageable pageable,
-            PagedResourcesAssembler<EmployeeSummaryDto> assembler
+            PagedResourcesAssembler<EmployeeListDto> assembler
     ) {
-        Page<EmployeeSummaryDto> employeesPage = employeeService.findPaginated(institutionId, pageable);
+        Page<EmployeeListDto> employeesPage = employeeService.findPaginatedSearchVersion(institutionId, searchTerm, pageable);
 
-        PagedModel<EntityModel<EmployeeSummaryDto>> pagedModel = assembler.toModel(employeesPage,
+        PagedModel<EntityModel<EmployeeListDto>> pagedModel = assembler.toModel(employeesPage,
                 employee -> EntityModel.of(employee,
                         linkTo(methodOn(EmployeeController.class).findById(employee.id())).withSelfRel()
                 )

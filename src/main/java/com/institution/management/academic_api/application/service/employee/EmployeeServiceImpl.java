@@ -1,10 +1,7 @@
 package com.institution.management.academic_api.application.service.employee;
 
 import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
-import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
-import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
-import com.institution.management.academic_api.application.dto.employee.EmployeeSummaryDto;
-import com.institution.management.academic_api.application.dto.employee.UpdateEmployeeRequestDto;
+import com.institution.management.academic_api.application.dto.employee.*;
 import com.institution.management.academic_api.application.dto.institution.CreateInstitutionAdminRequestDto;
 import com.institution.management.academic_api.application.dto.institution.InstitutionAdminResponseDto;
 import com.institution.management.academic_api.application.dto.user.CreateUserRequestDto;
@@ -15,16 +12,20 @@ import com.institution.management.academic_api.application.notifiers.employee.Em
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
+import com.institution.management.academic_api.domain.model.entities.common.SalaryStructure;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.institution.InstitutionAdmin;
+import com.institution.management.academic_api.domain.model.entities.specification.EmployeeSpecification;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
+import com.institution.management.academic_api.domain.model.enums.common.SalaryLevel;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
+import com.institution.management.academic_api.domain.repository.common.SalaryStructureRepository;
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionAdminRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
@@ -42,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -71,6 +73,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final EmployeeNotifier employeeNotifier;
+    private final SalaryStructureRepository salaryStructureRepository;
+
 
     @Override
     @Transactional
@@ -87,7 +91,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         newEmployee.setHiringDate(request.hiringDate());
         newEmployee.setStatus(PersonStatus.ACTIVE);
         newEmployee.setCreatedAt(LocalDateTime.now());
-
+        SalaryLevel defaultLevel = SalaryLevel.JUNIOR;
+        SalaryStructure salaryStructure = salaryStructureRepository.findByJobPositionAndLevel(position, defaultLevel)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Estrutura salarial para o cargo " + position + " e nível " + defaultLevel + " não encontrada."
+                ));
+        newEmployee.setSalaryStructure(salaryStructure);
         Employee savedEmployee = employeeRepository.save(newEmployee);
         String defaultPassword = savedEmployee.getDocument().getNumber();
 
@@ -185,6 +194,14 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeePage = employeeRepository.findAll(pageable);
         }
         return employeePage.map(employeeMapper::toSummaryDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeListDto> findPaginatedSearchVersion(Long institutionId, String searchTerm, Pageable pageable) {
+        Specification<Employee> spec = EmployeeSpecification.filterBy(searchTerm, institutionId);
+        Page<Employee> employeePage = employeeRepository.findAll(spec, pageable);
+        return employeePage.map(employeeMapper::toListDto);
     }
 
     @Override

@@ -176,13 +176,13 @@ public class DataSeederV3 implements CommandLineRunner {
         loan.setStatus(LoanStatus.ACTIVE);
         loanRepository.save(loan);
 
-        // Atualizar cópias disponíveis
+
         item.setAvailableCopies(item.getAvailableCopies() - 1);
         libraryItemRepository.save(item);
 
         log.info("Seeded 1 loan.");
 
-        // Criar uma reserva para o mesmo item
+
         Person anotherPerson = personRepository.findAll().get(1);
         if (anotherPerson != null) {
             Reservation reservation = new Reservation();

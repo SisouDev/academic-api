@@ -18,6 +18,7 @@ import com.institution.management.academic_api.domain.model.entities.academic.Ac
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.common.Role;
+import com.institution.management.academic_api.domain.model.entities.common.SalaryStructure;
 import com.institution.management.academic_api.domain.model.entities.course.Course;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.course.Subject;
@@ -29,12 +30,14 @@ import com.institution.management.academic_api.domain.model.entities.student.Stu
 import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.enums.academic.AcademicTermStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
+import com.institution.management.academic_api.domain.model.enums.common.SalaryLevel;
 import com.institution.management.academic_api.domain.model.enums.employee.JobPosition;
 import com.institution.management.academic_api.domain.model.enums.teacher.AcademicDegree;
 import com.institution.management.academic_api.domain.repository.academic.AcademicTermRepository;
 import com.institution.management.academic_api.domain.repository.academic.DepartmentRepository;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.repository.common.RoleRepository;
+import com.institution.management.academic_api.domain.repository.common.SalaryStructureRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseSectionRepository;
 import com.institution.management.academic_api.domain.repository.course.SubjectRepository;
@@ -102,6 +105,8 @@ public class DataSeeder implements CommandLineRunner {
     private final AssessmentRepository assessmentRepository;
     private final SeedingService seedingService;
     private final AssessmentDefinitionService assessmentDefinitionService;
+    private final SalaryStructureRepository salaryStructureRepository;
+
 
 
     @Override
@@ -109,12 +114,14 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Executando DataSeeder para o perfil 'dev'...");
 
         Institution defaultInstitution = seedInstitution();
+        seedRoles();
 
         if (defaultInstitution != null) {
+            Map<String, SalaryStructure> salaryStructures = seedSalaryStructures();
 
-            Map<String, Teacher> teachers = seedTeachers(defaultInstitution);
+            Map<String, Teacher> teachers = seedTeachers(defaultInstitution, salaryStructures);
             Map<String, Student> students = seedStudents(defaultInstitution);
-            Map<String, Employee> employees = seedEmployees(defaultInstitution);
+            Map<String, Employee> employees = seedEmployees(defaultInstitution, salaryStructures);
 
             Map<String, Department> departments = seedDepartments(defaultInstitution);
             if (departments != null && !departments.isEmpty()) {
@@ -155,9 +162,11 @@ public class DataSeeder implements CommandLineRunner {
             roleRepository.save(new Role(RoleName.ROLE_STUDENT));
             roleRepository.save(new Role(RoleName.ROLE_EMPLOYEE));
             roleRepository.save(new Role(RoleName.ROLE_FINANCE));
+            roleRepository.save(new Role(RoleName.ROLE_LIBRARIAN));
+            roleRepository.save(new Role(RoleName.ROLE_HR_ANALYST));
+            roleRepository.save(new Role(RoleName.ROLE_TECHNICIAN));
         }
     }
-
 
 
     private Institution seedInstitution() {
@@ -452,18 +461,21 @@ public class DataSeeder implements CommandLineRunner {
                 });
     }
 
-    private Map<String, Teacher> seedTeachers(Institution institution) {
+    private Map<String, Teacher> seedTeachers(Institution institution, Map<String, SalaryStructure> salaryStructures) {
         log.info("Iniciando seeding de Professores...");
         Map<String, Teacher> createdTeachers = new HashMap<>();
+        SalaryStructure teacherSalarySr = salaryStructures.get("TEACHER_SENIOR");
+        SalaryStructure teacherSalaryJr = salaryStructures.get("TEACHER_JUNIOR");
 
-        createdTeachers.put("ROSSI", createTeacherIfNotExists(
-                "Marco",
+        createdTeachers.put("ROSSI", createTeacherIfNotExists("Marco",
                 "Rossi",
                 "marco.rossi@instituicao.com",
                 AcademicDegree.PHD,
                 new DocumentDto("NATIONAL_ID", "987654321"),
-                institution
+                institution,
+                teacherSalarySr
         ));
+
 
         createdTeachers.put("ALVES", createTeacherIfNotExists(
                 "Carla",
@@ -471,7 +483,8 @@ public class DataSeeder implements CommandLineRunner {
                 "carla.alves@instituicao.com",
                 AcademicDegree.MASTER,
                 new DocumentDto("NATIONAL_ID", "123456789"),
-                institution
+                institution,
+                teacherSalaryJr
         ));
 
         createdTeachers.put("FERREIRA", createTeacherIfNotExists(
@@ -480,7 +493,8 @@ public class DataSeeder implements CommandLineRunner {
                 "renata.ferreira@instituicao.com",
                 AcademicDegree.POSTDOC,
                 new DocumentDto("NATIONAL_ID", "78945612300"),
-                institution
+                institution,
+                teacherSalarySr
         ));
 
         createdTeachers.put("SANTOS", createTeacherIfNotExists(
@@ -489,7 +503,8 @@ public class DataSeeder implements CommandLineRunner {
                 "lucas.santos@instituicao.com",
                 AcademicDegree.MASTER,
                 new DocumentDto("NATIONAL_ID", "32165498700"),
-                institution
+                institution,
+                teacherSalaryJr
         ));
 
         createdTeachers.put("MARTINS", createTeacherIfNotExists(
@@ -498,7 +513,8 @@ public class DataSeeder implements CommandLineRunner {
                 "patricia.martins@instituicao.com",
                 AcademicDegree.BACHELOR,
                 new DocumentDto("NATIONAL_ID", "45678912300"),
-                institution
+                institution,
+                teacherSalaryJr
         ));
 
         createdTeachers.put("NOGUEIRA", createTeacherIfNotExists(
@@ -507,7 +523,8 @@ public class DataSeeder implements CommandLineRunner {
                 "eduardo.nogueira@instituicao.com",
                 AcademicDegree.LICENTIATE,
                 new DocumentDto("NATIONAL_ID", "65412378900"),
-                institution
+                institution,
+                teacherSalaryJr
         ));
 
         createdTeachers.put("RAMOS", createTeacherIfNotExists(
@@ -516,7 +533,8 @@ public class DataSeeder implements CommandLineRunner {
                 "tatiane.ramos@instituicao.com",
                 AcademicDegree.SPECIALIZATION,
                 new DocumentDto("NATIONAL_ID", "11223344556"),
-                institution
+                institution,
+                teacherSalaryJr
         ));
 
         createdTeachers.put("BARROS", createTeacherIfNotExists(
@@ -525,14 +543,15 @@ public class DataSeeder implements CommandLineRunner {
                 "henrique.barros@instituicao.com",
                 AcademicDegree.TECHNICAL,
                 new DocumentDto("NATIONAL_ID", "99887766554"),
-                institution
+                institution,
+                teacherSalaryJr
         ));
 
         log.info("Seeding de Professores finalizado.");
         return createdTeachers;
     }
 
-    private Teacher createTeacherIfNotExists(String firstName, String lastName, String email, AcademicDegree degree, DocumentDto document, Institution institution) {
+    private Teacher createTeacherIfNotExists(String firstName, String lastName, String email, AcademicDegree degree, DocumentDto document, Institution institution, SalaryStructure salaryStructure) {
         Optional<Person> existingPerson = personRepository.findByEmail(email);
         if (existingPerson.isPresent()) {
             if (existingPerson.get() instanceof Teacher) {
@@ -990,7 +1009,39 @@ public class DataSeeder implements CommandLineRunner {
                 });
     }
 
-    private Map<String, Employee> seedEmployees(Institution institution) {
+    private Map<String, SalaryStructure> seedSalaryStructures() {
+        log.info("Iniciando seeder de Estruturas Salariais...");
+        Map<String, SalaryStructure> structures = new HashMap<>();
+
+        structures.put("SECRETARY_JUNIOR", createSalaryStructureIfNotExists(JobPosition.SECRETARY, SalaryLevel.JUNIOR, new BigDecimal("2800.00")));
+        structures.put("FINANCE_ANALYST_MID", createSalaryStructureIfNotExists(JobPosition.FINANCE_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5800.00")));
+        structures.put("LIBRARIAN_JUNIOR", createSalaryStructureIfNotExists(JobPosition.LIBRARIAN, SalaryLevel.JUNIOR, new BigDecimal("3000.00")));
+        structures.put("TECHNICIAN_JUNIOR", createSalaryStructureIfNotExists(JobPosition.TECHNICIAN, SalaryLevel.JUNIOR, new BigDecimal("3200.00")));
+        structures.put("HR_ANALYST_MID", createSalaryStructureIfNotExists(JobPosition.HR_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5500.00")));
+        structures.put("TEACHER_JUNIOR", createSalaryStructureIfNotExists(JobPosition.TEACHER, SalaryLevel.JUNIOR, new BigDecimal("3500.00")));
+        structures.put("COORD_LEAD", createSalaryStructureIfNotExists(JobPosition.COORDINATOR, SalaryLevel.LEAD, new BigDecimal("8000.00")));
+        structures.put("TEACHER_SENIOR", createSalaryStructureIfNotExists(JobPosition.TEACHER, SalaryLevel.SENIOR, new BigDecimal("7500.00")));
+        structures.put("FINANCE_ANALYST_JUNIOR", createSalaryStructureIfNotExists(JobPosition.FINANCE_ANALYST, SalaryLevel.JUNIOR, new BigDecimal("5200.00")));
+        structures.put("HR_ANALYST_JUNIOR", createSalaryStructureIfNotExists(JobPosition.HR_ANALYST, SalaryLevel.JUNIOR, new BigDecimal("5000.00")));
+
+        log.info("Seeder de Estruturas Salariais finalizado.");
+        return structures;
+    }
+
+    private SalaryStructure createSalaryStructureIfNotExists(JobPosition jobPosition, SalaryLevel level, BigDecimal baseSalary) {
+        return salaryStructureRepository.findByJobPositionAndLevel(jobPosition, level)
+                .orElseGet(() -> {
+                    log.info("Criando estrutura salarial para {} - {}", jobPosition, level);
+                    SalaryStructure structure = new SalaryStructure();
+                    structure.setJobPosition(jobPosition);
+                    structure.setLevel(level);
+                    structure.setBaseSalary(baseSalary);
+                    return salaryStructureRepository.save(structure);
+                });
+    }
+
+
+    private Map<String, Employee> seedEmployees(Institution institution, Map<String, SalaryStructure> salaryStructures) {
         log.info("Iniciando seeding de Funcionários...");
         Map<String, Employee> createdEmployees = new HashMap<>();
 
@@ -1001,7 +1052,56 @@ public class DataSeeder implements CommandLineRunner {
                 JobPosition.COORDINATOR,
                 LocalDate.of(2022, 5, 20),
                 new DocumentDto("NATIONAL_ID", "33344455566"),
-                institution
+                institution,
+                salaryStructures.get("COORD_LEAD"),
+                Set.of(RoleName.ROLE_MANAGER, RoleName.ROLE_EMPLOYEE)
+        ));
+
+        createdEmployees.put("FINANCE", createEmployeeIfNotExists(
+                "Sarah",
+                "Luisa",
+                "sarah.luisa@instituicao.com",
+                JobPosition.FINANCE_ANALYST,
+                LocalDate.of(2024, 1, 20),
+                new DocumentDto("NATIONAL_ID", "30330330303"),
+                institution,
+                salaryStructures.get("FINANCE_ANALYST_MID"),
+                Set.of(RoleName.ROLE_FINANCE, RoleName.ROLE_EMPLOYEE)
+        ));
+
+        createdEmployees.put("LIBRARIAN_USER", createEmployeeIfNotExists(
+                "Beatriz",
+                "Costa",
+                "beatriz.costa@instituicao.com",
+                JobPosition.LIBRARIAN,
+                LocalDate.of(2024, 3, 15),
+                new DocumentDto("NATIONAL_ID", "10110110101"),
+                institution,
+                salaryStructures.get("LIBRARIAN_JUNIOR"),
+                Set.of(RoleName.ROLE_LIBRARIAN, RoleName.ROLE_EMPLOYEE)
+        ));
+        createdEmployees.put("TECH_USER", createEmployeeIfNotExists(
+                "Carlos",
+                "Andrade",
+                "carlos.andrade@instituicao.com",
+                JobPosition.TECHNICIAN,
+                LocalDate.of(2024, 2, 10),
+                new DocumentDto("NATIONAL_ID", "20220220202"),
+                institution,
+                salaryStructures.get("TECHNICIAN_JUNIOR"),
+                Set.of(RoleName.ROLE_TECHNICIAN, RoleName.ROLE_EMPLOYEE)
+        ));
+
+        createdEmployees.put("HR_USER", createEmployeeIfNotExists(
+                "Fernanda",
+                "Lima",
+                "fernanda.lima@instituicao.com",
+                JobPosition.HR_ANALYST,
+                LocalDate.of(2024, 1, 20),
+                new DocumentDto("NATIONAL_ID", "30310330303"),
+                institution,
+                salaryStructures.get("HR_ANALYST_MID"),
+                Set.of(RoleName.ROLE_HR_ANALYST, RoleName.ROLE_EMPLOYEE)
         ));
 
         createdEmployees.put("ANA", createEmployeeIfNotExists(
@@ -1011,14 +1111,16 @@ public class DataSeeder implements CommandLineRunner {
                 JobPosition.SECRETARY,
                 LocalDate.of(2023, 1, 10),
                 new DocumentDto("NATIONAL_ID", "77788899900"),
-                institution
+                institution,
+                salaryStructures.get("SECRETARY_JUNIOR"),
+                Set.of(RoleName.ROLE_EMPLOYEE)
         ));
 
         log.info("Seeding de Funcionários finalizado.");
         return createdEmployees;
     }
 
-    private Employee createEmployeeIfNotExists(String firstName, String lastName, String email, JobPosition position, LocalDate hiringDate, DocumentDto document, Institution institution) {
+    private Employee createEmployeeIfNotExists(String firstName, String lastName, String email, JobPosition position, LocalDate hiringDate, DocumentDto document, Institution institution, SalaryStructure salaryStructure, Set<RoleName> roles) {
         Optional<Person> existingPerson = personRepository.findByEmail(email);
         if (existingPerson.isPresent()) {
             if (existingPerson.get() instanceof Employee) {
@@ -1029,8 +1131,6 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         log.info("Criando funcionário de exemplo: {} {}...", firstName, lastName);
-        Set<RoleName> rolesForEmployee = new HashSet<>();
-        rolesForEmployee.add(RoleName.ROLE_EMPLOYEE);
 
         var employeeRequest = new CreateEmployeeRequestDto(
                 firstName,
@@ -1041,15 +1141,16 @@ public class DataSeeder implements CommandLineRunner {
                 institution.getId(),
                 1L,
                 document,
-                rolesForEmployee
+                roles
         );
 
         try {
             EmployeeResponseDto createdEmployeeDto = employeeService.createEmployee(employeeRequest);
             log.info("Funcionário '{}' e seu usuário correspondente foram criados com sucesso.", createdEmployeeDto.getEmail());
+            Employee employee = employeeRepository.findById(createdEmployeeDto.getId()).orElseThrow();
+            employee.setSalaryStructure(salaryStructure);
+            return employeeRepository.save(employee);
 
-            return employeeRepository.findById(createdEmployeeDto.getId())
-                    .orElseThrow(() -> new IllegalStateException("O funcionário acabou de ser criado, mas não foi encontrado."));
         } catch (Exception e) {
             log.error("Erro ao criar o funcionário de exemplo '{}': {}", email, e.getMessage());
             return null;
