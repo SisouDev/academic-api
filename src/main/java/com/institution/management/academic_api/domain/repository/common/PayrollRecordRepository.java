@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +24,7 @@ public interface PayrollRecordRepository extends JpaRepository<PayrollRecord, Lo
 
     @Query("SELECT SUM(pr.netPay) FROM PayrollRecord pr WHERE pr.status = :status AND pr.referenceMonth BETWEEN :startDate AND :endDate")
     Optional<BigDecimal> calculateTotalNetPayByStatusAndDateRange(PayrollStatus status, LocalDate startDate, LocalDate endDate);
+
+    List<PayrollRecord> findAllByStatus(PayrollStatus status);
+
 }

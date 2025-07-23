@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.application.mapper.simple.teacher;
 
+import com.institution.management.academic_api.application.dto.employee.StaffListDto;
 import com.institution.management.academic_api.application.dto.teacher.*;
 import com.institution.management.academic_api.application.mapper.simple.course.CourseSectionMapper;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
@@ -46,6 +47,12 @@ public interface TeacherMapper {
     @Mapping(target = "academicBackground", source = "academicBackground.displayName")
     @Mapping(target = "status", source = "status.displayName")
     TeacherSummaryDto toSummaryDto(Teacher teacher);
+
+    @Mapping(target = "fullName", expression = "java(teacher.getFirstName() + \" \" + teacher.getLastName())")
+    @Mapping(target = "positionOrDegree", source = "academicBackground.displayName")
+    @Mapping(target = "hiringDate", ignore = true)
+    @Mapping(target = "baseSalary", source = "salaryStructure.baseSalary")
+    StaffListDto toStaffListDto(Teacher teacher);
 
     @Named("mapToTaughtSubjects")
     default List<TaughtSubjectDto> mapToTaughtSubjects(List<CourseSection> courseSections) {

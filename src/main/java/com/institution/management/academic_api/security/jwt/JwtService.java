@@ -6,7 +6,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -36,13 +35,12 @@ public class JwtService {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
 
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-        extraClaims.put("roles", roles);
+        if (userDetails instanceof User customUser) {
 
-        if (userDetails instanceof User) {
-            User customUser = (User) userDetails;
+            List<String> roles = customUser.getRoles().stream()
+                    .map(role -> role.getName().name())
+                    .collect(Collectors.toList());
+            extraClaims.put("roles", roles);
 
             extraClaims.put("userId", customUser.getId());
             extraClaims.put("personId", customUser.getPerson().getId());

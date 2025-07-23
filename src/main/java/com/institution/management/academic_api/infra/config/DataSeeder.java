@@ -13,6 +13,8 @@ import com.institution.management.academic_api.application.dto.institution.Creat
 import com.institution.management.academic_api.application.dto.student.*;
 import com.institution.management.academic_api.application.dto.teacher.CreateTeacherRequestDto;
 import com.institution.management.academic_api.application.dto.teacher.TeacherResponseDto;
+import com.institution.management.academic_api.application.dto.utils.EmployeeSeed;
+import com.institution.management.academic_api.application.dto.utils.SalaryStructureSeed;
 import com.institution.management.academic_api.application.service.common.SeedingService;
 import com.institution.management.academic_api.domain.model.entities.academic.AcademicTerm;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
@@ -153,20 +155,168 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedRoles() {
-        if (roleRepository.count() == 0) {
-            log.info("Criando perfis (Roles) padrão...");
-            roleRepository.save(new Role(RoleName.ROLE_USER));
-            roleRepository.save(new Role(RoleName.ROLE_ADMIN));
-            roleRepository.save(new Role(RoleName.ROLE_MANAGER));
-            roleRepository.save(new Role(RoleName.ROLE_TEACHER));
-            roleRepository.save(new Role(RoleName.ROLE_STUDENT));
-            roleRepository.save(new Role(RoleName.ROLE_EMPLOYEE));
-            roleRepository.save(new Role(RoleName.ROLE_FINANCE));
-            roleRepository.save(new Role(RoleName.ROLE_LIBRARIAN));
-            roleRepository.save(new Role(RoleName.ROLE_HR_ANALYST));
-            roleRepository.save(new Role(RoleName.ROLE_TECHNICIAN));
+        List<RoleName> allRoles = List.of(
+                RoleName.ROLE_USER,
+                RoleName.ROLE_ADMIN,
+                RoleName.ROLE_MANAGER,
+                RoleName.ROLE_TEACHER,
+                RoleName.ROLE_STUDENT,
+                RoleName.ROLE_EMPLOYEE,
+                RoleName.ROLE_FINANCE_MANAGER,
+                RoleName.ROLE_LIBRARIAN,
+                RoleName.ROLE_HR_ANALYST,
+                RoleName.ROLE_TECHNICIAN,
+                RoleName.ROLE_FINANCE_ASSISTANT,
+                RoleName.ROLE_COORDINATOR,
+                RoleName.ROLE_SECRETARY
+        );
+
+        for (RoleName roleName : allRoles) {
+            if (!roleRepository.existsByName(roleName)) {
+                roleRepository.save(new Role(roleName));
+                log.info("Role '{}' criada.", roleName);
+            }
         }
     }
+
+
+
+    private static final List<SalaryStructureSeed> SALARY_SEED_LIST = List.of(
+            new SalaryStructureSeed("SECRETARY_JUNIOR", JobPosition.SECRETARY, SalaryLevel.JUNIOR, new BigDecimal("2800.00")),
+            new SalaryStructureSeed("SECRETARY_MID", JobPosition.SECRETARY, SalaryLevel.MID_LEVEL, new BigDecimal("3500.00")),
+            new SalaryStructureSeed("SECRETARY_SENIOR", JobPosition.SECRETARY, SalaryLevel.SENIOR, new BigDecimal("4300.00")),
+
+            new SalaryStructureSeed("ASSISTANT_JUNIOR", JobPosition.ASSISTANT, SalaryLevel.JUNIOR, new BigDecimal("2500.00")),
+            new SalaryStructureSeed("ASSISTANT_MID", JobPosition.ASSISTANT, SalaryLevel.MID_LEVEL, new BigDecimal("3200.00")),
+
+            new SalaryStructureSeed("TECHNICIAN_JUNIOR", JobPosition.TECHNICIAN, SalaryLevel.JUNIOR, new BigDecimal("3200.00")),
+            new SalaryStructureSeed("TECHNICIAN_MID", JobPosition.TECHNICIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4200.00")),
+            new SalaryStructureSeed("TECHNICIAN_SENIOR", JobPosition.TECHNICIAN, SalaryLevel.SENIOR, new BigDecimal("5200.00")),
+
+            new SalaryStructureSeed("LIBRARIAN_JUNIOR", JobPosition.LIBRARIAN, SalaryLevel.JUNIOR, new BigDecimal("3000.00")),
+            new SalaryStructureSeed("LIBRARIAN_MID", JobPosition.LIBRARIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4000.00")),
+            new SalaryStructureSeed("LIBRARIAN_SENIOR", JobPosition.LIBRARIAN, SalaryLevel.SENIOR, new BigDecimal("4800.00")),
+
+            new SalaryStructureSeed("HR_ANALYST_JUNIOR", JobPosition.HR_ANALYST, SalaryLevel.JUNIOR, new BigDecimal("3000.00")),
+            new SalaryStructureSeed("HR_ANALYST_MID", JobPosition.HR_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5500.00")),
+            new SalaryStructureSeed("HR_ANALYST_SENIOR", JobPosition.HR_ANALYST, SalaryLevel.SENIOR, new BigDecimal("7000.00")),
+
+            new SalaryStructureSeed("FINANCE_ASSISTANT_JUNIOR", JobPosition.FINANCE_ASSISTANT, SalaryLevel.JUNIOR, new BigDecimal("3200.00")),
+            new SalaryStructureSeed("FINANCE_ASSISTANT_MID", JobPosition.FINANCE_ASSISTANT, SalaryLevel.MID_LEVEL, new BigDecimal("4000.00")),
+
+            new SalaryStructureSeed("FINANCE_MANAGER_MID_LEVEL", JobPosition.FINANCE_MANAGER, SalaryLevel.MID_LEVEL, new BigDecimal("9800.00")),
+            new SalaryStructureSeed("FINANCE_MANAGER_JR", JobPosition.FINANCE_MANAGER, SalaryLevel.JUNIOR, new BigDecimal("7800.00")),
+            new SalaryStructureSeed("FINANCE_MANAGER", JobPosition.FINANCE_MANAGER, SalaryLevel.LEAD, new BigDecimal("12000.00")),
+
+            new SalaryStructureSeed("MANAGER_LEAD", JobPosition.MANAGER, SalaryLevel.LEAD, new BigDecimal("12000.00")),
+            new SalaryStructureSeed("MANAGER_MID", JobPosition.MANAGER, SalaryLevel.MID_LEVEL, new BigDecimal("10000.00")),
+            new SalaryStructureSeed("MANAGER_SENIOR", JobPosition.MANAGER, SalaryLevel.SENIOR, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("MANAGER_JR", JobPosition.MANAGER, SalaryLevel.JUNIOR, new BigDecimal("9000.00")),
+
+            new SalaryStructureSeed("TEACHER_JUNIOR", JobPosition.TEACHER, SalaryLevel.JUNIOR, new BigDecimal("3500.00")),
+            new SalaryStructureSeed("TEACHER_MID", JobPosition.TEACHER, SalaryLevel.MID_LEVEL, new BigDecimal("6000.00")),
+            new SalaryStructureSeed("TEACHER_SENIOR", JobPosition.TEACHER, SalaryLevel.SENIOR, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("TEACHER_PRINCIPAL", JobPosition.TEACHER, SalaryLevel.PRINCIPAL, new BigDecimal("18000.00")),
+
+            new SalaryStructureSeed("COORDINATOR_MID", JobPosition.COORDINATOR, SalaryLevel.MID_LEVEL, new BigDecimal("7000.00")),
+            new SalaryStructureSeed("COORDINATOR_JR", JobPosition.COORDINATOR, SalaryLevel.JUNIOR, new BigDecimal("5000.00")),
+            new SalaryStructureSeed("COORDINATOR_LEAD", JobPosition.COORDINATOR, SalaryLevel.LEAD, new BigDecimal("9000.00")),
+            new SalaryStructureSeed("COORDINATOR_SENIOR", JobPosition.COORDINATOR, SalaryLevel.SENIOR, new BigDecimal("7500.00")),
+
+            new SalaryStructureSeed("HR_ANALYST_MID_LEVEL", JobPosition.HR_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5500.00")),
+
+            new SalaryStructureSeed("LIBRARIAN_MID_LEVEL", JobPosition.LIBRARIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4000.00")),
+
+            new SalaryStructureSeed("TECHNICIAN_MID_LEVEL", JobPosition.TECHNICIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4200.00")),
+            new SalaryStructureSeed("DIRECTOR_LEAD", JobPosition.DIRECTOR, SalaryLevel.LEAD, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("DIRECTOR_PRINCIPAL", JobPosition.DIRECTOR, SalaryLevel.PRINCIPAL, new BigDecimal("18000.00")),
+
+            new SalaryStructureSeed("SECRETARY_JUNIOR", JobPosition.SECRETARY, SalaryLevel.JUNIOR, new BigDecimal("2800.00")),
+            new SalaryStructureSeed("SECRETARY_MID_LEVEL", JobPosition.SECRETARY, SalaryLevel.MID_LEVEL, new BigDecimal("3500.00")),
+            new SalaryStructureSeed("SECRETARY_SENIOR", JobPosition.SECRETARY, SalaryLevel.SENIOR, new BigDecimal("4300.00")),
+
+            new SalaryStructureSeed("ASSISTANT_JUNIOR", JobPosition.ASSISTANT, SalaryLevel.JUNIOR, new BigDecimal("2500.00")),
+            new SalaryStructureSeed("ASSISTANT_MID_LEVEL", JobPosition.ASSISTANT, SalaryLevel.MID_LEVEL, new BigDecimal("3200.00")),
+
+            new SalaryStructureSeed("TECHNICIAN_JUNIOR", JobPosition.TECHNICIAN, SalaryLevel.JUNIOR, new BigDecimal("3200.00")),
+            new SalaryStructureSeed("TECHNICIAN_MID_LEVEL", JobPosition.TECHNICIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4200.00")),
+            new SalaryStructureSeed("TECHNICIAN_SENIOR", JobPosition.TECHNICIAN, SalaryLevel.SENIOR, new BigDecimal("5200.00")),
+
+            new SalaryStructureSeed("LIBRARIAN_JUNIOR", JobPosition.LIBRARIAN, SalaryLevel.JUNIOR, new BigDecimal("3000.00")),
+            new SalaryStructureSeed("LIBRARIAN_MID_LEVEL", JobPosition.LIBRARIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4000.00")),
+            new SalaryStructureSeed("LIBRARIAN_SENIOR", JobPosition.LIBRARIAN, SalaryLevel.SENIOR, new BigDecimal("4800.00")),
+
+            new SalaryStructureSeed("HR_ANALYST_JUNIOR", JobPosition.HR_ANALYST, SalaryLevel.JUNIOR, new BigDecimal("3000.00")),
+            new SalaryStructureSeed("HR_ANALYST_MID_LEVEL", JobPosition.HR_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5500.00")),
+            new SalaryStructureSeed("HR_ANALYST_SENIOR", JobPosition.HR_ANALYST, SalaryLevel.SENIOR, new BigDecimal("7000.00")),
+
+            new SalaryStructureSeed("FINANCE_ASSISTANT_JUNIOR", JobPosition.FINANCE_ASSISTANT, SalaryLevel.JUNIOR, new BigDecimal("3200.00")),
+            new SalaryStructureSeed("FINANCE_ASSISTANT_MID_LEVEL", JobPosition.FINANCE_ASSISTANT, SalaryLevel.MID_LEVEL, new BigDecimal("4000.00")),
+
+            new SalaryStructureSeed("FINANCE_MANAGER_MID_LEVEL", JobPosition.FINANCE_MANAGER, SalaryLevel.MID_LEVEL, new BigDecimal("9800.00")),
+            new SalaryStructureSeed("FINANCE_MANAGER_JUNIOR", JobPosition.FINANCE_MANAGER, SalaryLevel.JUNIOR, new BigDecimal("7800.00")),
+            new SalaryStructureSeed("FINANCE_MANAGER_LEAD", JobPosition.FINANCE_MANAGER, SalaryLevel.LEAD, new BigDecimal("12000.00")),
+
+            new SalaryStructureSeed("MANAGER_LEAD", JobPosition.MANAGER, SalaryLevel.LEAD, new BigDecimal("12000.00")),
+            new SalaryStructureSeed("MANAGER_MID_LEVEL", JobPosition.MANAGER, SalaryLevel.MID_LEVEL, new BigDecimal("10000.00")),
+            new SalaryStructureSeed("MANAGER_SENIOR", JobPosition.MANAGER, SalaryLevel.SENIOR, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("MANAGER_JUNIOR", JobPosition.MANAGER, SalaryLevel.JUNIOR, new BigDecimal("9000.00")),
+
+            new SalaryStructureSeed("TEACHER_JUNIOR", JobPosition.TEACHER, SalaryLevel.JUNIOR, new BigDecimal("3500.00")),
+            new SalaryStructureSeed("TEACHER_MID_LEVEL", JobPosition.TEACHER, SalaryLevel.MID_LEVEL, new BigDecimal("6000.00")),
+            new SalaryStructureSeed("TEACHER_SENIOR", JobPosition.TEACHER, SalaryLevel.SENIOR, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("TEACHER_PRINCIPAL", JobPosition.TEACHER, SalaryLevel.PRINCIPAL, new BigDecimal("18000.00")),
+
+            new SalaryStructureSeed("COORDINATOR_MID_LEVEL", JobPosition.COORDINATOR, SalaryLevel.MID_LEVEL, new BigDecimal("7000.00")),
+            new SalaryStructureSeed("COORDINATOR_JUNIOR", JobPosition.COORDINATOR, SalaryLevel.JUNIOR, new BigDecimal("5000.00")),
+            new SalaryStructureSeed("COORDINATOR_LEAD", JobPosition.COORDINATOR, SalaryLevel.LEAD, new BigDecimal("9000.00")),
+            new SalaryStructureSeed("COORDINATOR_SENIOR", JobPosition.COORDINATOR, SalaryLevel.SENIOR, new BigDecimal("7500.00")),
+
+            new SalaryStructureSeed("DIRECTOR_LEAD", JobPosition.DIRECTOR, SalaryLevel.LEAD, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("DIRECTOR_PRINCIPAL", JobPosition.DIRECTOR, SalaryLevel.PRINCIPAL, new BigDecimal("18000.00"))
+    );
+
+    private static final List<EmployeeSeed> EMPLOYEE_SEED_LIST = List.of(
+            new EmployeeSeed("ROBERTO", "Roberto", "Gomes", "roberto.gomes@instituicao.com", JobPosition.COORDINATOR,
+                    SalaryLevel.LEAD, LocalDate.of(2022, 5, 20), "33344455566", Set.of(RoleName.ROLE_COORDINATOR, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("FINANCE", "Sarah", "Luisa", "sarah.luisa@instituicao.com", JobPosition.FINANCE_MANAGER,
+                    SalaryLevel.MID_LEVEL, LocalDate.of(2024, 1, 20), "30330330303", Set.of(RoleName.ROLE_FINANCE_MANAGER, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("LIBRARIAN_USER", "Beatriz", "Costa", "beatriz.costa@instituicao.com", JobPosition.LIBRARIAN,
+                    SalaryLevel.SENIOR, LocalDate.of(2024, 3, 15), "10110110101", Set.of(RoleName.ROLE_LIBRARIAN, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("TECH_USER", "Carlos", "Andrade", "carlos.andrade@instituicao.com", JobPosition.TECHNICIAN,
+                    SalaryLevel.MID_LEVEL, LocalDate.of(2024, 2, 10), "20220220202", Set.of(RoleName.ROLE_TECHNICIAN, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("HR_USER", "Fernanda", "Lima", "fernanda.lima@instituicao.com", JobPosition.HR_ANALYST,
+                    SalaryLevel.MID_LEVEL, LocalDate.of(2024, 1, 20), "30310330303", Set.of(RoleName.ROLE_HR_ANALYST, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("ANA", "Ana", "Pereira", "ana.pereira@instituicao.com", JobPosition.SECRETARY,
+                    SalaryLevel.JUNIOR, LocalDate.of(2023, 1, 10), "77788899900", Set.of(RoleName.ROLE_SECRETARY, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("JULIA", "Julia", "Santos", "julia.santos@instituicao.com", JobPosition.HR_ANALYST,
+                    SalaryLevel.MID_LEVEL, LocalDate.of(2023, 9, 10), "22334455667", Set.of(RoleName.ROLE_HR_ANALYST, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("PEDRO", "Pedro", "Almeida", "pedro.almeida@instituicao.com", JobPosition.TECHNICIAN,
+                    SalaryLevel.JUNIOR, LocalDate.of(2022, 12, 5), "33445566778", Set.of(RoleName.ROLE_TECHNICIAN, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("ROBERTO_FINANCE", "Roberto", "Mendes", "roberto.mendes@instituicao.com", JobPosition.FINANCE_ASSISTANT,
+                    SalaryLevel.JUNIOR, LocalDate.of(2024, 1, 25), "44556677889", Set.of(RoleName.ROLE_FINANCE_ASSISTANT, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("CARLA", "Carla", "Pinto", "carla.pinto@instituicao.com", JobPosition.LIBRARIAN,
+                    SalaryLevel.MID_LEVEL, LocalDate.of(2023, 11, 15), "55667788990", Set.of(RoleName.ROLE_LIBRARIAN, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("JULIANO", "Juliano", "Ferreira", "juliano.ferreira@instituicao.com", JobPosition.COORDINATOR,
+                    SalaryLevel.MID_LEVEL, LocalDate.of(2022, 10, 20), "66778899001", Set.of(RoleName.ROLE_COORDINATOR, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("MARCOS", "Marcos", "Rodrigues", "marcos.rodrigues@instituicao.com", JobPosition.SECRETARY,
+                    SalaryLevel.SENIOR, LocalDate.of(2024, 2, 28), "77889900112", Set.of(RoleName.ROLE_SECRETARY, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("FERNANDO", "Fernando", "Santos", "fernando.santos@instituicao.com", JobPosition.MANAGER,
+                    SalaryLevel.LEAD, LocalDate.of(2023, 7, 3), "88990011223", Set.of(RoleName.ROLE_MANAGER, RoleName.ROLE_EMPLOYEE))
+    );
+
 
 
     private Institution seedInstitution() {
@@ -464,16 +614,13 @@ public class DataSeeder implements CommandLineRunner {
     private Map<String, Teacher> seedTeachers(Institution institution, Map<String, SalaryStructure> salaryStructures) {
         log.info("Iniciando seeding de Professores...");
         Map<String, Teacher> createdTeachers = new HashMap<>();
-        SalaryStructure teacherSalarySr = salaryStructures.get("TEACHER_SENIOR");
-        SalaryStructure teacherSalaryJr = salaryStructures.get("TEACHER_JUNIOR");
-
         createdTeachers.put("ROSSI", createTeacherIfNotExists("Marco",
                 "Rossi",
                 "marco.rossi@instituicao.com",
                 AcademicDegree.PHD,
                 new DocumentDto("NATIONAL_ID", "987654321"),
                 institution,
-                teacherSalarySr
+                salaryStructures.get("TEACHER_SENIOR")
         ));
 
 
@@ -484,7 +631,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.MASTER,
                 new DocumentDto("NATIONAL_ID", "123456789"),
                 institution,
-                teacherSalaryJr
+                salaryStructures.get("TEACHER_MID")
         ));
 
         createdTeachers.put("FERREIRA", createTeacherIfNotExists(
@@ -494,7 +641,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.POSTDOC,
                 new DocumentDto("NATIONAL_ID", "78945612300"),
                 institution,
-                teacherSalarySr
+                salaryStructures.get("TEACHER_PRINCIPAL")
         ));
 
         createdTeachers.put("SANTOS", createTeacherIfNotExists(
@@ -504,7 +651,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.MASTER,
                 new DocumentDto("NATIONAL_ID", "32165498700"),
                 institution,
-                teacherSalaryJr
+                salaryStructures.get("TEACHER_MID")
         ));
 
         createdTeachers.put("MARTINS", createTeacherIfNotExists(
@@ -514,7 +661,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.BACHELOR,
                 new DocumentDto("NATIONAL_ID", "45678912300"),
                 institution,
-                teacherSalaryJr
+                salaryStructures.get("TEACHER_JUNIOR")
         ));
 
         createdTeachers.put("NOGUEIRA", createTeacherIfNotExists(
@@ -524,7 +671,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.LICENTIATE,
                 new DocumentDto("NATIONAL_ID", "65412378900"),
                 institution,
-                teacherSalaryJr
+                salaryStructures.get("TEACHER_JUNIOR")
         ));
 
         createdTeachers.put("RAMOS", createTeacherIfNotExists(
@@ -534,7 +681,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.SPECIALIZATION,
                 new DocumentDto("NATIONAL_ID", "11223344556"),
                 institution,
-                teacherSalaryJr
+                salaryStructures.get("TEACHER_JUNIOR")
         ));
 
         createdTeachers.put("BARROS", createTeacherIfNotExists(
@@ -544,7 +691,7 @@ public class DataSeeder implements CommandLineRunner {
                 AcademicDegree.TECHNICAL,
                 new DocumentDto("NATIONAL_ID", "99887766554"),
                 institution,
-                teacherSalaryJr
+                salaryStructures.get("TEACHER_JUNIOR")
         ));
 
         log.info("Seeding de Professores finalizado.");
@@ -574,10 +721,15 @@ public class DataSeeder implements CommandLineRunner {
 
         try {
             TeacherResponseDto createdTeacherDto = teacherService.create(teacherRequest);
-            log.info("Professor '{}' e seu usuário correspondente foram criados com sucesso.", createdTeacherDto.getEmail());
 
-            return teacherRepository.findById(createdTeacherDto.getId())
+            Teacher teacher = teacherRepository.findById(createdTeacherDto.getId())
                     .orElseThrow(() -> new IllegalStateException("O professor acabou de ser criado, mas não foi encontrado."));
+
+            teacher.setSalaryStructure(salaryStructure);
+
+            log.info("Professor '{}' criado. Associando estrutura salarial: {}", email, salaryStructure.getBaseSalary());
+            return teacherRepository.save(teacher);
+
         } catch (Exception e) {
             log.error("Erro ao criar o professor de exemplo '{}': {}", email, e.getMessage());
             return null;
@@ -1013,16 +1165,9 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Iniciando seeder de Estruturas Salariais...");
         Map<String, SalaryStructure> structures = new HashMap<>();
 
-        structures.put("SECRETARY_JUNIOR", createSalaryStructureIfNotExists(JobPosition.SECRETARY, SalaryLevel.JUNIOR, new BigDecimal("2800.00")));
-        structures.put("FINANCE_ANALYST_MID", createSalaryStructureIfNotExists(JobPosition.FINANCE_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5800.00")));
-        structures.put("LIBRARIAN_JUNIOR", createSalaryStructureIfNotExists(JobPosition.LIBRARIAN, SalaryLevel.JUNIOR, new BigDecimal("3000.00")));
-        structures.put("TECHNICIAN_JUNIOR", createSalaryStructureIfNotExists(JobPosition.TECHNICIAN, SalaryLevel.JUNIOR, new BigDecimal("3200.00")));
-        structures.put("HR_ANALYST_MID", createSalaryStructureIfNotExists(JobPosition.HR_ANALYST, SalaryLevel.MID_LEVEL, new BigDecimal("5500.00")));
-        structures.put("TEACHER_JUNIOR", createSalaryStructureIfNotExists(JobPosition.TEACHER, SalaryLevel.JUNIOR, new BigDecimal("3500.00")));
-        structures.put("COORD_LEAD", createSalaryStructureIfNotExists(JobPosition.COORDINATOR, SalaryLevel.LEAD, new BigDecimal("8000.00")));
-        structures.put("TEACHER_SENIOR", createSalaryStructureIfNotExists(JobPosition.TEACHER, SalaryLevel.SENIOR, new BigDecimal("7500.00")));
-        structures.put("FINANCE_ANALYST_JUNIOR", createSalaryStructureIfNotExists(JobPosition.FINANCE_ANALYST, SalaryLevel.JUNIOR, new BigDecimal("5200.00")));
-        structures.put("HR_ANALYST_JUNIOR", createSalaryStructureIfNotExists(JobPosition.HR_ANALYST, SalaryLevel.JUNIOR, new BigDecimal("5000.00")));
+        SALARY_SEED_LIST.forEach(seed -> {
+            structures.put(seed.key(), createSalaryStructureIfNotExists(seed.position(), seed.level(), seed.salary()));
+        });
 
         log.info("Seeder de Estruturas Salariais finalizado.");
         return structures;
@@ -1045,80 +1190,33 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Iniciando seeding de Funcionários...");
         Map<String, Employee> createdEmployees = new HashMap<>();
 
-        createdEmployees.put("ROBERTO", createEmployeeIfNotExists(
-                "Roberto",
-                "Gomes",
-                "roberto.gomes@instituicao.com",
-                JobPosition.COORDINATOR,
-                LocalDate.of(2022, 5, 20),
-                new DocumentDto("NATIONAL_ID", "33344455566"),
-                institution,
-                salaryStructures.get("COORD_LEAD"),
-                Set.of(RoleName.ROLE_MANAGER, RoleName.ROLE_EMPLOYEE)
-        ));
+        for (EmployeeSeed seed : EMPLOYEE_SEED_LIST) {
+            String salaryKey = seed.position().name() + "_" + seed.level().name();
+            SalaryStructure structure = salaryStructures.get(salaryKey);
 
-        createdEmployees.put("FINANCE", createEmployeeIfNotExists(
-                "Sarah",
-                "Luisa",
-                "sarah.luisa@instituicao.com",
-                JobPosition.FINANCE_ANALYST,
-                LocalDate.of(2024, 1, 20),
-                new DocumentDto("NATIONAL_ID", "30330330303"),
-                institution,
-                salaryStructures.get("FINANCE_ANALYST_MID"),
-                Set.of(RoleName.ROLE_FINANCE, RoleName.ROLE_EMPLOYEE)
-        ));
+            if (structure == null) {
+                log.warn("Estrutura salarial não encontrada para chave '{}'. Funcionário '{}' não será criado.", salaryKey, seed.email());
+                continue;
+            }
 
-        createdEmployees.put("LIBRARIAN_USER", createEmployeeIfNotExists(
-                "Beatriz",
-                "Costa",
-                "beatriz.costa@instituicao.com",
-                JobPosition.LIBRARIAN,
-                LocalDate.of(2024, 3, 15),
-                new DocumentDto("NATIONAL_ID", "10110110101"),
-                institution,
-                salaryStructures.get("LIBRARIAN_JUNIOR"),
-                Set.of(RoleName.ROLE_LIBRARIAN, RoleName.ROLE_EMPLOYEE)
-        ));
-        createdEmployees.put("TECH_USER", createEmployeeIfNotExists(
-                "Carlos",
-                "Andrade",
-                "carlos.andrade@instituicao.com",
-                JobPosition.TECHNICIAN,
-                LocalDate.of(2024, 2, 10),
-                new DocumentDto("NATIONAL_ID", "20220220202"),
-                institution,
-                salaryStructures.get("TECHNICIAN_JUNIOR"),
-                Set.of(RoleName.ROLE_TECHNICIAN, RoleName.ROLE_EMPLOYEE)
-        ));
+            Employee employee = createEmployeeIfNotExists(
+                    seed.firstName(),
+                    seed.lastName(),
+                    seed.email(),
+                    seed.position(),
+                    seed.hiringDate(),
+                    new DocumentDto("NATIONAL_ID", seed.documentNumber()),
+                    institution,
+                    structure,
+                    seed.roles()
+            );
+        }
 
-        createdEmployees.put("HR_USER", createEmployeeIfNotExists(
-                "Fernanda",
-                "Lima",
-                "fernanda.lima@instituicao.com",
-                JobPosition.HR_ANALYST,
-                LocalDate.of(2024, 1, 20),
-                new DocumentDto("NATIONAL_ID", "30310330303"),
-                institution,
-                salaryStructures.get("HR_ANALYST_MID"),
-                Set.of(RoleName.ROLE_HR_ANALYST, RoleName.ROLE_EMPLOYEE)
-        ));
 
-        createdEmployees.put("ANA", createEmployeeIfNotExists(
-                "Ana",
-                "Pereira",
-                "ana.pereira@instituicao.com",
-                JobPosition.SECRETARY,
-                LocalDate.of(2023, 1, 10),
-                new DocumentDto("NATIONAL_ID", "77788899900"),
-                institution,
-                salaryStructures.get("SECRETARY_JUNIOR"),
-                Set.of(RoleName.ROLE_EMPLOYEE)
-        ));
-
-        log.info("Seeding de Funcionários finalizado.");
+        log.info("Seeding de Funcionários finalizado. Total: {}", createdEmployees.size());
         return createdEmployees;
     }
+
 
     private Employee createEmployeeIfNotExists(String firstName, String lastName, String email, JobPosition position, LocalDate hiringDate, DocumentDto document, Institution institution, SalaryStructure salaryStructure, Set<RoleName> roles) {
         Optional<Person> existingPerson = personRepository.findByEmail(email);
@@ -1129,6 +1227,8 @@ public class DataSeeder implements CommandLineRunner {
             log.warn("Uma pessoa com o e-mail {} já existe, mas não é um funcionário. Nenhum funcionário foi criado.", email);
             return null;
         }
+        log.info("SEEDER: Tentando criar '{}' com as roles: {}", email, roles);
+        System.out.println("SEEDER: tentando criar '" + email + "' com as roles: " + roles);
 
         log.info("Criando funcionário de exemplo: {} {}...", firstName, lastName);
 
@@ -1153,6 +1253,8 @@ public class DataSeeder implements CommandLineRunner {
 
         } catch (Exception e) {
             log.error("Erro ao criar o funcionário de exemplo '{}': {}", email, e.getMessage());
+            log.error("Seeder: ERRO ao criar '{}': {}", email, e.getMessage());
+            System.out.println("Erro ao criar o funcionário de exemplo " + email + e.getMessage());
             return null;
         }
     }

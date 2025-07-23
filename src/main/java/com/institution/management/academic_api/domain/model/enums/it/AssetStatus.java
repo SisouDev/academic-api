@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 public enum AssetStatus {
     IN_STOCK("In stock"),
     IN_USE("In use"),
-    IN_REPAIR("In repair"),
-    RETIRED("Retired");
+    IN_MAINTENANCE("In Maintenance"),
+    DISPOSED("Disposed");
 
     private final String displayName;
 

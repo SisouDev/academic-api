@@ -1,12 +1,10 @@
 package com.institution.management.academic_api.application.mapper.simple.calendar;
 
-import com.institution.management.academic_api.application.dto.calendar.CalendarEventDetailsDto;
-import com.institution.management.academic_api.application.dto.calendar.CalendarEventSummaryDto;
-import com.institution.management.academic_api.application.dto.calendar.CreateCalendarEventRequestDto;
-import com.institution.management.academic_api.application.dto.calendar.UpdateCalendarEventRequestDto;
+import com.institution.management.academic_api.application.dto.calendar.*;
 import com.institution.management.academic_api.application.mapper.simple.academic.DepartmentMapper;
 import com.institution.management.academic_api.domain.model.entities.calendar.CalendarEvent;
 import com.institution.management.academic_api.domain.model.enums.announcement.AnnouncementScope;
+import com.institution.management.academic_api.application.dto.dashboard.student.CalendarEventInfo;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = {DepartmentMapper.class})
@@ -24,6 +22,9 @@ public interface CalendarEventMapper {
     @Mapping(target = "sourceEntityId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     CalendarEvent toEntity(CreateCalendarEventRequestDto dto);
+
+    @Mapping(target = "type", source = "type.displayName")
+    CalendarEventInfo toInfo(CalendarEvent event);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)

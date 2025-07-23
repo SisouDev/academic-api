@@ -30,6 +30,10 @@ public class PurchaseOrder {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchase_request_id", unique = true)
+    private PurchaseRequest purchaseRequest;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 

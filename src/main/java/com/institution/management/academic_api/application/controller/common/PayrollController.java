@@ -22,7 +22,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping("/api/v1/payroll")
 @RequiredArgsConstructor
 @Tag(name = "Payroll", description = "Endpoints para gerenciamento da Folha de Pagamento")
-@PreAuthorize("hasAnyRole('FINANCE', 'ADMIN')")
+@PreAuthorize("hasAnyRole('FINANCE_ASSISTANT', 'FINANCE_MANAGER', 'ADMIN')")
 public class PayrollController {
 
     private final PayrollService payrollService;

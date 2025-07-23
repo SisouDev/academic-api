@@ -3,22 +3,22 @@ package com.institution.management.academic_api.application.controller.employee;
 import com.institution.management.academic_api.application.controller.institution.InstitutionController;
 import com.institution.management.academic_api.application.dto.common.PersonResponseDto;
 import com.institution.management.academic_api.application.dto.employee.CreateEmployeeRequestDto;
-import com.institution.management.academic_api.application.dto.employee.EmployeeListDto;
 import com.institution.management.academic_api.application.dto.employee.EmployeeResponseDto;
+import com.institution.management.academic_api.application.dto.employee.StaffListDto;
 import com.institution.management.academic_api.application.dto.employee.UpdateEmployeeRequestDto;
 import com.institution.management.academic_api.domain.service.employee.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -61,22 +61,19 @@ public class EmployeeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_ANALYST', 'FINANCE')")
-    @Operation(summary = "Lista todos os funcionários com paginação e filtro")
-    public ResponseEntity<PagedModel<EntityModel<EmployeeListDto>>> getAllEmployees(
-            @RequestParam(required = false) Long institutionId,
-            @RequestParam(required = false) String searchTerm,
-            Pageable pageable,
-            PagedResourcesAssembler<EmployeeListDto> assembler
-    ) {
-        Page<EmployeeListDto> employeesPage = employeeService.findPaginatedSearchVersion(institutionId, searchTerm, pageable);
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_ANALYST', 'FINANCE_ASSISTANT', 'FINANCE_MANAGER')")
+    @Operation(summary = "Lista todos os funcionários e professores com filtro")
+    public ResponseEntity<CollectionModel<EntityModel<StaffListDto>>> getAllStaff(
+            @RequestParam(required = false) String searchTerm) {
 
-        PagedModel<EntityModel<EmployeeListDto>> pagedModel = assembler.toModel(employeesPage,
-                employee -> EntityModel.of(employee,
-                        linkTo(methodOn(EmployeeController.class).findById(employee.id())).withSelfRel()
-                )
-        );
+        List<StaffListDto> staffList = employeeService.findAllStaff(searchTerm);
 
-        return ResponseEntity.ok(pagedModel);
+        List<EntityModel<StaffListDto>> resources = staffList.stream()
+                .map(staff -> EntityModel.of(staff,
+                        linkTo(methodOn(EmployeeController.class).findById(staff.id())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(CollectionModel.of(resources,
+                linkTo(methodOn(EmployeeController.class).getAllStaff(searchTerm)).withSelfRel()));
     }
 }

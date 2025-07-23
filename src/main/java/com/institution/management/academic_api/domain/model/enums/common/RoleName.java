@@ -8,13 +8,16 @@ import java.util.stream.Stream;
 public enum RoleName {
     ROLE_ADMIN("Admin"),
     ROLE_TEACHER("Teacher"),
+    ROLE_SECRETARY("Secretary"),
     ROLE_STUDENT("Student"),
     ROLE_USER("User"),
-    ROLE_FINANCE("Finance"),
+    ROLE_COORDINATOR("Coordinator"),
+    ROLE_FINANCE_MANAGER("Finance"),
     ROLE_EMPLOYEE("Employee"),
     ROLE_MANAGER("Manager"),
     ROLE_TECHNICIAN("Technician"),
     ROLE_HR_ANALYST("HR Analyst"),
+    ROLE_FINANCE_ASSISTANT("Finance Assistant"),
     ROLE_LIBRARIAN("Librarian");
 
     private final String displayName;

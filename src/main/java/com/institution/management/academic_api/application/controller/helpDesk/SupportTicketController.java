@@ -3,8 +3,11 @@ package com.institution.management.academic_api.application.controller.helpDesk;
 import com.institution.management.academic_api.application.dto.helpDesk.CreateSupportTicketRequestDto;
 import com.institution.management.academic_api.application.dto.helpDesk.SupportTicketDetailsDto;
 import com.institution.management.academic_api.application.dto.helpDesk.UpdateSupportTicketRequestDto;
+import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
+import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.service.helpDesk.SupportTicketService;
+import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class SupportTicketController {
 
     private final SupportTicketService ticketService;
+    private final PersonRepository personRepository;
 
     @PostMapping
     @Operation(summary = "Abre um novo chamado de suporte")
@@ -76,7 +80,11 @@ public class SupportTicketController {
     public ResponseEntity<List<EntityModel<SupportTicketDetailsDto>>> findMyTickets() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        List<SupportTicketDetailsDto> tickets = List.of();
+
+        Person requester = personRepository.findByUser_Login(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Pessoa não encontrada para o usuário logado: " + userEmail));
+
+        List<SupportTicketDetailsDto> tickets = ticketService.findByRequester(requester.getId());
 
         List<EntityModel<SupportTicketDetailsDto>> resources = tickets.stream()
                 .map(ticket -> EntityModel.of(ticket,

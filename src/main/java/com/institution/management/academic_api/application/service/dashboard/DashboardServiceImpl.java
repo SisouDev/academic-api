@@ -10,6 +10,10 @@ import com.institution.management.academic_api.application.dto.dashboard.student
 import com.institution.management.academic_api.application.dto.dashboard.teacher.TeacherDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.teacher.UpcomingTaskInfo;
 import com.institution.management.academic_api.application.dto.dashboard.teacher.WorkloadSummary;
+import com.institution.management.academic_api.application.dto.request.InternalRequestSummaryDto;
+import com.institution.management.academic_api.application.mapper.simple.calendar.CalendarEventMapper;
+import com.institution.management.academic_api.application.mapper.simple.request.InternalRequestMapper;
+import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.calendar.CalendarEvent;
 import com.institution.management.academic_api.domain.model.entities.course.CourseSection;
 import com.institution.management.academic_api.domain.model.entities.employee.Employee;
@@ -29,6 +33,7 @@ import com.institution.management.academic_api.domain.model.enums.financial.Tran
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import com.institution.management.academic_api.domain.model.enums.humanResources.LeaveRequestStatus;
 import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
+import com.institution.management.academic_api.domain.model.enums.request.RequestStatus;
 import com.institution.management.academic_api.domain.model.enums.student.EnrollmentStatus;
 import com.institution.management.academic_api.domain.model.enums.tasks.TaskStatus;
 import com.institution.management.academic_api.domain.repository.announcement.AnnouncementRepository;
@@ -44,6 +49,7 @@ import com.institution.management.academic_api.domain.repository.helpDesk.Suppor
 import com.institution.management.academic_api.domain.repository.humanResources.LeaveRequestRepository;
 import com.institution.management.academic_api.domain.repository.it.AssetRepository;
 import com.institution.management.academic_api.domain.repository.library.LoanRepository;
+import com.institution.management.academic_api.domain.repository.request.InternalRequestRepository;
 import com.institution.management.academic_api.domain.repository.student.AssessmentDefinitionRepository;
 import com.institution.management.academic_api.domain.repository.student.AssessmentRepository;
 import com.institution.management.academic_api.domain.repository.student.AttendanceRecordRepository;
@@ -59,6 +65,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.institution.management.academic_api.application.dto.dashboard.student.CalendarEventInfo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -94,6 +101,9 @@ public class DashboardServiceImpl implements DashboardService {
     private final FinancialTransactionRepository financialTransactionRepository;
     private final PayrollRecordRepository payrollRecordRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final InternalRequestRepository internalRequestRepository;
+    private final InternalRequestMapper internalRequestMapper;
+    private final CalendarEventMapper calendarEventMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -132,10 +142,20 @@ public class DashboardServiceImpl implements DashboardService {
             log.info("Usuário é STUDENT, retornando StudentDashboardDto.");
             return getStudentDashboard(user);
         }
-        if (roles.contains("ROLE_FINANCE")){
+        if (roles.contains("ROLE_FINANCE_MANAGER")){
             log.info("Usuário é FINANCE, retornando FinanceDashboardDto.");
             return getFinanceDashboard(user);
         }
+        if (roles.contains("ROLE_FINANCE_ASSISTANT")){
+            log.info("Usuário é FINANCE ASSISTANT, retornando FinanceDashboardDto.");
+            return getFinanceDashboard(user);
+        }
+
+        if (roles.contains("ROLE_SECRETARY")){
+            log.info("Usuário é Secretário(a), retornando SecretaryDashboardDto.");
+            return getSecretaryDashboard(user);
+        }
+
         if (roles.contains("ROLE_EMPLOYEE")) {
             log.info("Usuário é EMPLOYEE genérico, retornando EmployeeDashboardDto.");
             return getEmployeeDashboard(user);
@@ -423,6 +443,48 @@ public class DashboardServiceImpl implements DashboardService {
                 payable,
                 pendingPayrolls,
                 pendingPOs
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SecretaryDashboardDto getSecretaryDashboard(User user) {
+        CommonEmployeeData commonData = getCommonEmployeeData(user);
+        Employee employee = (Employee) user.getPerson();
+        Department department = employee.getDepartment();
+
+        if (department == null) {
+            throw new IllegalStateException("Secretário(a) não está associado(a) a um departamento.");
+        }
+
+        long pendingRequests = internalRequestRepository.countByTargetDepartmentAndStatus(department, RequestStatus.PENDING);
+
+        List<InternalRequestSummaryDto> recentRequests = internalRequestRepository
+                .findTop5ByTargetDepartmentAndStatusOrderByCreatedAtDesc(department, RequestStatus.PENDING)
+                .stream()
+                .map(internalRequestMapper::toSummaryDto)
+                .collect(Collectors.toList());
+
+        List<CalendarEvent> upcomingEvents = calendarEventRepository.findUpcomingEvents(
+                AnnouncementScope.INSTITUTION,
+                department,
+                LocalDateTime.now(),
+                PageRequest.of(0, 1)
+        );
+
+        CalendarEventInfo nextEvent = upcomingEvents.isEmpty()
+                ? null
+                : calendarEventMapper.toInfo(upcomingEvents.getFirst());
+
+
+        return new SecretaryDashboardDto(
+                commonData.unreadNotifications(),
+                commonData.pendingTasksCount(),
+                commonData.myOpenTasks(),
+                commonData.recentAnnouncements(),
+                pendingRequests,
+                recentRequests,
+                nextEvent
         );
     }
 }

@@ -7,6 +7,8 @@ import com.institution.management.academic_api.application.dto.institution.Insti
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface EmployeeService {
     EmployeeResponseDto createEmployee(CreateEmployeeRequestDto request);
 
@@ -23,4 +25,5 @@ public interface EmployeeService {
 
     Page<EmployeeListDto> findPaginatedSearchVersion(Long institutionId, String searchTerm, Pageable pageable);
 
+    List<StaffListDto> findAllStaff(String searchTerm);
 }

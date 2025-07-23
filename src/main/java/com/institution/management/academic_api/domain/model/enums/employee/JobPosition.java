@@ -14,7 +14,8 @@ public enum JobPosition {
     ASSISTANT("Assistant"),
     HR_ANALYST("HR Analyst"),
     MANAGER("Manager"),
-    FINANCE_ANALYST("Finance Analyst"),
+    FINANCE_MANAGER("Finance Manager"),
+    FINANCE_ASSISTANT("Finance Assistant"),
     TEACHER("Teacher");
 
     private final String displayName;

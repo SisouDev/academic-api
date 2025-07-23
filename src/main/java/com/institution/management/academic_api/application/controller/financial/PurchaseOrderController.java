@@ -46,7 +46,7 @@ public class PurchaseOrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('FINANCE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('FINANCE_ASSISTANT', 'FINANCE_MANAGER', 'ADMIN')")
     @Operation(summary = "Busca uma ordem de compra pelo ID")
     public ResponseEntity<EntityModel<PurchaseOrderDto>> findById(@PathVariable Long id) {
         PurchaseOrderDto po = poService.findById(id);
@@ -56,7 +56,7 @@ public class PurchaseOrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('FINANCE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('FINANCE_ASSISTANT', 'FINANCE_MANAGER', 'ADMIN')")
     @Operation(summary = "Lista todas as ordens de compra com filtros")
     public ResponseEntity<PagedModel<EntityModel<PurchaseOrderDto>>> findAll(@RequestParam(required = false) OrderStatus status, Pageable pageable) {
         Page<PurchaseOrderDto> page = poService.findAll(status, pageable);
@@ -65,7 +65,7 @@ public class PurchaseOrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('FINANCE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('FINANCE_MANAGER', 'ADMIN')")
     @Operation(summary = "Atualiza o status de uma ordem de compra (aprovar, pagar, etc.)")
     public ResponseEntity<Void> updateStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         poService.updateStatus(id, status);

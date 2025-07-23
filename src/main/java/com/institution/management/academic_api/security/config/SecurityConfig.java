@@ -37,35 +37,30 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/uploads/**", "/ws/**").permitAll()
 
-                        // 2. REGRAS ESPECÍFICAS POR ENDPOINT (As mais importantes vêm aqui)
-                        // RH & Financeiro
-                        .requestMatchers("/api/v1/employees/**").hasAnyRole("ADMIN", "HR_ANALYST", "FINANCE")
-                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("HR_ANALYST", "MANAGER", "ADMIN")
+                        // 2. REGRAS DE GESTÃO PARA RH E FINANCEIRO
+                        .requestMatchers("/api/v1/employees/**").hasAnyRole("ADMIN", "HR_ANALYST", "FINANCE_MANAGER", "FINANCE_ASSISTANT")
+                        .requestMatchers("/api/v1/hr/**").hasAnyRole("ADMIN", "HR_ANALYST")
+                        .requestMatchers("/api/v1/payroll/**").hasAnyRole("ADMIN", "FINANCE_MANAGER", "FINANCE_ASSISTANT")
+                        .requestMatchers("/api/v1/purchase-orders/**").hasAnyRole("ADMIN", "FINANCE_MANAGER", "FINANCE_ASSISTANT")
+                        .requestMatchers("/api/v1/purchase-requests/**").hasAnyRole("ADMIN", "FINANCE_MANAGER", "FINANCE_ASSISTANT")
+                        .requestMatchers("/api/v1/scholarships/**").hasAnyRole("ADMIN", "FINANCE_MANAGER")
+                        .requestMatchers("/api/v1/salary-structures/**").hasAnyRole("ADMIN", "HR_ANALYST")
 
-                        // Docente
-                        .requestMatchers("/api/v1/assessments/**").hasRole("TEACHER")
-                        .requestMatchers("/api/v1/announcements/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers("/api/v1/lessons/**").hasRole("TEACHER")
-                        .requestMatchers("/api/v1/lesson-contents/**").hasRole("TEACHER")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/enrollments/attendance", "/api/v1/teacher-notes").hasRole("TEACHER")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/teachers/{id}/status").hasRole("TEACHER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/teacher-notes/**").hasRole("TEACHER")
-                        .requestMatchers("/api/v1/assessment-definitions/**").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers("/api/v1/lesson-plans/**").hasAnyRole("TEACHER", "ADMIN")
+                        // 3. REGRAS DE GESTÃO PARA OUTROS CARGOS
+                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("ADMIN", "HR_ANALYST", "MANAGER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/support-tickets/**").hasAnyRole("ADMIN", "TECHNICIAN")
+                        .requestMatchers("/api/v1/lessons/**", "/api/v1/lesson-contents/**", "/api/v1/lesson-plans/**", "/api/v1/gradebook/**").hasRole("TEACHER")
 
-                        // TI
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/support-tickets/**").hasAnyRole("TECHNICIAN", "ADMIN")
+                        .requestMatchers("/api/v1/it/**").hasAnyRole("ADMIN", "TECHNICIAN", "MANAGER")
 
-                        // 3. REGRAS GENÉRICAS PARA USUÁRIOS AUTENTICADOS (Menos específicas)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/leave-requests").authenticated()
+
+                        // 4. REGRAS GENÉRICAS PARA USUÁRIOS AUTENTICADOS (Qualquer um logado pode fazer)
                         .requestMatchers(HttpMethod.POST, "/api/v1/support-tickets").authenticated()
-                        .requestMatchers("/api/v1/meetings/**").authenticated()
-                        .requestMatchers("/api/v1/internal-requests/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/leave-requests").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/purchase-requests").authenticated() // Permitindo qualquer funcionário criar a requisição simples
+                        .requestMatchers(HttpMethod.GET).authenticated() // Permite que todos os GETs passem, a segurança será no @PreAuthorize do controller
 
-                        // 4. REGRA GENÉRICA FINAL PARA QUALQUER GET
-                        .requestMatchers(HttpMethod.GET).authenticated()
-
-                        // 5. REGRA DE FALLBACK (Qualquer outra coisa não permitida acima, só para ADMIN)
+                        // 5. REGRA FINAL DE FALLBACK (Qualquer outra coisa não permitida acima, só para ADMIN)
                         .anyRequest().hasRole("ADMIN")
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

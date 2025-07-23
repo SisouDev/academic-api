@@ -25,7 +25,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping("/api/v1/scholarships")
 @RequiredArgsConstructor
 @Tag(name = "Scholarships", description = "Endpoints para gerenciamento de bolsas de estudo")
-@PreAuthorize("hasAnyRole('FINANCE', 'ADMIN')")
+@PreAuthorize("hasAnyRole('FINANCE_ASSISTANT', 'FINANCE_MANAGER', 'ADMIN')")
 public class ScholarshipController {
 
     private final ScholarshipService scholarshipService;

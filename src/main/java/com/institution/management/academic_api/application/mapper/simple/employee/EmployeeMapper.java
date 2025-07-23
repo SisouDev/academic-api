@@ -71,6 +71,11 @@ public interface EmployeeMapper {
     @Mapping(target = "baseSalary", source = "salaryStructure.baseSalary")
     EmployeeListDto toListDto(Employee employee);
 
+    @Mapping(target = "fullName", expression = "java(employee.getFirstName() + \" \" + employee.getLastName())")
+    @Mapping(target = "positionOrDegree", source = "jobPosition.displayName")
+    @Mapping(target = "baseSalary", source = "salaryStructure.baseSalary")
+    StaffListDto toStaffListDto(Employee employee);
+
     @Named("calculateYearsOfService")
     default long calculateYearsOfService(LocalDate hiringDate) {
         if (hiringDate == null) {

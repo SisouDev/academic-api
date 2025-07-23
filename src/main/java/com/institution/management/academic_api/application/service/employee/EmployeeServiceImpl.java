@@ -8,6 +8,7 @@ import com.institution.management.academic_api.application.dto.user.CreateUserRe
 import com.institution.management.academic_api.application.mapper.simple.common.PersonMapper;
 import com.institution.management.academic_api.application.mapper.simple.employee.EmployeeMapper;
 import com.institution.management.academic_api.application.mapper.simple.institution.InstitutionAdminMapper;
+import com.institution.management.academic_api.application.mapper.simple.teacher.TeacherMapper;
 import com.institution.management.academic_api.application.notifiers.employee.EmployeeNotifier;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
@@ -17,6 +18,7 @@ import com.institution.management.academic_api.domain.model.entities.employee.Em
 import com.institution.management.academic_api.domain.model.entities.institution.Institution;
 import com.institution.management.academic_api.domain.model.entities.institution.InstitutionAdmin;
 import com.institution.management.academic_api.domain.model.entities.specification.EmployeeSpecification;
+import com.institution.management.academic_api.domain.model.entities.teacher.Teacher;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.common.RoleName;
@@ -29,6 +31,7 @@ import com.institution.management.academic_api.domain.repository.common.SalarySt
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionAdminRepository;
 import com.institution.management.academic_api.domain.repository.institution.InstitutionRepository;
+import com.institution.management.academic_api.domain.repository.teacher.TeacherRepository;
 import com.institution.management.academic_api.domain.repository.user.UserRepository;
 import com.institution.management.academic_api.domain.service.employee.EmployeeService;
 import com.institution.management.academic_api.domain.service.user.UserService;
@@ -51,9 +54,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,16 +75,22 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final EmployeeNotifier employeeNotifier;
     private final SalaryStructureRepository salaryStructureRepository;
+    private final TeacherRepository teacherRepository;
+    private final TeacherMapper teacherMapper;
 
 
     @Override
     @Transactional
     @LogActivity("Criou um novo funcionário.")
     public EmployeeResponseDto createEmployee(CreateEmployeeRequestDto request) {
+        log.info("SERVICE: Iniciando criação de funcionário para: {}", request.email());
+        System.out.println("SERVICE: Iniciando criação de funcionário para: " + request.email() + "");
         Institution institution = findInstitutionByIdOrThrow(request.institutionId());
         if (employeeRepository.existsEmployeeByEmail(request.email())){
             throw new EmailAlreadyExists("Email already in use: " + request.email());
         }
+
+        // 1. Cria a entidade base
         JobPosition position = JobPosition.fromDisplayName(request.jobPosition());
         Employee newEmployee = employeeMapper.toEntity(request);
         newEmployee.setInstitution(institution);
@@ -91,49 +98,53 @@ public class EmployeeServiceImpl implements EmployeeService {
         newEmployee.setHiringDate(request.hiringDate());
         newEmployee.setStatus(PersonStatus.ACTIVE);
         newEmployee.setCreatedAt(LocalDateTime.now());
-        SalaryLevel defaultLevel = SalaryLevel.JUNIOR;
+
+        // 2. Lógica de Salário AUTOMÁTICA
+        SalaryLevel defaultLevel = determineDefaultLevelFor(position);
         SalaryStructure salaryStructure = salaryStructureRepository.findByJobPositionAndLevel(position, defaultLevel)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Estrutura salarial para o cargo " + position + " e nível " + defaultLevel + " não encontrada."
                 ));
         newEmployee.setSalaryStructure(salaryStructure);
+
+        // 3. Salva a entidade Employee
         Employee savedEmployee = employeeRepository.save(newEmployee);
+        log.info("SERVICE: Entidade Employee {} salva.", savedEmployee.getEmail());
+
+        // 4. Lógica de criação do Usuário com as ROLES corretas
         String defaultPassword = savedEmployee.getDocument().getNumber();
 
         Set<Role> assignedRoles = new HashSet<>();
+        Set<Long> roleIds = assignedRoles.stream().map(Role::getId).collect(Collectors.toSet());
 
-        roleRepository.findByName(RoleName.ROLE_EMPLOYEE)
-                .ifPresent(assignedRoles::add);
-
+        log.info("SERVICE (Employee): Roles encontradas no banco: {}", assignedRoles.stream().map(Role::getName).collect(Collectors.toSet()));
+        log.info("SERVICE (Employee): Enviando IDs de roles para o UserService: {}", roleIds);
         if (request.roles() != null && !request.roles().isEmpty()) {
             request.roles().forEach(roleName ->
-                    roleRepository.findByName(roleName)
-                            .ifPresentOrElse(
-                                    assignedRoles::add,
-                                    () -> log.warn("Role '{}' não encontrada no banco de dados e não será atribuída.", roleName)
-                            )
+                    roleRepository.findByName(roleName).ifPresent(assignedRoles::add)
             );
         }
 
-        Set<Long> roleIds = assignedRoles.stream()
-                .map(Role::getId)
-                .collect(Collectors.toSet());
+        roleRepository.findByName(RoleName.ROLE_EMPLOYEE).ifPresent(assignedRoles::add);
 
-        if (roleIds.isEmpty()) {
-            throw new InvalidRoleAssignmentException("Nenhum papel válido foi encontrado para ser atribuído ao usuário.");
-        }
-
+        log.info("SERVICE: Atribuindo roles {} para {}", assignedRoles.stream().map(Role::getName).collect(Collectors.toSet()), savedEmployee.getEmail());
         CreateUserRequestDto userRequest = new CreateUserRequestDto(
-                savedEmployee.getEmail(),
-                defaultPassword,
-                savedEmployee.getId(),
-                roleIds
+                savedEmployee.getEmail(), defaultPassword, savedEmployee.getId(),
+                assignedRoles.stream().map(Role::getId).collect(Collectors.toSet())
         );
-
         userService.create(userRequest);
 
         employeeNotifier.notifyAdminOfNewEmployee(savedEmployee);
         return employeeMapper.toDto(savedEmployee);
+    }
+
+    private SalaryLevel determineDefaultLevelFor(JobPosition position) {
+        return switch (position) {
+            case DIRECTOR, MANAGER, FINANCE_MANAGER -> SalaryLevel.LEAD;
+            case COORDINATOR -> SalaryLevel.SENIOR;
+            case HR_ANALYST, FINANCE_ASSISTANT -> SalaryLevel.MID_LEVEL;
+            default -> SalaryLevel.JUNIOR;
+        };
     }
 
     @Override
@@ -202,6 +213,29 @@ public class EmployeeServiceImpl implements EmployeeService {
         Specification<Employee> spec = EmployeeSpecification.filterBy(searchTerm, institutionId);
         Page<Employee> employeePage = employeeRepository.findAll(spec, pageable);
         return employeePage.map(employeeMapper::toListDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StaffListDto> findAllStaff(String searchTerm) {
+        List<Employee> employees = employeeRepository.findAll();
+        List<Teacher> teachers = teacherRepository.findAll();
+
+        List<StaffListDto> staffList = new ArrayList<>();
+        employees.stream().map(employeeMapper::toStaffListDto).forEach(staffList::add);
+        teachers.stream().map(teacherMapper::toStaffListDto).forEach(staffList::add);
+
+        staffList.sort(Comparator.comparing(StaffListDto::fullName));
+
+        if (searchTerm != null && !searchTerm.isBlank()) {
+            String lowerCaseSearch = searchTerm.toLowerCase();
+            return staffList.stream()
+                    .filter(staff -> staff.fullName().toLowerCase().contains(lowerCaseSearch) ||
+                            staff.positionOrDegree().toLowerCase().contains(lowerCaseSearch))
+                    .collect(Collectors.toList());
+        }
+
+        return staffList;
     }
 
     @Override

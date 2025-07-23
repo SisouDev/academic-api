@@ -92,7 +92,7 @@ public class DashboardController {
     }
 
     @GetMapping("/finance")
-    @PreAuthorize("hasRole('FINANCE')")
+    @PreAuthorize("hasAnyRole('FINANCE_ASSISTANT', 'FINANCE_MANAGER')")
     @Operation(summary = "Busca os dados do dashboard específico para o setor Financeiro")
     public ResponseEntity<EntityModel<FinanceDashboardDto>> getFinanceDashboard(Authentication authentication) {
         User user = (User) authentication.getPrincipal();

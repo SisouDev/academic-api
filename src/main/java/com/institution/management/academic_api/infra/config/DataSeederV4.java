@@ -35,7 +35,7 @@ public class DataSeederV4 {
 //        createRoleIfNotExists(RoleName.ROLE_LIBRARIAN);
 //        createRoleIfNotExists(RoleName.ROLE_TECHNICIAN);
 //        createRoleIfNotExists(RoleName.ROLE_HR_ANALYST);
-//        createRoleIfNotExists(RoleName.ROLE_FINANCE);
+//        createRoleIfNotExists(RoleName.ROLE_FINANCE_MANAGER);
 //    }
 //
 //    private void createRoleIfNotExists(RoleName roleName) {
@@ -83,7 +83,7 @@ public class DataSeederV4 {
 //                "Sarah",
 //                "Luisa",
 //                "sarah.luisa@instituicao.com",
-//                JobPosition.FINANCE_ANALYST,
+//                JobPosition.FINANCE_MANAGER,
 //                LocalDate.of(2024, 1, 20),
 //                new DocumentDto("NATIONAL_ID", "30330330303"),
 //                institution
@@ -116,8 +116,8 @@ public class DataSeederV4 {
 //            case HR_ANALYST:
 //                rolesForEmployee.add(RoleName.ROLE_HR_ANALYST);
 //                break;
-//            case FINANCE_ANALYST:
-//                rolesForEmployee.add(RoleName.ROLE_FINANCE);
+//            case FINANCE_MANAGER:
+//                rolesForEmployee.add(RoleName.ROLE_FINANCE_MANAGER);
 //                break;
 //        }
 //

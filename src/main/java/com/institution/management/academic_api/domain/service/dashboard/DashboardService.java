@@ -1,10 +1,7 @@
 package com.institution.management.academic_api.domain.service.dashboard;
 
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.FinanceDashboardDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.HrAnalystDashboardDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.LibrarianDashboardDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.TechnicianDashboardDto;
+import com.institution.management.academic_api.application.dto.dashboard.employee.*;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,5 +13,5 @@ public interface DashboardService {
     TechnicianDashboardDto getTechnicianDashboard(User user);
     LibrarianDashboardDto getLibrarianDashboard(User user);
     FinanceDashboardDto getFinanceDashboard(User user);
-
+    SecretaryDashboardDto getSecretaryDashboard(User user);
 }

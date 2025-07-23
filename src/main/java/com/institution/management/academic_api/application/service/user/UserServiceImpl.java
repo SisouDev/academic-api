@@ -30,6 +30,7 @@ import com.institution.management.academic_api.exception.type.user.UserAlreadyEx
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -66,6 +68,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @LogActivity("Cadastrou um novo usuário.")
     public UserResponseDto create(CreateUserRequestDto request) {
+        log.info("SERVICE (User): Recebido pedido para criar usuário {} com IDs de roles: {}", request.login(), request.roleIds());
+
         if (userRepository.existsByLogin(request.login())) {
             throw new UserAlreadyExistsException("Login already in use: " + request.login());
         }
@@ -73,6 +77,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Person not found to associate with user. ID: " + request.personId()));
 
         Set<Role> roles = new HashSet<>(roleRepository.findAllById(request.roleIds()));
+        log.info("SERVICE (User): Roles encontradas no banco a partir dos IDs: {}", roles.stream().map(Role::getName).collect(Collectors.toSet()));
+
         if (roles.isEmpty()) {
             throw new InvalidRoleAssignmentException("No valid Role was provided for the user.");
         }
@@ -87,6 +93,8 @@ public class UserServiceImpl implements UserService {
         newUser.setPasswordHash(hashedPassword);
 
         User savedUser = userRepository.save(newUser);
+        log.info("SERVICE (User): Usuário {} salvo com sucesso no banco de dados.", savedUser.getLogin());
+
         userNotifier.notifyUserWelcome(savedUser);
 
         return userMapper.toResponseDto(savedUser);

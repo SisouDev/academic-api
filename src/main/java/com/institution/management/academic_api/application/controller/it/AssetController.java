@@ -1,10 +1,12 @@
 package com.institution.management.academic_api.application.controller.it;
 
 import com.institution.management.academic_api.application.dto.it.AssetDetailsDto;
+import com.institution.management.academic_api.application.dto.it.CreateAssetRequestDto;
 import com.institution.management.academic_api.domain.model.enums.it.AssetStatus;
 import com.institution.management.academic_api.domain.service.it.AssetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,10 +15,12 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/it/assets")
@@ -37,6 +41,28 @@ public class AssetController {
 
         Page<AssetDetailsDto> assetsPage = assetService.findAll(status, assignedToId, pageable);
         return ResponseEntity.ok(assembler.toModel(assetsPage));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
+    @Operation(summary = "Registra um novo ativo de TI no sistema")
+    public ResponseEntity<EntityModel<AssetDetailsDto>> create(@Valid @RequestBody CreateAssetRequestDto request) {
+        AssetDetailsDto createdAsset = assetService.create(request);
+
+        EntityModel<AssetDetailsDto> resource = EntityModel.of(createdAsset,
+                linkTo(methodOn(AssetController.class).findById(createdAsset.id())).withSelfRel());
+
+        return ResponseEntity.created(URI.create(resource.getRequiredLink("self").getHref())).body(resource);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
+    @Operation(summary = "Busca um ativo de TI pelo ID")
+    public ResponseEntity<EntityModel<AssetDetailsDto>> findById(@PathVariable Long id) {
+        AssetDetailsDto asset = assetService.findById(id);
+        EntityModel<AssetDetailsDto> resource = EntityModel.of(asset,
+                linkTo(methodOn(AssetController.class).findById(id)).withSelfRel());
+        return ResponseEntity.ok(resource);
     }
 
 }
