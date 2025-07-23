@@ -20,6 +20,8 @@ import com.institution.management.academic_api.exception.type.common.EntityNotFo
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import com.institution.management.academic_api.infra.utils.HtmlSanitizerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,5 +123,17 @@ public class InternalRequestServiceImpl implements InternalRequestService {
         return requestRepository.findByRequesterId(requester.getId()).stream()
                 .map(requestMapper::toDetailsDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<InternalRequestDetailsDto> findAll(RequestStatus status, Pageable pageable) {
+        Page<InternalRequest> page;
+        if (status != null) {
+            page = requestRepository.findAllByStatus(status, pageable);
+        } else {
+            page = requestRepository.findAll(pageable);
+        }
+        return page.map(requestMapper::toDetailsDto);
     }
 }

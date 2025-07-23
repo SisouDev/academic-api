@@ -48,6 +48,9 @@ public class SecurityConfig {
 
                         // 3. REGRAS DE GESTÃO PARA OUTROS CARGOS
                         .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("ADMIN", "HR_ANALYST", "MANAGER")
+                        .requestMatchers("/api/v1/internal-requests/**").hasAnyRole("ADMIN", "SECRETARY", "MANAGER")
+                        .requestMatchers("/api/v1/calendar/events/**").hasAnyRole("ADMIN", "SECRETARY", "MANAGER")
+
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/support-tickets/**").hasAnyRole("ADMIN", "TECHNICIAN")
                         .requestMatchers("/api/v1/lessons/**", "/api/v1/lesson-contents/**", "/api/v1/lesson-plans/**", "/api/v1/gradebook/**").hasRole("TEACHER")
 

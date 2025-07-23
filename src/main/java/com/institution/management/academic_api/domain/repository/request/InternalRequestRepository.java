@@ -3,6 +3,8 @@ package com.institution.management.academic_api.domain.repository.request;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.request.InternalRequest;
 import com.institution.management.academic_api.domain.model.enums.request.RequestStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,4 +21,6 @@ public interface InternalRequestRepository extends JpaRepository<InternalRequest
     long countByTargetDepartmentAndStatus(Department department, RequestStatus status);
 
     List<InternalRequest> findTop5ByTargetDepartmentAndStatusOrderByCreatedAtDesc(Department department, RequestStatus status);
+
+    Page<InternalRequest> findAllByStatus(RequestStatus status, Pageable pageable);
 }

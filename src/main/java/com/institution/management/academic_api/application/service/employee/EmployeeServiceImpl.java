@@ -90,7 +90,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new EmailAlreadyExists("Email already in use: " + request.email());
         }
 
-        // 1. Cria a entidade base
+        Department department = departmentRepository.findById(request.departmentId())
+                .orElseThrow(() -> new EntityNotFoundException("Departamento com ID " + request.departmentId() + " não encontrado."));
+
         JobPosition position = JobPosition.fromDisplayName(request.jobPosition());
         Employee newEmployee = employeeMapper.toEntity(request);
         newEmployee.setInstitution(institution);
@@ -98,8 +100,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         newEmployee.setHiringDate(request.hiringDate());
         newEmployee.setStatus(PersonStatus.ACTIVE);
         newEmployee.setCreatedAt(LocalDateTime.now());
+        newEmployee.setDepartment(department);
 
-        // 2. Lógica de Salário AUTOMÁTICA
         SalaryLevel defaultLevel = determineDefaultLevelFor(position);
         SalaryStructure salaryStructure = salaryStructureRepository.findByJobPositionAndLevel(position, defaultLevel)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -107,11 +109,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                 ));
         newEmployee.setSalaryStructure(salaryStructure);
 
-        // 3. Salva a entidade Employee
         Employee savedEmployee = employeeRepository.save(newEmployee);
         log.info("SERVICE: Entidade Employee {} salva.", savedEmployee.getEmail());
 
-        // 4. Lógica de criação do Usuário com as ROLES corretas
         String defaultPassword = savedEmployee.getDocument().getNumber();
 
         Set<Role> assignedRoles = new HashSet<>();

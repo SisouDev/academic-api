@@ -450,7 +450,8 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public SecretaryDashboardDto getSecretaryDashboard(User user) {
         CommonEmployeeData commonData = getCommonEmployeeData(user);
-        Employee employee = (Employee) user.getPerson();
+        Employee employee = employeeRepository.findById(user.getPerson().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Registro de Funcionário não encontrado para o usuário: " + user.getUsername()));
         Department department = employee.getDepartment();
 
         if (department == null) {

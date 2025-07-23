@@ -1,10 +1,7 @@
 package com.institution.management.academic_api.application.controller.dashboard;
 
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.FinanceDashboardDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.HrAnalystDashboardDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.LibrarianDashboardDto;
-import com.institution.management.academic_api.application.dto.dashboard.employee.TechnicianDashboardDto;
+import com.institution.management.academic_api.application.dto.dashboard.employee.*;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.service.dashboard.DashboardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -99,6 +96,17 @@ public class DashboardController {
         FinanceDashboardDto dashboardData = dashboardService.getFinanceDashboard(user);
         EntityModel<FinanceDashboardDto> resource = EntityModel.of(dashboardData,
                 linkTo(methodOn(DashboardController.class).getFinanceDashboard(authentication)).withSelfRel());
+        return ResponseEntity.ok(resource);
+    }
+
+    @GetMapping("/secretary")
+    @PreAuthorize("hasRole('SECRETARY')")
+    @Operation(summary = "Busca os dados do dashboard específico para Secretário(a)")
+    public ResponseEntity<EntityModel<SecretaryDashboardDto>> getSecretaryDashboard(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        SecretaryDashboardDto dashboardData = dashboardService.getSecretaryDashboard(user);
+        EntityModel<SecretaryDashboardDto> resource = EntityModel.of(dashboardData,
+                linkTo(methodOn(DashboardController.class).getSecretaryDashboard(authentication)).withSelfRel());
         return ResponseEntity.ok(resource);
     }
 }

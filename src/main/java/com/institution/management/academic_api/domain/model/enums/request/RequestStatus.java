@@ -10,6 +10,9 @@ public enum RequestStatus {
     IN_PROGRESS( "In progress"),
     COMPLETED( "Completed"),
     REJECTED( "Rejected"),
+    APPROVED_BY_ASSISTANT("Approved by assistant"),
+    REJECTED_BY_ASSISTANT("Rejected by assistant"),
+    PROCESSED("Processed"),
     CANCELLED("Cancelled");
 
     private final String displayName;

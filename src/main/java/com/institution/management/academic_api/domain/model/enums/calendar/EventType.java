@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 @Getter
 public enum EventType {
     MEETING("Meeting"),
+    ACADEMIC_EVENT("Academic Event"),
     DEADLINE("Deadline"),
     TRAINING("Training"),
     HOLIDAY("Holiday"),

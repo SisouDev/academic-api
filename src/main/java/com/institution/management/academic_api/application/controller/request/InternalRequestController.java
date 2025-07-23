@@ -3,14 +3,20 @@ package com.institution.management.academic_api.application.controller.request;
 import com.institution.management.academic_api.application.dto.request.CreateInternalRequestDto;
 import com.institution.management.academic_api.application.dto.request.InternalRequestDetailsDto;
 import com.institution.management.academic_api.application.dto.request.UpdateInternalRequestDto;
+import com.institution.management.academic_api.domain.model.enums.request.RequestStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
 import com.institution.management.academic_api.domain.service.request.InternalRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +36,8 @@ public class InternalRequestController {
 
     private final InternalRequestService requestService;
     private final PersonRepository personRepository;
+    private final PagedResourcesAssembler<InternalRequestDetailsDto> assembler;
+
 
     @PostMapping
     @Operation(summary = "Cria uma nova requisição interna")
@@ -82,5 +90,19 @@ public class InternalRequestController {
 
         return ResponseEntity.ok(CollectionModel.of(resources,
                 linkTo(methodOn(InternalRequestController.class).findMyRequests()).withSelfRel()));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SECRETARY', 'ADMIN')")
+    @Operation(summary = "Lista todas as requisições internas com filtro de status")
+    public ResponseEntity<PagedModel<EntityModel<InternalRequestDetailsDto>>> findAll(
+            @RequestParam(required = false) RequestStatus status,
+            Pageable pageable) {
+
+        Page<InternalRequestDetailsDto> page = requestService.findAll(status, pageable);
+
+        return ResponseEntity.ok(assembler.toModel(page,
+                request -> EntityModel.of(request,
+                        linkTo(methodOn(InternalRequestController.class).findById(request.id())).withSelfRel())));
     }
 }
