@@ -1,6 +1,7 @@
 package com.institution.management.academic_api.application.controller.dashboard;
 
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
+import com.institution.management.academic_api.application.dto.dashboard.director.DirectorDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.employee.*;
 import com.institution.management.academic_api.domain.model.entities.user.User;
 import com.institution.management.academic_api.domain.service.dashboard.DashboardService;
@@ -107,6 +108,20 @@ public class DashboardController {
         SecretaryDashboardDto dashboardData = dashboardService.getSecretaryDashboard(user);
         EntityModel<SecretaryDashboardDto> resource = EntityModel.of(dashboardData,
                 linkTo(methodOn(DashboardController.class).getSecretaryDashboard(authentication)).withSelfRel());
+        return ResponseEntity.ok(resource);
+    }
+
+    @GetMapping("/director")
+    @PreAuthorize("hasRole('DIRECTOR')")
+    @Operation(summary = "Busca os dados do dashboard estratégico para o Diretor")
+    public ResponseEntity<EntityModel<DirectorDashboardDto>> getDirectorDashboard(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        DirectorDashboardDto dashboardData = dashboardService.getDirectorDashboard(authenticatedUser);
+
+        EntityModel<DirectorDashboardDto> resource = EntityModel.of(dashboardData,
+                linkTo(methodOn(DashboardController.class).getDirectorDashboard(authentication)).withSelfRel()
+        );
+
         return ResponseEntity.ok(resource);
     }
 }

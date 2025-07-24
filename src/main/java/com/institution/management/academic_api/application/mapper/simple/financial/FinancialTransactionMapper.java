@@ -1,5 +1,6 @@
 package com.institution.management.academic_api.application.mapper.simple.financial;
 
+import com.institution.management.academic_api.application.dto.dashboard.director.TransactionDetailDto;
 import com.institution.management.academic_api.application.dto.financial.CreateFinancialTransactionRequestDto;
 import com.institution.management.academic_api.application.dto.financial.FinancialTransactionDetailsDto;
 import com.institution.management.academic_api.application.dto.financial.FinancialTransactionSummaryDto;
@@ -18,6 +19,10 @@ public interface FinancialTransactionMapper {
     @Mapping(target = "type", expression = "java(transaction.getType().getDisplayName())")
     FinancialTransactionSummaryDto toSummaryDto(FinancialTransaction transaction);
 
+    @Mapping(target = "transactionId", source = "id")
+    @Mapping(target = "personName", expression = "java(transaction.getPerson().getFirstName() + \" \" + transaction.getPerson().getLastName())")
+    @Mapping(target = "personEmail", source = "person.email")
+    TransactionDetailDto toDetailDto(FinancialTransaction transaction);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "person", ignore = true)

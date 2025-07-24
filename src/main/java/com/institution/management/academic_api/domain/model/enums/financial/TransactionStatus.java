@@ -9,7 +9,9 @@ public enum TransactionStatus {
     PENDING("Pending"),
     COMPLETED("Completed"),
     PAID("Paid"),
-    CANCELLED("Cancelled");
+    CANCELLED("Cancelled"),
+    FAILED("Failed"),
+    IN_DISPUTE("In dispute");
 
     private final String displayName;
 

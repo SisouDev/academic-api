@@ -23,4 +23,6 @@ public interface InternalRequestRepository extends JpaRepository<InternalRequest
     List<InternalRequest> findTop5ByTargetDepartmentAndStatusOrderByCreatedAtDesc(Department department, RequestStatus status);
 
     Page<InternalRequest> findAllByStatus(RequestStatus status, Pageable pageable);
+
+    long countByStatus(RequestStatus requestStatus);
 }

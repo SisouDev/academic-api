@@ -168,7 +168,8 @@ public class DataSeeder implements CommandLineRunner {
                 RoleName.ROLE_TECHNICIAN,
                 RoleName.ROLE_FINANCE_ASSISTANT,
                 RoleName.ROLE_COORDINATOR,
-                RoleName.ROLE_SECRETARY
+                RoleName.ROLE_SECRETARY,
+                RoleName.ROLE_DIRECTOR
         );
 
         for (RoleName roleName : allRoles) {
@@ -188,6 +189,12 @@ public class DataSeeder implements CommandLineRunner {
 
             new SalaryStructureSeed("ASSISTANT_JUNIOR", JobPosition.ASSISTANT, SalaryLevel.JUNIOR, new BigDecimal("2500.00")),
             new SalaryStructureSeed("ASSISTANT_MID", JobPosition.ASSISTANT, SalaryLevel.MID_LEVEL, new BigDecimal("3200.00")),
+
+            new SalaryStructureSeed("DIRECTOR_LEAD", JobPosition.DIRECTOR, SalaryLevel.LEAD, new BigDecimal("15000.00")),
+            new SalaryStructureSeed("DIRECTOR_PRINCIPAL", JobPosition.DIRECTOR, SalaryLevel.PRINCIPAL, new BigDecimal("18000.00")),
+            new SalaryStructureSeed("DIRECTOR_SENIOR", JobPosition.DIRECTOR, SalaryLevel.SENIOR, new BigDecimal("20000.00")),
+            new SalaryStructureSeed("DIRECTOR_JUNIOR", JobPosition.DIRECTOR, SalaryLevel.JUNIOR, new BigDecimal("17000.00")),
+            new SalaryStructureSeed("DIRECTOR_MID", JobPosition.DIRECTOR, SalaryLevel.MID_LEVEL, new BigDecimal("19000.00")),
 
             new SalaryStructureSeed("TECHNICIAN_JUNIOR", JobPosition.TECHNICIAN, SalaryLevel.JUNIOR, new BigDecimal("3200.00")),
             new SalaryStructureSeed("TECHNICIAN_MID", JobPosition.TECHNICIAN, SalaryLevel.MID_LEVEL, new BigDecimal("4200.00")),
@@ -314,7 +321,10 @@ public class DataSeeder implements CommandLineRunner {
                     SalaryLevel.SENIOR, LocalDate.of(2024, 2, 28), "77889900112", Set.of(RoleName.ROLE_SECRETARY, RoleName.ROLE_EMPLOYEE)),
 
             new EmployeeSeed("FERNANDO", "Fernando", "Santos", "fernando.santos@instituicao.com", JobPosition.MANAGER,
-                    SalaryLevel.LEAD, LocalDate.of(2023, 7, 3), "88990011223", Set.of(RoleName.ROLE_MANAGER, RoleName.ROLE_EMPLOYEE))
+                    SalaryLevel.LEAD, LocalDate.of(2023, 7, 3), "88990011223", Set.of(RoleName.ROLE_MANAGER, RoleName.ROLE_EMPLOYEE)),
+
+            new EmployeeSeed("KAROLINA", "Maria", "Karolina", "maria.karolina@instituicao.com", JobPosition.DIRECTOR,
+                    SalaryLevel.LEAD, LocalDate.of(2023, 7, 3), "08675618662", Set.of(RoleName.ROLE_DIRECTOR, RoleName.ROLE_EMPLOYEE))
     );
 
 

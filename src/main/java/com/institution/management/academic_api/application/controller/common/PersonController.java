@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,5 +28,13 @@ public class PersonController {
     public ResponseEntity<List<PersonSummaryDto>> getSelectableParticipants() {
         List<PersonSummaryDto> participants = userService.findSelectableParticipants();
         return ResponseEntity.ok(participants);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Busca pessoas (alunos, professores, funcionários) por nome, email ou matrícula")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN', 'SECRETARY')")
+    public ResponseEntity<List<PersonSummaryDto>> searchPeople(@RequestParam String query) {
+        List<PersonSummaryDto> people = userService.searchPeople(query);
+        return ResponseEntity.ok(people);
     }
 }

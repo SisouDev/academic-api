@@ -30,24 +30,27 @@ public class ReservationNotifier {
 
     public void notifyNextInQueue(LibraryItem returnedItem) {
         reservationRepository.findFirstByItemIdAndStatusOrderByReservationDateAsc(
-                returnedItem.getId(), ReservationStatus.ACTIVE
+                returnedItem.getId(), ReservationStatus.PENDING
         ).ifPresent(nextReservation -> {
-
             nextReservation.setStatus(ReservationStatus.AVAILABLE);
             reservationRepository.save(nextReservation);
 
-            String message = String.format(
-                    "O item '%s' que você reservou está disponível para retirada na biblioteca!",
-                    returnedItem.getTitle()
-            );
-            String link = "/my-profile/reservations";
-
-            notificationService.createNotification(
-                    nextReservation.getPerson().getUser(),
-                    message,
-                    link,
-                    NotificationType.ACTION_REQUIRED
-            );
+            notifyUserOfAvailableReservation(nextReservation);
         });
+    }
+
+    public void notifyUserOfAvailableReservation(Reservation reservation) {
+        String message = String.format(
+                "Boas notícias! O item '%s' que você reservou está agora disponível para levantamento na biblioteca.",
+                reservation.getItem().getTitle()
+        );
+        String link = "/my-profile/reservations";
+
+        notificationService.createNotification(
+                reservation.getPerson().getUser(),
+                message,
+                link,
+                NotificationType.ACTION_REQUIRED
+        );
     }
 }

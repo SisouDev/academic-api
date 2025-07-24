@@ -43,4 +43,10 @@ public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecif
 
     @Query("SELECT p FROM Person p WHERE TYPE(p) != Student")
     List<Person> findAllNonStudents();
+
+    @Query("SELECT p FROM Person p WHERE " +
+            "LOWER(p.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(p.email) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Person> searchByQuery(@Param("query") String query);
 }

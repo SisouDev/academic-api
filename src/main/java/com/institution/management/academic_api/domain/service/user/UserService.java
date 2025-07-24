@@ -30,5 +30,7 @@ public interface UserService {
 
     void updateMyProfile(String userEmail, UpdateProfileRequestDto request);
 
+    List<PersonSummaryDto> searchPeople(String query);
+
 
 }

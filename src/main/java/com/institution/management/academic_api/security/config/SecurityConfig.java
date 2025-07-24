@@ -45,10 +45,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/purchase-requests/**").hasAnyRole("ADMIN", "FINANCE_MANAGER", "FINANCE_ASSISTANT")
                         .requestMatchers("/api/v1/scholarships/**").hasAnyRole("ADMIN", "FINANCE_MANAGER")
                         .requestMatchers("/api/v1/salary-structures/**").hasAnyRole("ADMIN", "HR_ANALYST")
+                        .requestMatchers("/api/v1/finance/director-report").hasAnyRole("ADMIN", "DIRECTOR")
+
+                        .requestMatchers("/api/v1/library/items/**").hasAnyRole("ADMIN", "LIBRARIAN")
+                        .requestMatchers("/api/v1/loans/**").hasAnyRole("ADMIN", "LIBRARIAN")
 
                         // 3. REGRAS DE GESTÃO PARA OUTROS CARGOS
-                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("ADMIN", "HR_ANALYST", "MANAGER")
-                        .requestMatchers("/api/v1/internal-requests/**").hasAnyRole("ADMIN", "SECRETARY", "MANAGER")
+                        .requestMatchers("/api/v1/leave-requests/**").hasAnyRole("ADMIN", "HR_ANALYST", "MANAGER", "DIRECTOR")
+                        .requestMatchers("/api/v1/internal-requests/**").hasAnyRole("ADMIN", "SECRETARY", "MANAGER", "DIRECTOR")
                         .requestMatchers("/api/v1/calendar/events/**").hasAnyRole("ADMIN", "SECRETARY", "MANAGER")
 
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/support-tickets/**").hasAnyRole("ADMIN", "TECHNICIAN")

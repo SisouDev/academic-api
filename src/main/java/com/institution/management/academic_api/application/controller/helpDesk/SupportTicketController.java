@@ -95,7 +95,7 @@ public class SupportTicketController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN', 'MANAGER', 'DIRECTOR')")
     @Operation(summary = "Lista todos os chamados de suporte com filtros")
     public ResponseEntity<PagedModel<EntityModel<SupportTicketDetailsDto>>> findAll(
             @RequestParam(required = false) TicketStatus status,

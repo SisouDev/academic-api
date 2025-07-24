@@ -93,7 +93,7 @@ public class InternalRequestController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SECRETARY', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'ADMIN', 'DIRECTOR')")
     @Operation(summary = "Lista todas as requisições internas com filtro de status")
     public ResponseEntity<PagedModel<EntityModel<InternalRequestDetailsDto>>> findAll(
             @RequestParam(required = false) RequestStatus status,

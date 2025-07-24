@@ -18,6 +18,7 @@ public enum RoleName {
     ROLE_TECHNICIAN("Technician"),
     ROLE_HR_ANALYST("HR Analyst"),
     ROLE_FINANCE_ASSISTANT("Finance Assistant"),
+    ROLE_DIRECTOR("Director"),
     ROLE_LIBRARIAN("Librarian");
 
     private final String displayName;

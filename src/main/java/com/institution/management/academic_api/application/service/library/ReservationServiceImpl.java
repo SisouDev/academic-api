@@ -6,6 +6,7 @@ import com.institution.management.academic_api.application.mapper.simple.library
 import com.institution.management.academic_api.application.notifiers.library.ReservationNotifier;
 import com.institution.management.academic_api.domain.factory.library.ReservationFactory;
 import com.institution.management.academic_api.domain.model.entities.common.Person;
+import com.institution.management.academic_api.domain.model.entities.library.LibraryItem;
 import com.institution.management.academic_api.domain.model.entities.library.Reservation;
 import com.institution.management.academic_api.domain.model.enums.library.ReservationStatus;
 import com.institution.management.academic_api.domain.repository.common.PersonRepository;
@@ -14,6 +15,8 @@ import com.institution.management.academic_api.domain.service.library.Reservatio
 import com.institution.management.academic_api.exception.type.common.EntityNotFoundException;
 import com.institution.management.academic_api.infra.aplication.aop.LogActivity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,5 +97,32 @@ public class ReservationServiceImpl implements ReservationService {
     private Reservation findReservationByIdOrThrow(Long id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Reservation not found with id: " + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReservationDetailsDto> findAllByStatus(ReservationStatus status, Pageable pageable) {
+        return reservationRepository.findAllByStatus(status, pageable)
+                .map(reservationMapper::toDetailsDto);
+    }
+
+    @Override
+    @Transactional
+    @LogActivity("Aprovou uma reserva de item da biblioteca.")
+    public void approveReservation(Long reservationId) {
+        Reservation reservation = findReservationByIdOrThrow(reservationId);
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("Apenas reservas pendentes podem ser aprovadas.");
+        }
+
+        LibraryItem item = reservation.getItem();
+        if (item.getAvailableCopies() <= 0) {
+            throw new IllegalStateException("Não há cópias disponíveis do item '" + item.getTitle() + "' para atender a esta reserva.");
+        }
+
+        reservation.setStatus(ReservationStatus.AVAILABLE);
+
+        reservationNotifier.notifyUserOfAvailableReservation(reservation);
     }
 }

@@ -37,4 +37,9 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     @Query("SELECT AVG(a.score) FROM Assessment a WHERE a.enrollment = :enrollment")
     BigDecimal findAverageScoreByEnrollment(@Param("enrollment") Enrollment enrollment);
 
+    @Query("SELECT AVG(a.score) FROM Assessment a WHERE a.score IS NOT NULL")
+    Optional<BigDecimal> findOverallAverageScore();
+
+    @Query("SELECT (CAST(SUM(CASE WHEN a.score >= :passingGrade THEN 1 ELSE 0 END) AS double) / COUNT(a.id)) * 100.0 FROM Assessment a")
+    Optional<BigDecimal> findOverallApprovalRate(@Param("passingGrade") BigDecimal passingGrade);
 }

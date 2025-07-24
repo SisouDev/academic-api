@@ -2,13 +2,19 @@ package com.institution.management.academic_api.application.controller.library;
 
 import com.institution.management.academic_api.application.dto.library.CreateReservationRequestDto;
 import com.institution.management.academic_api.application.dto.library.ReservationDetailsDto;
+import com.institution.management.academic_api.domain.model.enums.library.ReservationStatus;
 import com.institution.management.academic_api.domain.service.library.ReservationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +33,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final PagedResourcesAssembler<ReservationDetailsDto> assembler;
+
 
     @PostMapping
     @Operation(summary = "Cria uma nova reserva para um item da biblioteca")
@@ -72,5 +80,29 @@ public class ReservationController {
 
         return ResponseEntity.ok(CollectionModel.of(resources,
                 linkTo(methodOn(ReservationController.class).findMyActiveReservations()).withSelfRel()));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+    @Operation(summary = "Lista todas as reservas do sistema com filtros")
+    public ResponseEntity<PagedModel<EntityModel<ReservationDetailsDto>>> findAll(
+            @RequestParam(defaultValue = "PENDING") ReservationStatus status,
+            Pageable pageable) {
+
+        Page<ReservationDetailsDto> reservationsPage = reservationService.findAllByStatus(status, pageable);
+
+        PagedModel<EntityModel<ReservationDetailsDto>> pagedModel = assembler.toModel(reservationsPage,
+                reservation -> EntityModel.of(reservation,
+                        linkTo(methodOn(ReservationController.class).findById(reservation.id())).withSelfRel()));
+
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    @PatchMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
+    @Operation(summary = "Aprova uma reserva, tornando-a disponível para levantamento")
+    public ResponseEntity<Void> approve(@PathVariable Long id) {
+        reservationService.approveReservation(id);
+        return ResponseEntity.noContent().build();
     }
 }

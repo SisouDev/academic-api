@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -270,5 +271,16 @@ public class UserServiceImpl implements UserService {
                 detailedPersonDto,
                 baseResponseDto.roles()
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonSummaryDto> searchPeople(String query) {
+        if (query == null || query.isBlank() || query.length() < 3) {
+            return Collections.emptyList();
+        }
+        return personRepository.searchByQuery(query).stream()
+                .map(personMapper::toSummaryDto)
+                .collect(Collectors.toList());
     }
 }

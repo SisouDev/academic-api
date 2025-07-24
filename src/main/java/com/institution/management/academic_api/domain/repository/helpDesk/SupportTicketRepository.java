@@ -2,6 +2,7 @@ package com.institution.management.academic_api.domain.repository.helpDesk;
 
 import com.institution.management.academic_api.domain.model.entities.common.Person;
 import com.institution.management.academic_api.domain.model.entities.helpDesk.SupportTicket;
+import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketPriority;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -22,4 +23,5 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicket, Lo
     long countByAssigneeAndStatus(Person assignee, TicketStatus status);
 
 
+    long countByStatusAndPriority(TicketStatus ticketStatus, TicketPriority ticketPriority);
 }

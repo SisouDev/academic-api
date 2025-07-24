@@ -61,7 +61,7 @@ public class LeaveRequestController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('HR_ANALYST', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('HR_ANALYST', 'MANAGER', 'DIRECTOR')")
     @Operation(summary = "Lista todas as solicitações de ausência com filtros")
     public ResponseEntity<PagedModel<EntityModel<LeaveRequestDetailsDto>>> findAll(
             @RequestParam(required = false) LeaveRequestStatus status,

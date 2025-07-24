@@ -93,6 +93,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LoanDetailsDto findById(Long id) {
         return loanRepository.findById(id)
                 .map(loanMapper::toDetailsDto)
@@ -100,6 +101,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LoanDetailsDto> findByBorrower(Long borrowerId) {
         return loanRepository.findByBorrowerId(borrowerId).stream()
                 .map(loanMapper::toDetailsDto)

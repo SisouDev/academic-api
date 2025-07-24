@@ -1,10 +1,15 @@
 package com.institution.management.academic_api.application.service.dashboard;
 
 import com.institution.management.academic_api.application.dto.announcement.AnnouncementSummaryDto;
+import com.institution.management.academic_api.application.dto.common.ActivityLogDto;
 import com.institution.management.academic_api.application.dto.dashboard.admin.ActivityFeedItem;
 import com.institution.management.academic_api.application.dto.dashboard.admin.AdminDashboardDto;
 import com.institution.management.academic_api.application.dto.dashboard.admin.GlobalStatsDto;
 import com.institution.management.academic_api.application.dto.dashboard.admin.StudentDistributionData;
+import com.institution.management.academic_api.application.dto.dashboard.director.AcademicEfficiencyDto;
+import com.institution.management.academic_api.application.dto.dashboard.director.DirectorDashboardDto;
+import com.institution.management.academic_api.application.dto.dashboard.director.FinancialSummaryDto;
+import com.institution.management.academic_api.application.dto.dashboard.director.OperationalAlertsDto;
 import com.institution.management.academic_api.application.dto.dashboard.employee.*;
 import com.institution.management.academic_api.application.dto.dashboard.student.*;
 import com.institution.management.academic_api.application.dto.dashboard.teacher.TeacherDashboardDto;
@@ -12,6 +17,7 @@ import com.institution.management.academic_api.application.dto.dashboard.teacher
 import com.institution.management.academic_api.application.dto.dashboard.teacher.WorkloadSummary;
 import com.institution.management.academic_api.application.dto.request.InternalRequestSummaryDto;
 import com.institution.management.academic_api.application.mapper.simple.calendar.CalendarEventMapper;
+import com.institution.management.academic_api.application.mapper.simple.common.ActivityLogMapper;
 import com.institution.management.academic_api.application.mapper.simple.request.InternalRequestMapper;
 import com.institution.management.academic_api.domain.model.entities.academic.Department;
 import com.institution.management.academic_api.domain.model.entities.calendar.CalendarEvent;
@@ -28,8 +34,10 @@ import com.institution.management.academic_api.domain.model.enums.common.Notific
 import com.institution.management.academic_api.domain.model.enums.common.PayrollStatus;
 import com.institution.management.academic_api.domain.model.enums.common.PersonStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.OrderStatus;
+import com.institution.management.academic_api.domain.model.enums.financial.ScholarshipStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionStatus;
 import com.institution.management.academic_api.domain.model.enums.financial.TransactionType;
+import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketPriority;
 import com.institution.management.academic_api.domain.model.enums.helpDesk.TicketStatus;
 import com.institution.management.academic_api.domain.model.enums.humanResources.LeaveRequestStatus;
 import com.institution.management.academic_api.domain.model.enums.library.LoanStatus;
@@ -38,6 +46,7 @@ import com.institution.management.academic_api.domain.model.enums.student.Enroll
 import com.institution.management.academic_api.domain.model.enums.tasks.TaskStatus;
 import com.institution.management.academic_api.domain.repository.announcement.AnnouncementRepository;
 import com.institution.management.academic_api.domain.repository.calendar.CalendarEventRepository;
+import com.institution.management.academic_api.domain.repository.common.ActivityLogRepository;
 import com.institution.management.academic_api.domain.repository.common.NotificationRepository;
 import com.institution.management.academic_api.domain.repository.common.PayrollRecordRepository;
 import com.institution.management.academic_api.domain.repository.course.CourseRepository;
@@ -45,6 +54,7 @@ import com.institution.management.academic_api.domain.repository.course.CourseSe
 import com.institution.management.academic_api.domain.repository.employee.EmployeeRepository;
 import com.institution.management.academic_api.domain.repository.financial.FinancialTransactionRepository;
 import com.institution.management.academic_api.domain.repository.financial.PurchaseOrderRepository;
+import com.institution.management.academic_api.domain.repository.financial.ScholarshipRepository;
 import com.institution.management.academic_api.domain.repository.helpDesk.SupportTicketRepository;
 import com.institution.management.academic_api.domain.repository.humanResources.LeaveRequestRepository;
 import com.institution.management.academic_api.domain.repository.it.AssetRepository;
@@ -65,9 +75,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.institution.management.academic_api.application.dto.dashboard.student.CalendarEventInfo;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -104,6 +114,10 @@ public class DashboardServiceImpl implements DashboardService {
     private final InternalRequestRepository internalRequestRepository;
     private final InternalRequestMapper internalRequestMapper;
     private final CalendarEventMapper calendarEventMapper;
+    private final ScholarshipRepository scholarshipRepository;
+    private final ActivityLogRepository activityLogRepository;
+
+    private final ActivityLogMapper activityLogMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -112,6 +126,11 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
         log.info("Buscando dashboard para usuário '{}' com as roles: {}", user.getUsername(), roles);
+
+        if (roles.contains("ROLE_DIRECTOR")) {
+            log.info("Usuário é DIRECTOR. Retornando DirectorDashboardDto.");
+            return getDirectorDashboard(user);
+        }
 
         if (roles.contains("ROLE_ADMIN")) {
             log.info("Usuário é ADMIN. Retornando AdminDashboardDto.");
@@ -486,6 +505,78 @@ public class DashboardServiceImpl implements DashboardService {
                 pendingRequests,
                 recentRequests,
                 nextEvent
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DirectorDashboardDto getDirectorDashboard(User user) {
+        GlobalStatsDto globalStats = getGlobalStats();
+
+        LocalDate startOfMonth = YearMonth.now().atDay(1);
+        LocalDate endOfMonth = YearMonth.now().atEndOfMonth();
+
+        BigDecimal monthlyRevenue = financialTransactionRepository
+                .calculateTotalAmountByStatusAndDateRange(TransactionStatus.COMPLETED, startOfMonth, endOfMonth)
+                .orElse(BigDecimal.ZERO);
+
+        long totalTuition = financialTransactionRepository.countByType(TransactionType.TUITION);
+        long overdueTuition = financialTransactionRepository.countByTypeAndStatusIn(
+                TransactionType.TUITION, List.of(TransactionStatus.PENDING, TransactionStatus.FAILED));
+        double delinquencyRate = (totalTuition > 0) ? (((double) overdueTuition / totalTuition) * 100) : 0.0;
+
+        long activeScholarships = scholarshipRepository.countByStatus(ScholarshipStatus.ACTIVE);
+        BigDecimal totalScholarshipValue = scholarshipRepository
+                .sumValuesByStatus(ScholarshipStatus.ACTIVE)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal operationalExpenses = purchaseOrderRepository
+                .sumApprovedOrdersInDateRange(startOfMonth, endOfMonth)
+                .orElse(BigDecimal.ZERO);
+
+        FinancialSummaryDto financialSummary = new FinancialSummaryDto(
+                monthlyRevenue,
+                delinquencyRate,
+                activeScholarships,
+                totalScholarshipValue,
+                operationalExpenses
+        );
+
+        BigDecimal averageGrade = assessmentRepository.findOverallAverageScore().orElse(BigDecimal.ZERO);
+        double averageAttendance = attendanceRecordRepository.findOverallAverageAttendance().orElse(0.0);
+        BigDecimal approvalRate = assessmentRepository.findOverallApprovalRate(new BigDecimal("6.0")).orElse(BigDecimal.ZERO);
+
+        AcademicEfficiencyDto academicEfficiency = new AcademicEfficiencyDto(
+                averageGrade.setScale(2, RoundingMode.HALF_UP),
+                averageAttendance,
+                approvalRate.doubleValue()
+        );
+
+        long recentLeaveRequests = leaveRequestRepository.countByStatus(LeaveRequestStatus.PENDING);
+        long failedOrPendingTransactions = financialTransactionRepository.countByStatusIn(
+                List.of(TransactionStatus.PENDING, TransactionStatus.FAILED)
+        );
+        long highPriorityTickets = supportTicketRepository.countByStatusAndPriority(TicketStatus.OPEN, TicketPriority.HIGH);
+        long pendingInternalRequests = internalRequestRepository.countByStatus(RequestStatus.PENDING);
+
+        OperationalAlertsDto operationalAlerts = new OperationalAlertsDto(
+                recentLeaveRequests,
+                failedOrPendingTransactions,
+                highPriorityTickets,
+                pendingInternalRequests
+        );
+
+        List<ActivityLogDto> recentActivities = activityLogRepository.findTop10ByOrderByTimestampDesc()
+                .stream()
+                .map(activityLogMapper::toDto)
+                .toList();
+
+        return new DirectorDashboardDto(
+                globalStats,
+                financialSummary,
+                academicEfficiency,
+                operationalAlerts,
+                recentActivities
         );
     }
 }
